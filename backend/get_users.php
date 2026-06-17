@@ -1,0 +1,1 @@
+<?php $users = \App\Modules\Accounts\Models\User::all(); echo '| ID | Name | Email | Role Tier | Sub Role |' . PHP_EOL; echo '|---|---|---|---|---|' . PHP_EOL; foreach($users as $u) { echo '| ' . $u->id . ' | ' . $u->name . ' | ' . $u->email . ' | ' . $u->role_tier . ' | ' . $u->sub_role . ' |' . PHP_EOL; }
