@@ -1,0 +1,66 @@
+name: Deploy to cPanel
+
+on:
+  push:
+    branches:
+      - main # Automatically deploy when code is pushed to the main branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # 1. SETUP PHP & BACKEND
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2' # Laravel 11 requires PHP 8.2+
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, dom, filter, gd, iconv, json, libxml, mbstring, openssl, pcre, phar, pdo, session, sqlite3, xml, xmlwriter, zip
+
+      - name: Install Composer Dependencies
+        run: |
+          cd backend
+          composer install --no-dev --optimize-autoloader
+
+      # 2. SETUP NODE & FRONTEND
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install Node Dependencies and Build
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+      # 3. PREPARE UPLOAD FOLDERS
+      # We move the built React app into public_html and keep backend as is
+      - name: Prepare Deployment Directory
+        run: |
+          mkdir deploy_package
+          mkdir deploy_package/public_html
+          mkdir deploy_package/backend
+          
+          # Move Backend files
+          cp -R backend/* deploy_package/backend/
+          
+          # Move Built Frontend files (Vite builds to dist)
+          cp -R frontend/dist/* deploy_package/public_html/
+          
+          # Remove files we don't want uploaded to the live server
+          rm -rf deploy_package/backend/tests
+          rm -rf deploy_package/backend/phpunit.xml
+
+      # 4. DEPLOY VIA FTP
+      - name: Sync files via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./deploy_package/
+          server-dir: ./
+          dangerous-clean-slate: false # Set to true ONLY if you want to delete files on the server that aren't in GitHub (Dangerous!)

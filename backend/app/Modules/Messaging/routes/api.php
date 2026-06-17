@@ -54,9 +54,12 @@ Route::middleware(['auth.api_key'])->prefix('v1')->group(function () {
 });
 
 // System Supervisor (Admin) Messaging Route Management
-Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry', 'role.admin'])->group(function () {
-    Route::get('/admin/routes', [\App\Modules\Messaging\Controllers\RouteController::class, 'index']);
-    Route::put('/admin/routes/{id}', [\App\Modules\Messaging\Controllers\RouteController::class, 'update']);
+Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry', 'role.admin'])
+    ->prefix('messaging')
+    ->group(function () {
+        Route::get('/admin/routes', [\App\Modules\Messaging\Controllers\RouteController::class, 'index']);
+        Route::put('/admin/routes/{id}', [\App\Modules\Messaging\Controllers\RouteController::class, 'update']);
+        Route::post('/admin/routes/{id}/test', [\App\Modules\Messaging\Controllers\RouteController::class, 'test']);
 });
 
 
