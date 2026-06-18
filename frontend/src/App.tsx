@@ -334,6 +334,9 @@ export default function App() {
     ]
   });
 
+  // Phase 3 States
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+
   // Client Campaigns List State
   const [clientCampaigns, setClientCampaigns] = useState<any[]>([]);
   const [apiKeys, setApiKeys] = useState<any[]>([]);
@@ -2060,7 +2063,7 @@ export default function App() {
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'campaigns' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <Send className="w-5 h-5 shrink-0" />
-                    <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Campaign Wizard</span>
+                    <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Campaigns & Queue</span>
                   </button>
                   <button 
                     onClick={() => setCurrentPage('inbox')} 
@@ -3490,14 +3493,186 @@ export default function App() {
                     </div>
                   )}
 
-                  {currentPage === 'campaigns' && (
+                  {currentPage === 'campaigns' && !isWizardOpen && (
+                    <div className="space-y-6 animate-fadeIn">
+                      <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-800/40">
+                        <div>
+                          <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                            <Send className="w-6 h-6 text-indigo-400" />
+                            Queued & Scheduled Campaigns
+                          </h3>
+                          <p className="text-xs text-gray-400 mt-1">Monitor, pause, and review all pending SMS broadcasts.</p>
+                        </div>
+                        <button 
+                          onClick={() => setIsWizardOpen(true)}
+                          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all shadow-lg shadow-indigo-500/20 text-sm font-bold"
+                        >
+                          <Plus className="w-4 h-4" />
+                          New Campaign
+                        </button>
+                      </div>
+
+                      {/* OLD TABLE REINJECTED */}
+                      <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card col-span-full ">
+                    <h4 className="font-bold text-white mb-4 flex items-center gap-2">
+                      <Send className="w-5 h-5 text-indigo-400" />
+                      Bulk Campaigns History Registry
+                    </h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm text-gray-300">
+                        <thead className="bg-slate-900/60 uppercase tracking-widest text-[10px] text-gray-400 font-bold">
+                          <tr>
+                            <th className="px-6 py-4 rounded-l-xl">Campaign Name</th>
+                            <th className="px-6 py-4">Status</th>
+                            <th className="px-6 py-4 text-center">TPS Limit</th>
+                            <th className="px-6 py-4 text-center">Sent / Deliv</th>
+                            <th className="px-6 py-4 text-center">Approvals</th>
+                            <th className="px-6 py-4 rounded-r-xl text-center">Programmatic Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/40 font-mono text-xs">
+                          {clientCampaigns.map(camp => (
+                            <tr key={camp.id} className="hover:bg-slate-900/20">
+                              <td className="px-6 py-4 font-sans">
+                                <span className="font-bold text-white block">{camp.name}</span>
+                                <span className="text-[10px] text-gray-400 mt-0.5 truncate max-w-[200px] block font-mono">{camp.template}</span>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                  camp.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                  camp.status === 'PROCESSING' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 animate-pulse' :
+                                  camp.status === 'PAUSED' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                                  'bg-slate-500/10 text-gray-400 border border-slate-500/20'
+                                }`}>
+                                  {camp.status}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-center font-mono font-bold text-xs">{camp.tps_limit} TPS</td>
+                              <td className="px-6 py-4 text-center font-mono text-xs">
+                                <b className="text-white">{camp.sent_count}</b> / <b className="text-emerald-450">{camp.delivered_count}</b>
+                              </td>
+                              <td className="px-6 py-4 text-center">
+                                <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                                  camp.approval_status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-450' : 'bg-amber-500/10 text-amber-450 animate-pulse'
+                                }`}>
+                                  {camp.approval_status}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 flex gap-2 justify-center">
+                                <button
+                                  onClick={async () => {
+                                    if (token) {
+                                      try {
+                                        const res = await apiClient.post(`/campaigns/${camp.id}/duplicate`, {}, { headers: { Authorization: `Bearer ${token}` } });
+                                        if (res.data.status === 'SUCCESS') {
+                                          fetchClientData(token);
+                                        }
+                                      } catch (err) {}
+                                    } else {
+                                      const clone = { ...camp, id: Date.now(), name: camp.name + ' (Copy)', status: 'DRAFT' };
+                                      setClientCampaigns([clone, ...clientCampaigns]);
+                                    }
+                                  }}
+                                  className="px-2.5 py-1 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-indigo-400 font-bold text-xs rounded-lg transition-all font-sans"
+                                >
+                                  Clone
+                                </button>
+
+                                <button
+                                  onClick={async () => {
+                                    setViewingCampaignLogs(camp);
+                                    setCampaignLogsLoading(true);
+                                    if (token) {
+                                      try {
+                                        const res = await apiClient.get(`/campaigns/${camp.id}/logs`, { headers: { Authorization: `Bearer ${token}` } });
+                                        if (res.data.logs) {
+                                          setCampaignLogsData(res.data.logs.data);
+                                        }
+                                      } catch (err) { console.error(err); }
+                                    }
+                                    setCampaignLogsLoading(false);
+                                  }}
+                                  className="px-2.5 py-1 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-blue-400 font-bold text-xs rounded-lg transition-all font-sans"
+                                >
+                                  Logs
+                                </button>
+                                
+                                {camp.status === 'PROCESSING' && (
+                                  <button
+                                    onClick={async () => {
+                                      if (token) {
+                                        await apiClient.post(`/campaigns/${camp.id}/action`, { action: 'PAUSE' }, { headers: { Authorization: `Bearer ${token}` } });
+                                        fetchClientData(token);
+                                      } else {
+                                        const updated = clientCampaigns.map(c => c.id === camp.id ? { ...c, status: 'PAUSED' } : c);
+                                        setClientCampaigns(updated);
+                                      }
+                                    }}
+                                    className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-lg transition-all font-sans"
+                                  >
+                                    Pause
+                                  </button>
+                                )}
+                                {camp.status === 'PAUSED' && (
+                                  <button
+                                    onClick={async () => {
+                                      if (token) {
+                                        await apiClient.post(`/campaigns/${camp.id}/action`, { action: 'RESUME' }, { headers: { Authorization: `Bearer ${token}` } });
+                                        fetchClientData(token);
+                                      } else {
+                                        const updated = clientCampaigns.map(c => c.id === camp.id ? { ...c, status: 'PROCESSING' } : c);
+                                        setClientCampaigns(updated);
+                                      }
+                                    }}
+                                    className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg transition-all font-sans"
+                                  >
+                                    Resume
+                                  </button>
+                                )}
+
+                                {camp.approval_status === 'PENDING_APPROVAL' && user?.sub_role === 'CLIENT_ADMIN' && (
+                                  <button
+                                    onClick={async () => {
+                                      if (token) {
+                                        await apiClient.post(`/campaigns/${camp.id}/approve`, {}, { headers: { Authorization: `Bearer ${token}` } });
+                                        fetchClientData(token);
+                                      } else {
+                                        const updated = clientCampaigns.map(c => c.id === camp.id ? { ...c, approval_status: 'APPROVED', status: 'PROCESSING' } : c);
+                                        setClientCampaigns(updated);
+                                      }
+                                    }}
+                                    className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition-all font-sans animate-pulse"
+                                  >
+                                    Approve
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                    </div>
+                  )}
+
+                  {currentPage === 'campaigns' && isWizardOpen && (
                     <div className="space-y-8 animate-fadeIn">
                       
                       <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-800/40">
-                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                          <Send className="w-5 h-5 text-indigo-400" />
-                          Bulk Campaign Wizard
-                        </h3>
+                        <div className="flex flex-col gap-2">
+                          <button 
+                            onClick={() => setIsWizardOpen(false)}
+                            className="flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-white transition-all w-fit"
+                          >
+                            <ArrowDownLeft className="w-4 h-4" />
+                            Back to Dashboard
+                          </button>
+                          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                            <Send className="w-5 h-5 text-indigo-400" />
+                            Bulk Campaign Wizard
+                          </h3>
+                        </div>
                         <div className="flex items-center gap-2">
                           {[1, 2, 3, 4].map(s => (
                             <div 
@@ -3818,153 +3993,14 @@ export default function App() {
                       <button
                         type="button"
                         disabled={isLoading || (clientAccount.wallet_balance < wizCostEstimate)}
-                        onClick={handleLaunchCampaign}
+                        onClick={() => { handleLaunchCampaign(); setIsWizardOpen(false); }}
                         className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all hover:shadow disabled:opacity-50 text-sm"
                       >
                         {isLoading ? <RefreshCw className="w-5 h-5 animate-spin" /> : 'Launch Campaign'}
                       </button>
                     )}
                   </div>
-                  <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card col-span-full mt-8 animate-fadeIn">
-                    <h4 className="font-bold text-white mb-4 flex items-center gap-2">
-                      <Send className="w-5 h-5 text-indigo-400" />
-                      Bulk Campaigns History Registry
-                    </h4>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-sm text-gray-300">
-                        <thead className="bg-slate-900/60 uppercase tracking-widest text-[10px] text-gray-400 font-bold">
-                          <tr>
-                            <th className="px-6 py-4 rounded-l-xl">Campaign Name</th>
-                            <th className="px-6 py-4">Status</th>
-                            <th className="px-6 py-4 text-center">TPS Limit</th>
-                            <th className="px-6 py-4 text-center">Sent / Deliv</th>
-                            <th className="px-6 py-4 text-center">Approvals</th>
-                            <th className="px-6 py-4 rounded-r-xl text-center">Programmatic Action</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800/40 font-mono text-xs">
-                          {clientCampaigns.map(camp => (
-                            <tr key={camp.id} className="hover:bg-slate-900/20">
-                              <td className="px-6 py-4 font-sans">
-                                <span className="font-bold text-white block">{camp.name}</span>
-                                <span className="text-[10px] text-gray-400 mt-0.5 truncate max-w-[200px] block font-mono">{camp.template}</span>
-                              </td>
-                              <td className="px-6 py-4">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                                  camp.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                                  camp.status === 'PROCESSING' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 animate-pulse' :
-                                  camp.status === 'PAUSED' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
-                                  'bg-slate-500/10 text-gray-400 border border-slate-500/20'
-                                }`}>
-                                  {camp.status}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 text-center font-mono font-bold text-xs">{camp.tps_limit} TPS</td>
-                              <td className="px-6 py-4 text-center font-mono text-xs">
-                                <b className="text-white">{camp.sent_count}</b> / <b className="text-emerald-450">{camp.delivered_count}</b>
-                              </td>
-                              <td className="px-6 py-4 text-center">
-                                <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
-                                  camp.approval_status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-450' : 'bg-amber-500/10 text-amber-450 animate-pulse'
-                                }`}>
-                                  {camp.approval_status}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 flex gap-2 justify-center">
-                                <button
-                                  onClick={async () => {
-                                    if (token) {
-                                      try {
-                                        const res = await apiClient.post(`/campaigns/${camp.id}/duplicate`, {}, { headers: { Authorization: `Bearer ${token}` } });
-                                        if (res.data.status === 'SUCCESS') {
-                                          fetchClientData(token);
-                                        }
-                                      } catch (err) {}
-                                    } else {
-                                      const clone = { ...camp, id: Date.now(), name: camp.name + ' (Copy)', status: 'DRAFT' };
-                                      setClientCampaigns([clone, ...clientCampaigns]);
-                                    }
-                                  }}
-                                  className="px-2.5 py-1 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-indigo-400 font-bold text-xs rounded-lg transition-all font-sans"
-                                >
-                                  Clone
-                                </button>
-
-                                <button
-                                  onClick={async () => {
-                                    setViewingCampaignLogs(camp);
-                                    setCampaignLogsLoading(true);
-                                    if (token) {
-                                      try {
-                                        const res = await apiClient.get(`/campaigns/${camp.id}/logs`, { headers: { Authorization: `Bearer ${token}` } });
-                                        if (res.data.logs) {
-                                          setCampaignLogsData(res.data.logs.data);
-                                        }
-                                      } catch (err) { console.error(err); }
-                                    }
-                                    setCampaignLogsLoading(false);
-                                  }}
-                                  className="px-2.5 py-1 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-blue-400 font-bold text-xs rounded-lg transition-all font-sans"
-                                >
-                                  Logs
-                                </button>
-                                
-                                {camp.status === 'PROCESSING' && (
-                                  <button
-                                    onClick={async () => {
-                                      if (token) {
-                                        await apiClient.post(`/campaigns/${camp.id}/action`, { action: 'PAUSE' }, { headers: { Authorization: `Bearer ${token}` } });
-                                        fetchClientData(token);
-                                      } else {
-                                        const updated = clientCampaigns.map(c => c.id === camp.id ? { ...c, status: 'PAUSED' } : c);
-                                        setClientCampaigns(updated);
-                                      }
-                                    }}
-                                    className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-lg transition-all font-sans"
-                                  >
-                                    Pause
-                                  </button>
-                                )}
-                                {camp.status === 'PAUSED' && (
-                                  <button
-                                    onClick={async () => {
-                                      if (token) {
-                                        await apiClient.post(`/campaigns/${camp.id}/action`, { action: 'RESUME' }, { headers: { Authorization: `Bearer ${token}` } });
-                                        fetchClientData(token);
-                                      } else {
-                                        const updated = clientCampaigns.map(c => c.id === camp.id ? { ...c, status: 'PROCESSING' } : c);
-                                        setClientCampaigns(updated);
-                                      }
-                                    }}
-                                    className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg transition-all font-sans"
-                                  >
-                                    Resume
-                                  </button>
-                                )}
-
-                                {camp.approval_status === 'PENDING_APPROVAL' && user?.sub_role === 'CLIENT_ADMIN' && (
-                                  <button
-                                    onClick={async () => {
-                                      if (token) {
-                                        await apiClient.post(`/campaigns/${camp.id}/approve`, {}, { headers: { Authorization: `Bearer ${token}` } });
-                                        fetchClientData(token);
-                                      } else {
-                                        const updated = clientCampaigns.map(c => c.id === camp.id ? { ...c, approval_status: 'APPROVED', status: 'PROCESSING' } : c);
-                                        setClientCampaigns(updated);
-                                      }
-                                    }}
-                                    className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition-all font-sans animate-pulse"
-                                  >
-                                    Approve
-                                  </button>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+                  
 
                 </div>
               )}
