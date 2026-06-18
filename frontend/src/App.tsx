@@ -2174,7 +2174,7 @@ export default function App() {
           </aside>
 
           {/* 2.2 MAIN BODY WORKSPACE CONTAINER */}
-          <main className="flex-1 flex flex-col min-w-0 bg-darkBg relative overflow-y-auto">
+          <main className="flex-1 flex flex-col min-w-0 w-full bg-darkBg relative overflow-y-auto overflow-x-hidden">
             <div className="absolute w-[300px] h-[300px] rounded-full bg-indigo-600/5 blur-3xl top-20 left-20 pointer-events-none"></div>
             <div className="absolute w-[400px] h-[400px] rounded-full bg-blue-600/5 blur-3xl bottom-20 right-20 pointer-events-none"></div>
 
@@ -2268,7 +2268,7 @@ export default function App() {
             </header>
 
             {/* Scrollable Main Content Frame */}
-            <div className="flex-1 p-8 space-y-8 relative z-10">
+            <div className="flex-1 p-4 md:p-8 space-y-8 relative z-10 min-w-0 w-full">
 
               {/* ========================================== */}
               {/* ========================================== */}
