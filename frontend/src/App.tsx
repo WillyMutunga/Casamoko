@@ -32,7 +32,7 @@ import {
   User,
   X
 } from 'lucide-react';
-import { Key, Copy, Trash2, Code, Library, Webhook, TerminalSquare, FileCode2, MessageSquareDashed } from 'lucide-react';
+import { Key, Copy, Trash2, Code, Library, Webhook, TerminalSquare, FileCode2, MessageSquareDashed, GitMerge, ArrowRightLeft, Route, Inbox } from 'lucide-react';
 import apiClient from './services/api';
 
 // Core Interfaces
@@ -249,10 +249,6 @@ export default function App() {
   const [mpesaStatus, setMpesaStatus] = useState<string | null>(null);
 
   // Routing & Binds States
-  const [routes, setRoutes] = useState<any[]>([]);
-  const [testingRouteId, setTestingRouteId] = useState<number | null>(null);
-  const [routeLogs, setRouteLogs] = useState<string[]>([]);
-  const [editingRoute, setEditingRoute] = useState<any | null>(null);
 
   // Supervisor Wallet Adjustment
   const [adjustingClient, setAdjustingClient] = useState<any | null>(null);
@@ -344,6 +340,19 @@ export default function App() {
   const [messageTemplates, setMessageTemplates] = useState<any[]>([]);
   const [newTemplateName, setNewTemplateName] = useState('');
   const [newTemplateContent, setNewTemplateContent] = useState('');
+
+  // Phase 2 States
+  const [inboxChats, setInboxChats] = useState([
+    { id: '1', msisdn: '+254711223344', lastMessage: 'Thank you for the update', time: '10:45 AM', unread: 2, history: [{ dir: 'out', text: 'Your package is delivered.', time: '10:00 AM'}, { dir: 'in', text: 'Thank you for the update', time: '10:45 AM'}] },
+    { id: '2', msisdn: '+254799887766', lastMessage: 'STOP', time: 'Yesterday', unread: 0, history: [{ dir: 'out', text: 'Reply STOP to opt out.', time: 'Yesterday'}, { dir: 'in', text: 'STOP', time: 'Yesterday'}] }
+  ]);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>('1');
+  const [replyText, setReplyText] = useState('');
+  const [lcrRoutes] = useState([
+    { id: 1, provider: 'Safaricom Direct', mcc: '639', mnc: '02', prefix: '2547', cost: 0.008, priority: 1, status: 'ACTIVE' },
+    { id: 2, provider: 'RouteMobile', mcc: '639', mnc: '02', prefix: '2547', cost: 0.006, priority: 2, status: 'ACTIVE' },
+    { id: 3, provider: 'Infobip Global', mcc: '*', mnc: '*', prefix: '*', cost: 0.012, priority: 99, status: 'ACTIVE' }
+  ]);
   const [newApiKeyRaw, setNewApiKeyRaw] = useState<string | null>(null);
   const [newApiKeyName, setNewApiKeyName] = useState('');
 
@@ -424,14 +433,7 @@ export default function App() {
         }));
         setLoginLogs(formattedLogs);
       }
-      try {
-        const resRoutes = await apiClient.get('/messaging/admin/routes');
-        if (resRoutes.data && resRoutes.data.data) {
-          setRoutes(resRoutes.data.data);
-        }
-      } catch (errRoutes) {
-        console.error("Backend carrier routes sync offline.", errRoutes);
-      }
+
     } catch (err) {
       console.error("Backend admin sync offline.", err);
     }
@@ -803,68 +805,6 @@ export default function App() {
       setDeletingReseller(null);
     } catch (err) {
       console.error(err);
-    }
-  };
-
-  // Route Connection Test (FR-ROT-001)
-  const handleTestRouteConnection = async (routeId: number) => {
-    setTestingRouteId(routeId);
-    setRouteLogs([`[${new Date().toLocaleTimeString()}] INFO: Connecting to carrier bind node...`]);
-    try {
-      const res = await apiClient.post(`/messaging/admin/routes/${routeId}/test`);
-      if (res.data && res.data.success) {
-        let i = 0;
-        const interval = setInterval(() => {
-          if (res.data.logs && i < res.data.logs.length) {
-            setRouteLogs(prev => [...prev, res.data.logs[i]]);
-            i++;
-          } else {
-            clearInterval(interval);
-            setTestingRouteId(null);
-          }
-        }, 600);
-      }
-    } catch (err) {
-      console.warn("Connection test API failed, utilizing sandbox simulation.");
-      const mockLogs = [
-        `[${new Date().toLocaleTimeString()}] INFO: Establishing connection to primary binding socket...`,
-        `[${new Date().toLocaleTimeString()}] DEBUG: Sending SMPP BIND_TRX PDU (seq_no: 1)`,
-        `[${new Date().toLocaleTimeString()}] DEBUG: Socket connection established. Handshake completed.`,
-        `[${new Date().toLocaleTimeString()}] INFO: SMPP connection established successfully (BOUND state, WindowSize: 10).`
-      ];
-      let i = 0;
-      const interval = setInterval(() => {
-        if (i < mockLogs.length) {
-          setRouteLogs(prev => [...prev, mockLogs[i]]);
-          i++;
-        } else {
-          clearInterval(interval);
-          setTestingRouteId(null);
-        }
-      }, 600);
-    }
-  };
-
-  // Save Route Settings (FR-ROT-001)
-  const handleSaveRouteConfig = async (route: any) => {
-    try {
-      const res = await apiClient.put(`/messaging/admin/routes/${route.id}`, {
-        priority: route.priority,
-        window_size: route.window_size,
-        use_tls: route.use_tls,
-        is_active: route.is_active,
-        tps_limit: route.tps_limit,
-        bind_type: route.bind_type,
-        cost_per_sms: route.cost_per_sms
-      });
-      if (res.data && res.data.success) {
-        setRoutes(prev => prev.map(r => r.id === route.id ? { ...r, ...res.data.data } : r));
-        setEditingRoute(null);
-      }
-    } catch (err) {
-      console.warn("Save route config failed, utilizing sandbox local sync.");
-      setRoutes(prev => prev.map(r => r.id === route.id ? route : r));
-      setEditingRoute(null);
     }
   };
 
@@ -2123,6 +2063,13 @@ export default function App() {
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Campaign Wizard</span>
                   </button>
                   <button 
+                    onClick={() => setCurrentPage('inbox')} 
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'inbox' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                  >
+                    <Inbox className="w-5 h-5 shrink-0" />
+                    <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Two-Way Inbox</span>
+                  </button>
+                  <button 
                     onClick={() => setCurrentPage('reports')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'reports' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
@@ -2759,86 +2706,75 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* I.5 SUPER_ADMIN SMPP CARRIER ROUTING CONFIGURATION */}
+                  {/* I.5 SUPER_ADMIN ADVANCED LCR ROUTING CONFIGURATION */}
                   {currentPage === 'routing' && (
                     <div className="space-y-8 animate-fadeIn">
                       <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card">
                         <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-800/40">
                           <div>
                             <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                              <Cpu className="w-5 h-5 text-indigo-400" />
-                              SMPP Binds & Routing Orchestration
+                              <Route className="w-5 h-5 text-indigo-400" />
+                              Advanced LCR Routing Engine
                             </h3>
-                            <p className="text-[10px] text-gray-400 mt-1">Configure active connection channels, window sizes, and TLS links for mobile operators.</p>
+                            <p className="text-[10px] text-gray-400 mt-1">Manage Least Cost Routing priority lists across MCC/MNC networks and destination prefixes.</p>
                           </div>
-                          <span className="text-[10px] font-mono text-gray-500">Active Binds: {routes.length}</span>
+                          <span className="text-[10px] font-mono text-gray-500">Active LCR Routes: {lcrRoutes.length}</span>
                         </div>
 
                         <div className="overflow-x-auto">
                           <table className="w-full text-left text-xs text-gray-300">
                             <thead className="bg-slate-950 uppercase tracking-widest text-[9px] text-gray-400 font-bold">
                               <tr>
-                                <th className="px-6 py-4 rounded-l-xl">Route Name</th>
-                                <th className="px-6 py-4">Network</th>
-                                <th className="px-6 py-4 text-center">TPS Limit</th>
-                                <th className="px-6 py-4 text-center">Cost/SMS</th>
-                                <th className="px-6 py-4 text-center">Bind Type</th>
-                                <th className="px-6 py-4 text-center">Window Size</th>
-                                <th className="px-6 py-4 text-center">QoS Score</th>
+                                <th className="px-6 py-4 rounded-l-xl">Provider / Connection</th>
+                                <th className="px-6 py-4 text-center">Priority</th>
+                                <th className="px-6 py-4 text-center">MCC</th>
+                                <th className="px-6 py-4 text-center">MNC</th>
+                                <th className="px-6 py-4 text-center">Prefix / Regex</th>
+                                <th className="px-6 py-4 text-center">Base Cost (Ksh)</th>
                                 <th className="px-6 py-4 text-center">Status</th>
                                 <th className="px-6 py-4 rounded-r-xl text-center">Actions</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-855 bg-slate-900/10">
-                              {routes.map(r => (
+                              {lcrRoutes.map(r => (
                                 <tr key={r.id} className="hover:bg-slate-900/20 transition-all">
                                   <td className="px-6 py-4">
-                                    <div className="font-bold text-white">{r.name}</div>
-                                    <div className="text-[9px] text-gray-405">{r.use_tls ? 'TLS v1.3 Secure' : 'Standard Connection'}</div>
+                                    <div className="font-bold text-white flex items-center gap-2">
+                                      <GitMerge className="w-3.5 h-3.5 text-emerald-400" /> {r.provider}
+                                    </div>
+                                    <div className="text-[9px] text-gray-405 mt-1 tracking-wider">SMPP BIND SECURE</div>
                                   </td>
-                                  <td className="px-6 py-4 font-semibold text-indigo-300 tracking-wider">
-                                    {r.destination_network}
-                                  </td>
-                                  <td className="px-6 py-4 text-center font-mono font-bold text-white">
-                                    {r.tps_limit} TPS
-                                  </td>
-                                  <td className="px-6 py-4 text-center font-mono text-gray-300">
-                                    ${parseFloat(r.cost_per_sms).toFixed(4)}
-                                  </td>
-                                  <td className="px-6 py-4 text-center font-mono">
-                                    <span className="px-2 py-0.5 bg-slate-950 rounded text-[9px] text-indigo-400 font-bold border border-slate-800">
-                                      {r.bind_type}
+                                  <td className="px-6 py-4 text-center">
+                                    <span className={`px-2.5 py-1 rounded-md text-xs font-bold font-mono border ${r.priority === 1 ? 'bg-indigo-600 text-white border-indigo-500 shadow-[0_0_10px_rgba(79,70,229,0.4)]' : 'bg-slate-800 text-gray-300 border-slate-700'}`}>
+                                      P-{r.priority}
                                     </span>
                                   </td>
-                                  <td className="px-6 py-4 text-center font-mono text-gray-300">
-                                    {r.window_size}
+                                  <td className="px-6 py-4 text-center font-mono font-bold text-indigo-300">
+                                    {r.mcc}
+                                  </td>
+                                  <td className="px-6 py-4 text-center font-mono font-bold text-indigo-300">
+                                    {r.mnc}
+                                  </td>
+                                  <td className="px-6 py-4 text-center font-mono">
+                                    <span className="px-2 py-0.5 bg-slate-950 rounded text-[10px] text-gray-400 border border-slate-800">
+                                      {r.prefix}
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-4 text-center font-mono text-emerald-400 font-bold tracking-wider">
+                                    {r.cost.toFixed(3)}
                                   </td>
                                   <td className="px-6 py-4 text-center">
-                                    <div className="flex flex-col items-center justify-center gap-0.5">
-                                      <span className="text-[10px] text-emerald-400 font-bold">{parseFloat(r.delivery_rate_score).toFixed(1)}% DLR</span>
-                                      <span className="text-[9px] text-gray-400 font-mono">{r.latency_score}ms Latency</span>
-                                    </div>
-                                  </td>
-                                  <td className="px-6 py-4 text-center">
-                                    <span className={`px-2 py-0.5 text-[9px] font-bold rounded uppercase ${r.is_active ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                                      {r.is_active ? 'Active' : 'Offline'}
+                                    <span className={`px-2 py-0.5 text-[9px] font-bold rounded uppercase ${r.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                                      {r.status}
                                     </span>
                                   </td>
                                   <td className="px-6 py-4">
                                     <div className="flex gap-2 justify-center">
-                                      <button 
-                                        disabled={testingRouteId !== null}
-                                        onClick={() => handleTestRouteConnection(r.id)}
-                                        className="px-2.5 py-1.5 bg-slate-950 hover:bg-slate-900 text-indigo-300 hover:text-white border border-slate-800 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 uppercase"
-                                      >
-                                        <RefreshCw className={`w-3.5 h-3.5 ${testingRouteId === r.id ? 'animate-spin text-emerald-450' : ''}`} />
-                                        Test Bind
+                                      <button className="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/30 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 uppercase">
+                                        <ArrowRightLeft className="w-3 h-3" /> Swap
                                       </button>
-                                      <button 
-                                        onClick={() => setEditingRoute(r)}
-                                        className="px-2.5 py-1.5 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/30 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 uppercase"
-                                      >
-                                        Configure
+                                      <button className="px-3 py-1.5 bg-slate-950 hover:bg-slate-900 text-gray-400 hover:text-white border border-slate-800 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 uppercase">
+                                        Edit
                                       </button>
                                     </div>
                                   </td>
@@ -2848,159 +2784,6 @@ export default function App() {
                           </table>
                         </div>
                       </div>
-
-                      {/* Live SSH Socket Binds Terminal Simulator Widget */}
-                      {routeLogs.length > 0 && (
-                        <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card bg-black/90 font-mono max-w-3xl mx-auto shadow-2xl relative overflow-hidden animate-fadeIn">
-                          <div className="flex items-center justify-between border-b border-slate-800/80 pb-3 mb-4">
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                              <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                              <span className="text-[10px] font-mono text-gray-400 ml-3">smpp-connection-manager@node-01:~/logs</span>
-                            </div>
-                            <button 
-                              onClick={() => setRouteLogs([])}
-                              className="text-xs text-gray-500 hover:text-white font-mono px-2 py-0.5 hover:bg-slate-800 rounded"
-                            >
-                              clear
-                            </button>
-                          </div>
-                          
-                          <div className="h-48 overflow-y-auto space-y-1.5 text-xs text-slate-350 leading-relaxed scrollbar-thin select-text">
-                            {routeLogs.map((log, idx) => {
-                              let cl = "text-gray-300";
-                              if (log.includes("INFO:")) cl = "text-indigo-400";
-                              if (log.includes("DEBUG:")) cl = "text-slate-450";
-                              if (log.includes("ESTABLISHED") || log.includes("successfully")) cl = "text-emerald-450";
-                              return (
-                                <p key={idx} className={cl}>{log}</p>
-                              );
-                            })}
-                            {testingRouteId !== null && (
-                              <div className="flex items-center gap-2 text-indigo-400 text-xs">
-                                <span className="w-2 h-3.5 bg-indigo-500 animate-pulse"></span>
-                                <span>Running diagnostics...</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Route Editing Modal Dialog */}
-                      {editingRoute && (
-                        <div className="fixed inset-0 bg-slate-955/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fadeIn">
-                          <div className="w-full max-w-md glass-panel border border-slate-800 rounded-3xl p-8 relative overflow-hidden shadow-2xl glow-card">
-                            <h3 className="text-base font-bold text-white uppercase tracking-wider mb-2 font-sans">Configure Route: {editingRoute.name}</h3>
-                            <p className="text-[10px] text-gray-400 mb-6 font-sans">Modify TPS controls, priority levels, and secure socket layer attributes.</p>
-
-                            <form onSubmit={(e) => {
-                              e.preventDefault();
-                              handleSaveRouteConfig(editingRoute);
-                            }} className="space-y-4 text-left">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">TPS Speed Limit</label>
-                                  <input 
-                                    type="number"
-                                    required
-                                    value={editingRoute.tps_limit}
-                                    onChange={(e) => setEditingRoute({ ...editingRoute, tps_limit: parseInt(e.target.value) })}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Window Size (PDUs)</label>
-                                  <input 
-                                    type="number"
-                                    required
-                                    value={editingRoute.window_size}
-                                    onChange={(e) => setEditingRoute({ ...editingRoute, window_size: parseInt(e.target.value) })}
-                                    className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Bind Connection Type</label>
-                                  <select
-                                    value={editingRoute.bind_type}
-                                    onChange={(e) => setEditingRoute({ ...editingRoute, bind_type: e.target.value })}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                  >
-                                    <option value="TRANSCEIVER">TRANSCEIVER</option>
-                                    <option value="TRANSMITTER">TRANSMITTER</option>
-                                    <option value="RECEIVER">RECEIVER</option>
-                                    <option value="REST">REST GATEWAY</option>
-                                  </select>
-                                </div>
-                                <div>
-                                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Administrative Priority</label>
-                                  <input 
-                                    type="number"
-                                    required
-                                    min="1"
-                                    max="10"
-                                    value={editingRoute.priority}
-                                    onChange={(e) => setEditingRoute({ ...editingRoute, priority: parseInt(e.target.value) })}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
-                                  />
-                                </div>
-                              </div>
-
-                              <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Cost Per SMS (Ksh)</label>
-                                <input 
-                                  type="number"
-                                  required
-                                  step="0.0001"
-                                  value={editingRoute.cost_per_sms}
-                                  onChange={(e) => setEditingRoute({ ...editingRoute, cost_per_sms: parseFloat(e.target.value) })}
-                                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
-                                />
-                              </div>
-
-                              <div className="flex gap-6 py-2">
-                                <label className="flex items-center gap-2 cursor-pointer select-none">
-                                  <input 
-                                    type="checkbox"
-                                    checked={editingRoute.use_tls}
-                                    onChange={(e) => setEditingRoute({ ...editingRoute, use_tls: e.target.checked })}
-                                    className="rounded border-slate-800 bg-slate-950 text-indigo-600 focus:ring-0 focus:ring-offset-0"
-                                  />
-                                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Use Secure TLS Link</span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer select-none">
-                                  <input 
-                                    type="checkbox"
-                                    checked={editingRoute.is_active}
-                                    onChange={(e) => setEditingRoute({ ...editingRoute, is_active: e.target.checked })}
-                                    className="rounded border-slate-800 bg-slate-950 text-indigo-600 focus:ring-0 focus:ring-offset-0"
-                                  />
-                                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Active Route</span>
-                                </label>
-                              </div>
-
-                              <div className="flex gap-3 justify-end pt-4">
-                                <button 
-                                  type="button"
-                                  onClick={() => setEditingRoute(null)}
-                                  className="px-4 py-2.5 bg-slate-950 border border-slate-800 hover:bg-slate-900 text-gray-300 font-bold rounded-xl transition-all text-[10px] uppercase tracking-wider font-sans"
-                                >
-                                  Cancel
-                                </button>
-                                <button 
-                                  type="submit"
-                                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all text-[10px] uppercase tracking-wider shadow shadow-indigo-500/25 font-sans"
-                                >
-                                  Save Configurations
-                                </button>
-                              </div>
-                            </form>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )}
 
@@ -6143,6 +5926,119 @@ export default function App() {
                             </table>
                           </div>
                         </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* III.Z TWO-WAY SMS INBOX */}
+                  {currentPage === 'inbox' && (
+                    <div className="h-[75vh] flex bg-slate-950 border border-slate-800/80 rounded-2xl overflow-hidden animate-fade-in-up">
+                      {/* Left Pane - Chats List */}
+                      <div className="w-80 border-r border-slate-800/80 flex flex-col bg-slate-900/40">
+                        <div className="p-4 border-b border-slate-800/60 bg-slate-950/80">
+                          <h3 className="text-white font-bold tracking-wider flex items-center gap-2">
+                            <Inbox className="w-5 h-5 text-indigo-400" /> Two-Way Inbox
+                          </h3>
+                        </div>
+                        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+                          {inboxChats.map(chat => (
+                            <button
+                              key={chat.id}
+                              onClick={() => setSelectedChatId(chat.id)}
+                              className={`w-full p-4 flex items-center gap-4 border-b border-slate-800/40 transition-all text-left ${selectedChatId === chat.id ? 'bg-indigo-600/10 border-l-2 border-l-indigo-500' : 'hover:bg-slate-800/40'}`}
+                            >
+                              <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
+                                <User className="w-5 h-5 text-indigo-300" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-center mb-1">
+                                  <h4 className="text-sm font-bold text-white truncate">{chat.msisdn}</h4>
+                                  <span className="text-[10px] text-gray-500">{chat.time}</span>
+                                </div>
+                                <p className="text-xs text-gray-400 truncate">{chat.lastMessage}</p>
+                              </div>
+                              {chat.unread > 0 && (
+                                <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
+                                  <span className="text-[10px] font-bold text-slate-900">{chat.unread}</span>
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Right Pane - Chat View */}
+                      <div className="flex-1 flex flex-col bg-slate-950">
+                        {selectedChatId ? (
+                          <>
+                            <div className="h-16 border-b border-slate-800/80 bg-slate-900/40 flex items-center px-6 gap-4 shrink-0">
+                              <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                                <User className="w-5 h-5 text-indigo-300" />
+                              </div>
+                              <div>
+                                <h3 className="text-white font-bold">{inboxChats.find(c => c.id === selectedChatId)?.msisdn}</h3>
+                                <span className="text-[10px] text-emerald-400 flex items-center gap-1">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div> Active
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                              {inboxChats.find(c => c.id === selectedChatId)?.history.map((msg, idx) => (
+                                <div key={idx} className={`flex flex-col ${msg.dir === 'out' ? 'items-end' : 'items-start'}`}>
+                                  <div className={`max-w-[70%] rounded-2xl px-5 py-3 ${msg.dir === 'out' ? 'bg-indigo-600 text-white rounded-br-sm' : 'bg-slate-800 text-gray-200 rounded-bl-sm border border-slate-700'}`}>
+                                    <p className="text-sm">{msg.text}</p>
+                                  </div>
+                                  <span className="text-[10px] text-gray-500 mt-1">{msg.time}</span>
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="p-4 border-t border-slate-800/80 bg-slate-900/20 shrink-0">
+                              <div className="flex gap-4">
+                                <input
+                                  type="text"
+                                  value={replyText}
+                                  onChange={(e) => setReplyText(e.target.value)}
+                                  placeholder="Type a reply... (Enter to send)"
+                                  onKeyDown={(e) => {
+                                    if(e.key === 'Enter' && replyText.trim()) {
+                                      const updatedChats = inboxChats.map(c => {
+                                        if(c.id === selectedChatId) {
+                                          return { ...c, history: [...c.history, { dir: 'out', text: replyText, time: 'Just now' }], lastMessage: replyText, time: 'Just now' };
+                                        }
+                                        return c;
+                                      });
+                                      setInboxChats(updatedChats);
+                                      setReplyText('');
+                                    }
+                                  }}
+                                  className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:ring-1 focus:ring-indigo-500 outline-none"
+                                />
+                                <button 
+                                  onClick={() => {
+                                    if(!replyText.trim()) return;
+                                    const updatedChats = inboxChats.map(c => {
+                                      if(c.id === selectedChatId) {
+                                        return { ...c, history: [...c.history, { dir: 'out', text: replyText, time: 'Just now' }], lastMessage: replyText, time: 'Just now' };
+                                      }
+                                      return c;
+                                    });
+                                    setInboxChats(updatedChats);
+                                    setReplyText('');
+                                  }}
+                                  className="px-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold flex items-center justify-center transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)]">
+                                  <Send className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
+                            <MessageSquare className="w-16 h-16 mb-4 opacity-20" />
+                            <p>Select a conversation to start messaging</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
