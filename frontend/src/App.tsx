@@ -351,13 +351,14 @@ export default function App() {
   ]);
   const [selectedChatId, setSelectedChatId] = useState<string | null>('1');
   const [replyText, setReplyText] = useState('');
-  const [lcrRoutes] = useState([
+  const [lcrRoutes, setLcrRoutes] = useState([
     { id: 1, provider: 'Safaricom Direct', mcc: '639', mnc: '02', prefix: '2547', cost: 0.005, priority: 1, status: 'ACTIVE' },
     { id: 2, provider: 'RouteMobile', mcc: '639', mnc: '02', prefix: '2547', cost: 0.006, priority: 2, status: 'ACTIVE' },
     { id: 3, provider: 'Infobip Global', mcc: '*', mnc: '*', prefix: '*', cost: 0.012, priority: 99, status: 'ACTIVE' }
   ]);
   const [isRouteModalOpen, setIsRouteModalOpen] = useState(false);
   const [editingRoute, setEditingRoute] = useState<any>(null);
+  const [routeFormData, setRouteFormData] = useState<any>({});
   const [newApiKeyRaw, setNewApiKeyRaw] = useState<string | null>(null);
   const [newApiKeyName, setNewApiKeyName] = useState('');
 
@@ -2725,7 +2726,7 @@ export default function App() {
                           </div>
                           <div className="flex items-center gap-4">
                             <span className="text-[10px] font-mono text-gray-500">Active LCR Routes: {lcrRoutes.length}</span>
-                            <button onClick={() => { setEditingRoute(null); setIsRouteModalOpen(true); }} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[11px] font-bold shadow-lg shadow-emerald-500/20 flex items-center gap-1">
+                            <button onClick={() => { setEditingRoute(null); setRouteFormData({ provider: '', mcc: '', mnc: '', prefix: '', cost: 0.000, priority: 1, status: 'ACTIVE' }); setIsRouteModalOpen(true); }} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[11px] font-bold shadow-lg shadow-emerald-500/20 flex items-center gap-1">
                               <Plus className="w-3 h-3" /> Add Route
                             </button>
                           </div>
@@ -2783,7 +2784,7 @@ export default function App() {
                                       <button className="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/30 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 uppercase">
                                         <ArrowRightLeft className="w-3 h-3" /> Swap
                                       </button>
-                                      <button onClick={() => { setEditingRoute(r); setIsRouteModalOpen(true); }} className="px-3 py-1.5 bg-slate-950 hover:bg-slate-900 text-gray-400 hover:text-white border border-slate-800 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 uppercase">
+                                      <button onClick={() => { setEditingRoute(r); setRouteFormData({...r}); setIsRouteModalOpen(true); }} className="px-3 py-1.5 bg-slate-950 hover:bg-slate-900 text-gray-400 hover:text-white border border-slate-800 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 uppercase">
                                         Edit
                                       </button>
                                     </div>
@@ -2811,7 +2812,7 @@ export default function App() {
                             <div className="space-y-4">
                               <div>
                                 <label className="block text-xs font-bold text-gray-400 mb-1">Provider Connection</label>
-                                <select className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" defaultValue={editingRoute?.provider || ''}>
+                                <select className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" value={routeFormData.provider || ''} onChange={(e) => setRouteFormData({...routeFormData, provider: e.target.value})}>
                                   <option value="">Select Connection Bind...</option>
                                   <option value="Safaricom Direct">Safaricom Direct</option>
                                   <option value="RouteMobile">RouteMobile</option>
@@ -2823,33 +2824,33 @@ export default function App() {
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
                                   <label className="block text-xs font-bold text-gray-400 mb-1">MCC (Country)</label>
-                                  <input type="text" defaultValue={editingRoute?.mcc || ''} placeholder="e.g. 639" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" />
+                                  <input type="text" value={routeFormData.mcc || ''} onChange={(e) => setRouteFormData({...routeFormData, mcc: e.target.value})} placeholder="e.g. 639" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" />
                                 </div>
                                 <div>
                                   <label className="block text-xs font-bold text-gray-400 mb-1">MNC (Network)</label>
-                                  <input type="text" defaultValue={editingRoute?.mnc || ''} placeholder="e.g. 02" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" />
+                                  <input type="text" value={routeFormData.mnc || ''} onChange={(e) => setRouteFormData({...routeFormData, mnc: e.target.value})} placeholder="e.g. 02" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" />
                                 </div>
                               </div>
 
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
                                   <label className="block text-xs font-bold text-gray-400 mb-1">Prefix / Regex</label>
-                                  <input type="text" defaultValue={editingRoute?.prefix || ''} placeholder="e.g. 2547" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" />
+                                  <input type="text" value={routeFormData.prefix || ''} onChange={(e) => setRouteFormData({...routeFormData, prefix: e.target.value})} placeholder="e.g. 2547" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" />
                                 </div>
                                 <div>
                                   <label className="block text-xs font-bold text-indigo-400 mb-1">Base Cost per SMS (Ksh)</label>
-                                  <input type="number" step="0.001" defaultValue={editingRoute?.cost || ''} placeholder="0.000" className="w-full bg-slate-950 border border-indigo-500/50 rounded-xl px-4 py-2 text-sm text-white font-mono focus:outline-none focus:border-indigo-400 shadow-[0_0_10px_rgba(79,70,229,0.1)]" />
+                                  <input type="number" step="0.001" value={routeFormData.cost || ''} onChange={(e) => setRouteFormData({...routeFormData, cost: parseFloat(e.target.value)})} placeholder="0.000" className="w-full bg-slate-950 border border-indigo-500/50 rounded-xl px-4 py-2 text-sm text-white font-mono focus:outline-none focus:border-indigo-400 shadow-[0_0_10px_rgba(79,70,229,0.1)]" />
                                 </div>
                               </div>
 
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
                                   <label className="block text-xs font-bold text-gray-400 mb-1">LCR Priority (1 = Highest)</label>
-                                  <input type="number" defaultValue={editingRoute?.priority || '1'} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" />
+                                  <input type="number" value={routeFormData.priority || '1'} onChange={(e) => setRouteFormData({...routeFormData, priority: parseInt(e.target.value)})} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" />
                                 </div>
                                 <div>
                                   <label className="block text-xs font-bold text-gray-400 mb-1">Status</label>
-                                  <select className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" defaultValue={editingRoute?.status || 'ACTIVE'}>
+                                  <select className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" value={routeFormData.status || 'ACTIVE'} onChange={(e) => setRouteFormData({...routeFormData, status: e.target.value})}>
                                     <option value="ACTIVE">ACTIVE</option>
                                     <option value="INACTIVE">INACTIVE</option>
                                     <option value="FAILOVER_ONLY">FAILOVER_ONLY</option>
@@ -2862,7 +2863,14 @@ export default function App() {
                               <button onClick={() => setIsRouteModalOpen(false)} className="px-4 py-2 text-sm font-bold text-gray-400 hover:text-white transition-all">
                                 Cancel
                               </button>
-                              <button onClick={() => setIsRouteModalOpen(false)} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all">
+                              <button onClick={() => {
+                                if (editingRoute) {
+                                  setLcrRoutes(lcrRoutes.map(r => r.id === editingRoute.id ? routeFormData : r));
+                                } else {
+                                  setLcrRoutes([...lcrRoutes, { ...routeFormData, id: Math.max(...lcrRoutes.map(r => r.id)) + 1 }]);
+                                }
+                                setIsRouteModalOpen(false);
+                              }} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all">
                                 Save Configuration
                               </button>
                             </div>
