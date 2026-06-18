@@ -105,8 +105,20 @@ interface LoginAttemptLog {
 export default function App() {
   // Navigation State
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const [showPrivilegeMatrix, setShowPrivilegeMatrix] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Authentication State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -2006,8 +2018,15 @@ export default function App() {
       {/* 2. AUTHENTICATED PANEL SHELL */}
       {isLoggedIn && user && (
         <>
+          {/* Mobile Overlay */}
+          {sidebarOpen && (
+            <div 
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden" 
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
           {/* 2.1 SIDEBAR NAVIGATION PANEL */}
-          <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-slate-950/80 border-r border-slate-800 hover:bg-slate-900/80 hover:border-slate-700 hover:shadow-[4px_0_24px_-4px_rgba(99,102,241,0.15)] transition-all duration-300 flex flex-col relative z-20 overflow-hidden`}>
+          <aside className={`${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 w-64 md:w-20'} fixed md:relative z-50 md:z-20 h-full bg-slate-950/80 border-r border-slate-800 hover:bg-slate-900/80 hover:border-slate-700 hover:shadow-[4px_0_24px_-4px_rgba(99,102,241,0.15)] transition-all duration-300 flex flex-col overflow-hidden`}>
             <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800/60">
               <div className="flex items-center gap-3">
                   <MessageSquare className="w-6 h-6 shrink-0 text-indigo-500" />
