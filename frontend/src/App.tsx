@@ -1286,7 +1286,7 @@ export default function App() {
 
       setQsStatus({
         type: 'success',
-        msg: `Outbound SMS successfully queued! Campaign ID: ${res.data.campaign_id}. Internal Ledger Balance: $${res.data.balance_after}${msgExtra}`
+        msg: `Outbound SMS successfully queued! Campaign ID: ${res.data.campaign_id}. Internal Ledger Balance: Ksh ${res.data.balance_after}${msgExtra}`
       });
 
       if (clientAccount) {
@@ -1402,7 +1402,7 @@ export default function App() {
 
           setWizStatus({
             type: 'success',
-            msg: `Campaign successfully launched! ${res.data.campaign.name} processed. Total Cost: $${Number(res.data.analysis.estimated_cost).toFixed(4)} deducted atomically.${msgExtra}`
+            msg: `Campaign successfully launched! ${res.data.campaign.name} processed. Total Cost: Ksh ${Number(res.data.analysis.estimated_cost).toFixed(4)} deducted atomically.${msgExtra}`
           });
           
           fetchProfile(token);
@@ -2217,7 +2217,7 @@ export default function App() {
                     <div className="bg-indigo-600/10 border border-indigo-500/20 px-5 py-1.5 rounded-full flex items-center gap-2 text-indigo-300 font-mono text-sm">
                       <Wallet className="w-4 h-4" />
                       <span>Balance:</span>
-                      <span className="font-extrabold">${Number(clientAccount.wallet_balance).toFixed(4)}</span>
+                      <span className="font-extrabold">Ksh {Number(clientAccount.wallet_balance).toFixed(4)}</span>
                     </div>
                     <button 
                       onClick={() => setTopupDrawerOpen(true)}
@@ -2237,7 +2237,7 @@ export default function App() {
                     <div className="bg-indigo-600/10 border border-indigo-500/20 px-5 py-1.5 rounded-full flex items-center gap-2 text-indigo-300 font-mono text-sm">
                       <Wallet className="w-4 h-4" />
                       <span>API Credits:</span>
-                      <span className="font-extrabold">${Number(resellerAccount.api_credits).toFixed(2)}</span>
+                      <span className="font-extrabold">Ksh {Number(resellerAccount.api_credits).toFixed(2)}</span>
                     </div>
                   </>
                 )}
@@ -2282,7 +2282,7 @@ export default function App() {
                         <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
                           <div>
                             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Global Revenue</p>
-                            <h3 className="text-3xl font-black text-white font-mono">${adminAnalytics.global_revenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
+                            <h3 className="text-3xl font-black text-white font-mono">Ksh {adminAnalytics.global_revenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
                             <p className="text-[10px] text-emerald-400 mt-1 font-bold">+12% Profit margins this week</p>
                           </div>
                           <div className="p-4 bg-emerald-500/10 rounded-2xl text-emerald-400 border border-emerald-500/20">
@@ -2391,8 +2391,8 @@ export default function App() {
                                 {clients.map(c => (
                                   <tr key={c.id} className="hover:bg-slate-900/20">
                                     <td className="px-6 py-4 font-bold text-white">{c.name}</td>
-                                    <td className="px-6 py-4 font-mono font-bold text-indigo-350">${Number(c.wallet_balance).toFixed(2)}</td>
-                                    <td className="px-6 py-4 font-mono font-bold text-gray-450">${Number(c.credit_limit).toFixed(2)}</td>
+                                    <td className="px-6 py-4 font-mono font-bold text-indigo-350">Ksh {Number(c.wallet_balance).toFixed(2)}</td>
+                                    <td className="px-6 py-4 font-mono font-bold text-gray-450">Ksh {Number(c.credit_limit).toFixed(2)}</td>
                                     <td className="px-6 py-4">
                                       <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold uppercase ${c.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : c.status === 'PENDING' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>{c.status}</span>
                                     </td>
@@ -2537,7 +2537,7 @@ export default function App() {
                                   <tr key={r.id} className="hover:bg-slate-900/20">
                                     <td className="px-6 py-4 font-bold text-white">{r.name}</td>
                                     <td className="px-6 py-4 font-mono font-bold text-indigo-400">{Number(r.markup_percentage).toFixed(2)}% Markup</td>
-                                    <td className="px-6 py-4 font-mono font-bold text-white">${Number(r.api_credits).toFixed(2)}</td>
+                                    <td className="px-6 py-4 font-mono font-bold text-white">Ksh {Number(r.api_credits).toFixed(2)}</td>
                                     <td className="px-6 py-4 text-emerald-400 font-bold text-xs">
                                       <div className="flex items-center gap-1">
                                         <CheckCircle className="w-4 h-4 text-emerald-400" /> Active Binds
@@ -2929,7 +2929,7 @@ export default function App() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Cost Per SMS ($)</label>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Cost Per SMS (Ksh)</label>
                                 <input 
                                   type="number"
                                   required
@@ -3012,12 +3012,12 @@ export default function App() {
                             <div className="text-sm font-black text-white">{adjustingClient.name}</div>
                             <div className="flex justify-between items-center text-[10px] font-mono mt-2 pt-2 border-t border-slate-800/40">
                               <span className="text-gray-400">Current Balance:</span>
-                              <span className="text-indigo-300 font-bold">${parseFloat(adjustingClient.wallet_balance).toFixed(2)}</span>
+                              <span className="text-indigo-300 font-bold">Ksh {parseFloat(adjustingClient.wallet_balance).toFixed(2)}</span>
                             </div>
                           </div>
 
                           <div>
-                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Adjustment Amount ($ USD)</label>
+                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Adjustment Amount (Ksh)</label>
                             <input 
                               type="number"
                               required
@@ -3082,7 +3082,7 @@ export default function App() {
                         <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
                           <div>
                             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Available API Credits</p>
-                            <h3 className="text-3xl font-black text-white font-mono">${Number(resellerAccount.api_credits).toFixed(2)}</h3>
+                            <h3 className="text-3xl font-black text-white font-mono">Ksh {Number(resellerAccount.api_credits).toFixed(2)}</h3>
                             <p className="text-[10px] text-gray-400 mt-1">Used to fund sub-client balances</p>
                           </div>
                           <div className="p-4 bg-emerald-500/10 rounded-2xl text-emerald-400 border border-emerald-500/20">
@@ -3093,7 +3093,7 @@ export default function App() {
                         <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
                           <div>
                             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">My Markup Profits</p>
-                            <h3 className="text-3xl font-black text-white font-mono">$184.20</h3>
+                            <h3 className="text-3xl font-black text-white font-mono">Ksh 184.20</h3>
                             <p className="text-[10px] text-emerald-400 mt-1 font-bold">+10% markup profit margin active</p>
                           </div>
                           <div className="p-4 bg-indigo-500/10 rounded-2xl text-indigo-400 border border-indigo-500/20">
@@ -3144,7 +3144,7 @@ export default function App() {
                           </div>
                           <div className="flex justify-between">
                             <span>Estimated Reseller Gross Commission:</span>
-                            <span className="font-bold text-emerald-400 font-mono">$18.4200 (Credits accumulated in wallet)</span>
+                            <span className="font-bold text-emerald-400 font-mono">Ksh 18.4200 (Credits accumulated in wallet)</span>
                           </div>
                         </div>
                       </div>
@@ -3224,7 +3224,7 @@ export default function App() {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Seeding Balance ($)</label>
+                                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Seeding Balance (Ksh)</label>
                                 <input 
                                   type="number"
                                   required
@@ -3234,7 +3234,7 @@ export default function App() {
                                 />
                               </div>
                               <div>
-                                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Credit Limit ($)</label>
+                                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Credit Limit (Ksh)</label>
                                 <input 
                                   type="number"
                                   required
@@ -3273,8 +3273,8 @@ export default function App() {
                                 {onboardedClients.map(c => (
                                   <tr key={c.id} className="hover:bg-slate-900/20">
                                     <td className="px-6 py-4 font-bold text-white">{c.name}</td>
-                                    <td className="px-6 py-4 font-mono font-bold text-indigo-300">${Number(c.wallet_balance).toFixed(2)}</td>
-                                    <td className="px-6 py-4 font-mono font-bold text-gray-450">${Number(c.credit_limit).toFixed(2)}</td>
+                                    <td className="px-6 py-4 font-mono font-bold text-indigo-300">Ksh {Number(c.wallet_balance).toFixed(2)}</td>
+                                    <td className="px-6 py-4 font-mono font-bold text-gray-450">Ksh {Number(c.credit_limit).toFixed(2)}</td>
                                     <td className="px-6 py-4">
                                       <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold uppercase ${c.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-550/20'}`}>{c.status}</span>
                                     </td>
@@ -3313,7 +3313,7 @@ export default function App() {
                         <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
                           <div>
                             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Double-Entry Balance</p>
-                            <h3 className="text-3xl font-black text-white font-mono">${Number(clientAccount.wallet_balance).toFixed(2)}</h3>
+                            <h3 className="text-3xl font-black text-white font-mono">Ksh {Number(clientAccount.wallet_balance).toFixed(2)}</h3>
                             <p className="text-[10px] text-gray-400 mt-1">Credit Limit: ${Number(clientAccount.credit_limit).toFixed(2)}</p>
                           </div>
                           <div className="p-4 bg-emerald-500/10 rounded-2xl text-emerald-400 border border-emerald-500/20">
@@ -3428,7 +3428,7 @@ export default function App() {
                             <div className="bg-slate-900/40 border border-slate-800/40 p-4 rounded-xl flex items-center justify-between">
                               <div className="text-sm">
                                 <span className="text-gray-400 font-semibold block mb-0.5 uppercase tracking-wider text-[10px]">Estimated Price Tariff</span>
-                                <span className="text-white font-mono font-black text-lg">${qsCostEstimate.toFixed(4)}</span>
+                                <span className="text-white font-mono font-black text-lg">Ksh {qsCostEstimate.toFixed(4)}</span>
                                 <span className="text-xs text-indigo-400 block mt-0.5">Calculated by destination prefix routing costs</span>
                               </div>
 
@@ -3974,7 +3974,7 @@ export default function App() {
                         </div>
                         <div className="flex justify-between pb-3">
                           <span className="text-sm text-gray-400">Double-Entry Wallet Debit Cost:</span>
-                          <span className="text-base font-extrabold text-white font-mono">${wizCostEstimate.toFixed(4)}</span>
+                          <span className="text-base font-extrabold text-white font-mono">Ksh {wizCostEstimate.toFixed(4)}</span>
                         </div>
                       </div>
 
@@ -4582,9 +4582,9 @@ export default function App() {
                                 </td>
                                 <td className="px-6 py-4 text-xs font-semibold text-gray-400">{t.description}</td>
                                 <td className={`px-6 py-4 font-mono font-bold ${t.amount > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                  {t.amount > 0 ? `+$${Number(t.amount).toFixed(4)}` : `-$${Math.abs(t.amount).toFixed(4)}`}
+                                  {t.amount > 0 ? `+Ksh ${Number(t.amount).toFixed(4)}` : `-Ksh ${Math.abs(t.amount).toFixed(4)}`}
                                 </td>
-                                <td className="px-6 py-4 font-mono font-bold text-white">${Number(t.balance_after).toFixed(4)}</td>
+                                <td className="px-6 py-4 font-mono font-bold text-white">Ksh {Number(t.balance_after).toFixed(4)}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -4616,15 +4616,15 @@ export default function App() {
                         <div className="space-y-4">
                           <div className="flex justify-between text-xs font-mono">
                             <span className="text-gray-400">Remaining Wallet Credit:</span>
-                            <span className="text-white font-bold">${Number(clientAccount.wallet_balance).toFixed(2)}</span>
+                            <span className="text-white font-bold">Ksh {Number(clientAccount.wallet_balance).toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between text-xs font-mono">
                             <span className="text-gray-400">Credit Overdraft Limit:</span>
-                            <span className="text-gray-400">${Number(clientAccount.credit_limit).toFixed(2)}</span>
+                            <span className="text-gray-400">Ksh {Number(clientAccount.credit_limit).toFixed(2)}</span>
                           </div>
 
                           <div className="pt-2 border-t border-slate-800/40">
-                            <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-2 font-sans">Set Low-Balance Alert Threshold ($)</label>
+                            <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-2 font-sans">Set Low-Balance Alert Threshold (Ksh)</label>
                             <div className="flex gap-2">
                               <input 
                                 type="number"
@@ -4634,7 +4634,7 @@ export default function App() {
                               />
                               <button 
                                 onClick={() => {
-                                  toast.success(`Low-balance notifications successfully enabled! We will alert you immediately when your balance drops below $${parseFloat(lowBalanceAlertThreshold).toFixed(2)}.`);
+                                  toast.success(`Low-balance notifications successfully enabled! We will alert you immediately when your balance drops below Ksh ${parseFloat(lowBalanceAlertThreshold).toFixed(2)}.`);
                                 }}
                                 className="bg-indigo-600 hover:bg-indigo-700 px-3 py-2 text-[10px] font-bold rounded-xl text-white uppercase tracking-wider transition-all font-sans"
                               >
@@ -4667,7 +4667,7 @@ export default function App() {
                                 <div className="text-[9px] text-gray-500 font-sans mt-0.5">{inv.billing_period} | <span className="text-emerald-450 font-bold uppercase">{inv.status}</span></div>
                               </div>
                               <div className="flex items-center gap-3">
-                                <span className="font-mono text-xs text-indigo-300 font-bold">${Number(inv.amount).toFixed(2)}</span>
+                                <span className="font-mono text-xs text-indigo-300 font-bold">Ksh {Number(inv.amount).toFixed(2)}</span>
                                 <button
                                   onClick={() => {
                                     toast.success(`Compiling audited monthly billing summary... Generated and downloaded itemized PDF invoice ${inv.invoice_number} successfully!`);
@@ -6179,7 +6179,7 @@ export default function App() {
                 </div>
                 <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800/40">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Available Credits</p>
-                  <p className="text-lg font-bold text-emerald-400">${Number(viewingReseller.api_credits).toFixed(2)}</p>
+                  <p className="text-lg font-bold text-emerald-400">Ksh {Number(viewingReseller.api_credits).toFixed(2)}</p>
                 </div>
               </div>
 
@@ -6322,7 +6322,7 @@ export default function App() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-indigo-300">{log.carrier_route_id || 'DEFAULT'}</td>
-                          <td className="px-4 py-3 text-gray-400">${Number(log.cost_incurred).toFixed(4)}</td>
+                          <td className="px-4 py-3 text-gray-400">Ksh {Number(log.cost_incurred).toFixed(4)}</td>
                         </tr>
                       ))}
                     </tbody>
