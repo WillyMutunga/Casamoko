@@ -19,7 +19,26 @@ class RouteController extends Controller
             'success' => true,
             'data' => $routes
         ]);
+    
+    public function getGatewayBalance()
+    {
+        try {
+            $gateway = app(\App\Modules\Messaging\Services\Gateways\SafaricomSmsGateway::class);
+            $balance = $gateway->getBalance();
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'safaricom_balance' => $balance
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
+}
 
     /**
      * Update route parameters.

@@ -252,6 +252,32 @@ export default function App() {
 
   // Supervisor Wallet Adjustment
   const [adjustingClient, setAdjustingClient] = useState<any | null>(null);
+  
+  const [gatewayBalance, setGatewayBalance] = useState<string | null>(null);
+  const [isFetchingBalance, setIsFetchingBalance] = useState(false);
+
+  const fetchGatewayBalance = async () => {
+    setIsFetchingBalance(true);
+    try {
+      const res = await fetch('/api/messaging/routes/balance');
+      const data = await res.json();
+      if (data.success && data.data.safaricom_balance) {
+        setGatewayBalance(data.data.safaricom_balance);
+      } else {
+        setGatewayBalance('0.00');
+      }
+    } catch (e) {
+      setGatewayBalance('AUTH_ERR');
+    } finally {
+      setIsFetchingBalance(false);
+    }
+  };
+
+  useEffect(() => {
+    if (currentPage === 'admin_dashboard') {
+      fetchGatewayBalance();
+    }
+  }, [currentPage]);
   const [adjustmentAmount, setAdjustmentAmount] = useState('100');
   const [adjustmentReason, setAdjustmentReason] = useState('REFUND_CORRECTION');
   const [adjustmentDesc, setAdjustmentDesc] = useState('');
@@ -2310,7 +2336,18 @@ export default function App() {
                                 <h5 className="font-bold text-white text-sm">Safaricom SMPP Binds (Primary Node)</h5>
                                 <p className="text-[10px] text-gray-400 mt-0.5">Throughput: 8,400 TPS | Latency: 45ms</p>
                               </div>
-                              <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold rounded uppercase">CONNECTED</span>
+                              <div className="flex items-center gap-3">
+                                {isFetchingBalance ? (
+                                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-gray-400 border border-slate-700 flex items-center gap-1">
+                                    <RefreshCw className="w-3 h-3 animate-spin" /> Fetching...
+                                  </span>
+                                ) : gatewayBalance && (
+                                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center gap-1">
+                                    <Wallet className="w-3 h-3" /> Ksh {gatewayBalance}
+                                  </span>
+                                )}
+                                <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold rounded uppercase">CONNECTED</span>
+                              </div>
                             </div>
                             <div className="flex items-center justify-between p-4 bg-slate-900/40 rounded-xl border border-slate-800/40">
                               <div>
