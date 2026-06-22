@@ -156,6 +156,31 @@ class AuthController extends Controller
             'created_at' => now(),
         ]);
 
+        // Auto-provision internal client accounts for Super Admins and Resellers so they can use Campaigns
+        if (($user->role_tier === 'SUPER_ADMIN' || $user->role_tier === 'RESELLER') && !$user->client_account_id) {
+            $initialBalance = 999999.00;
+            if ($user->role_tier === 'SUPER_ADMIN') {
+                try {
+                    $liveBalance = app(\App\Modules\Messaging\Services\Gateways\SafaricomSmsGateway::class)->getBalance();
+                    if ($liveBalance !== null && is_numeric($liveBalance)) {
+                        $initialBalance = (float) $liveBalance;
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::warning('Could not fetch Safaricom balance during admin auto-provisioning.');
+                }
+            }
+
+            $clientAccount = \App\Modules\Accounts\Models\ClientAccount::create([
+                'name' => $user->role_tier === 'SUPER_ADMIN' ? 'System Internal Account' : $user->name . ' Internal Account',
+                'reseller_account_id' => $user->reseller_account_id,
+                'status' => 'APPROVED',
+                'wallet_balance' => $initialBalance,
+                'credit_limit' => 0.00,
+            ]);
+            $user->update(['client_account_id' => $clientAccount->id]);
+            $user->refresh();
+        }
+
         // Generate authentication token
         $token = $user->createToken('casamoko_session')->plainTextToken;
 
