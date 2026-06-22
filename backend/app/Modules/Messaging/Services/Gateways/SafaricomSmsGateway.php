@@ -21,9 +21,9 @@ class SafaricomSmsGateway implements SmsGatewayInterface
      */
     public function __construct()
     {
-        $this->authUrl = env('SAFARICOM_SDP_AUTH_URL', 'https://dsdpstg-apinb.safaricom.com/api/auth/login');
-        $this->sendUrl = env('SAFARICOM_SDP_SEND_URL', 'https://dsdpstg-apinb.safaricom.com/api/public/CMS/bulksms');
-        $this->balanceUrl = env('SAFARICOM_SDP_BALANCE_URL', 'https://dsdpstg-apinb.safaricom.com/api/public/CMS/accountBalance');
+        $this->authUrl = str_replace('8481', '9480', env('SAFARICOM_SDP_AUTH_URL', 'https://dsvc.safaricom.com:9480/api/auth/login'));
+        $this->sendUrl = str_replace('8481', '9480', env('SAFARICOM_SDP_SEND_URL', 'https://dsvc.safaricom.com:9480/api/public/CMS/bulksms'));
+        $this->balanceUrl = str_replace('8481', '9480', env('SAFARICOM_SDP_BALANCE_URL', 'https://dsvc.safaricom.com:9480/api/public/CMS/accountBalance'));
         $this->username = env('SAFARICOM_SDP_USERNAME', env('SAFARICOM_SMS_API_KEY', 'default_mock_key'));
         $this->password = env('SAFARICOM_SDP_PASSWORD', 'default_mock_password');
         $this->cpId = env('SAFARICOM_SDP_CP_ID', 'EXT_ID_0000');
