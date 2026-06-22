@@ -1,5 +1,25 @@
 <?php
 
+Route::get('/process-queue', function() {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('queue:work', [
+            '--stop-when-empty' => true,
+            '--timeout' => 120
+        ]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Queue processed successfully!',
+            'output' => \Illuminate\Support\Facades\Artisan::output()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
+    }
+});
+
+
 use Illuminate\Support\Facades\Route;
 use App\Modules\Messaging\Controllers\QuickSendController;
 use App\Modules\Messaging\Controllers\CampaignController;
