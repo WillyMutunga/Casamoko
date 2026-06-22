@@ -3253,10 +3253,10 @@ export default function App() {
               {/* ========================================== */}
               {/* ========================================== */}
               {/* --- III. CLIENT INTERFACES (Existing premium flow) --- */}
-              {user.role_tier === 'CLIENT' && clientAccount && (
+              {clientAccount && (
                 <>
                   {/* III.1 CLIENT OVERVIEW DASHBOARD */}
-                  {currentPage === 'dashboard' && (
+                  {currentPage === 'dashboard' && user.role_tier === 'CLIENT' && (
                     <div className="space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
