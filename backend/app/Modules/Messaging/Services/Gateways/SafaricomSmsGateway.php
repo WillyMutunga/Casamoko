@@ -32,7 +32,7 @@ class SafaricomSmsGateway implements SmsGatewayInterface
 
         $this->username = 'casamoko_api';
         $this->password = '5qITcVn81hRion';
-        $this->cpId = env('SAFARICOM_SDP_CP_ID', 'EXT_ID_0000');
+        $this->cpId = 'casamokoCons';
         $this->packageId = (int) env('SAFARICOM_SDP_PACKAGE_ID', 4391);
     }
 
@@ -108,7 +108,7 @@ class SafaricomSmsGateway implements SmsGatewayInterface
                     'timeStamp' => (int) round(microtime(true) * 1000),
                     'dataSet' => [
                         [
-                            'userName' => $this->username,
+                            'userName' => $this->cpId,
                             'channel' => 'sms',
                             'packageId' => $this->packageId,
                             'oa' => $senderId,
