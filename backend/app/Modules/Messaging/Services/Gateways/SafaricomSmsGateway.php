@@ -30,8 +30,8 @@ class SafaricomSmsGateway implements SmsGatewayInterface
         $this->sendUrl = str_replace(['dsvc.safaricom.com:9480', 'dsvc.safaricom.com:8481'], 'dsdp-apinb.safaricom.com', $sendUrl);
         $this->balanceUrl = str_replace(['dsvc.safaricom.com:9480', 'dsvc.safaricom.com:8481'], 'dsdp-apinb.safaricom.com', $balanceUrl);
 
-        $this->username = env('SAFARICOM_SDP_USERNAME', 'casamoko_api');
-        $this->password = env('SAFARICOM_SDP_PASSWORD', '5qITcVn81hRion');
+        $this->username = 'casamoko_api';
+        $this->password = '5qITcVn81hRion';
         $this->cpId = env('SAFARICOM_SDP_CP_ID', 'EXT_ID_0000');
         $this->packageId = (int) env('SAFARICOM_SDP_PACKAGE_ID', 4391);
     }
