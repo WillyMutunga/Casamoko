@@ -4,16 +4,27 @@ Route::get('/test-safaricom', function() {
     try {
         $gateway = new \App\Modules\Messaging\Services\Gateways\SafaricomSmsGateway();
         
-        // Use reflection to make getJwtToken public for testing
         $reflection = new \ReflectionClass($gateway);
         $method = $reflection->getMethod('getJwtToken');
         $method->setAccessible(true);
         $token = $method->invoke($gateway);
 
+        // Attempt a test send to see the exact error
+        $sendResponse = null;
+        $sendError = null;
+        try {
+            // Using Casamoko sender ID (this will likely fail if sender ID is wrong or balance is 0, but we want to see the error)
+            $sendResponse = $gateway->send('Casamoko', '254742765445', 'Test message from diagnostic tool');
+        } catch (\Exception $sendEx) {
+            $sendError = $sendEx->getMessage();
+        }
+
         return response()->json([
             'success' => true,
             'token_received' => (bool)$token,
-            'balance' => $gateway->getBalance()
+            'balance' => $gateway->getBalance(),
+            'send_response' => $sendResponse,
+            'send_error' => $sendError
         ]);
     } catch (\Exception $e) {
         return response()->json([
