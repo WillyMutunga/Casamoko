@@ -108,7 +108,7 @@ class SafaricomSmsGateway implements SmsGatewayInterface
                     'timeStamp' => (int) round(microtime(true) * 1000),
                     'dataSet' => [
                         [
-                            'userName' => $this->cpId,
+                            'userName' => $this->username,
                             'channel' => 'sms',
                             'packageId' => $this->packageId,
                             'oa' => $senderId,
