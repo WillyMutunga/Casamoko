@@ -21,11 +21,17 @@ class SafaricomSmsGateway implements SmsGatewayInterface
      */
     public function __construct()
     {
-        $this->authUrl = str_replace('8481', '9480', env('SAFARICOM_SDP_AUTH_URL', 'https://dsvc.safaricom.com:9480/api/auth/login'));
-        $this->sendUrl = str_replace('8481', '9480', env('SAFARICOM_SDP_SEND_URL', 'https://dsvc.safaricom.com:9480/api/public/CMS/bulksms'));
-        $this->balanceUrl = str_replace('8481', '9480', env('SAFARICOM_SDP_BALANCE_URL', 'https://dsvc.safaricom.com:9480/api/public/CMS/accountBalance'));
-        $this->username = env('SAFARICOM_SDP_USERNAME', env('SAFARICOM_SMS_API_KEY', 'default_mock_key'));
-        $this->password = env('SAFARICOM_SDP_PASSWORD', 'default_mock_password');
+        $authUrl = env('SAFARICOM_SDP_AUTH_URL', 'https://dsdp-apinb.safaricom.com/api/auth/login');
+        $sendUrl = env('SAFARICOM_SDP_SEND_URL', 'https://dsdp-apinb.safaricom.com/api/public/CMS/bulksms');
+        $balanceUrl = env('SAFARICOM_SDP_BALANCE_URL', 'https://dsdp-apinb.safaricom.com/api/public/CMS/accountBalance');
+
+        // Automatically rewrite old dsvc URLs from .env to the new dsdp-apinb infrastructure
+        $this->authUrl = str_replace(['dsvc.safaricom.com:9480', 'dsvc.safaricom.com:8481'], 'dsdp-apinb.safaricom.com', $authUrl);
+        $this->sendUrl = str_replace(['dsvc.safaricom.com:9480', 'dsvc.safaricom.com:8481'], 'dsdp-apinb.safaricom.com', $sendUrl);
+        $this->balanceUrl = str_replace(['dsvc.safaricom.com:9480', 'dsvc.safaricom.com:8481'], 'dsdp-apinb.safaricom.com', $balanceUrl);
+
+        $this->username = env('SAFARICOM_SDP_USERNAME', 'casamoko_api');
+        $this->password = env('SAFARICOM_SDP_PASSWORD', '5qITcVn81hRion');
         $this->cpId = env('SAFARICOM_SDP_CP_ID', 'EXT_ID_0000');
         $this->packageId = (int) env('SAFARICOM_SDP_PACKAGE_ID', 4391);
     }
