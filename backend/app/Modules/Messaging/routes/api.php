@@ -5,14 +5,19 @@ Route::get('/test-safaricom', function() {
         $gateway = new \App\Modules\Messaging\Services\Gateways\SafaricomSmsGateway();
         
         $reflection = new \ReflectionClass($gateway);
+        
         $method = $reflection->getMethod('getJwtToken');
         $method->setAccessible(true);
         $token = $method->invoke($gateway);
 
+        $cpIdProp = $reflection->getProperty('cpId');
+        $cpIdProp->setAccessible(true);
+        $cpId = $cpIdProp->getValue($gateway);
+
         // Attempt a test send using standard bulkSMS
         $sendResponse = null;
         try {
-            $sendResponse = $gateway->send('Casamoko', '254742765445', 'Test message');
+            $sendResponse = $gateway->send('CASAMOKO', '254742765445', 'Test message');
         } catch (\Exception $sendEx) {
             $sendResponse = $sendEx->getMessage();
         }
@@ -35,6 +40,7 @@ Route::get('/test-safaricom', function() {
         return response()->json([
             'success' => true,
             'token_received' => (bool)$token,
+            'cpId_used' => $cpId,
             'cms_bulksms_test' => $sendResponse,
             'sdp_send_test' => $altResponse
         ]);

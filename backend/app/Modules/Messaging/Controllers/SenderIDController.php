@@ -94,7 +94,7 @@ class SenderIDController extends Controller
         // Create parent mask record
         $senderId = SenderID::create([
             'client_account_id' => $clientAccount->id,
-            'sender_id' => $mask,
+            'sender_id' => $cleanMask,
             'status' => 'PENDING',
         ]);
 

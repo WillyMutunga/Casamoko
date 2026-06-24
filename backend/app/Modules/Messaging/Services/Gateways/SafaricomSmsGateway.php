@@ -32,7 +32,8 @@ class SafaricomSmsGateway implements SmsGatewayInterface
 
         $this->username = 'casamoko_api';
         $this->password = '5qITcVn81hRion';
-        $this->cpId = 'casamokoCons';
+        // Safaricom has mapped the new account to integer ID 143
+        $this->cpId = '143';
         $this->packageId = (int) env('SAFARICOM_SDP_PACKAGE_ID', 4391);
     }
 
@@ -130,12 +131,26 @@ class SafaricomSmsGateway implements SmsGatewayInterface
 
                 if ($response->successful()) {
                     $data = $response->json();
-                    $messageId = $data['transactionId'] ?? $data['requestId'] ?? $uniqueId;
                     
+                    // Safaricom returns HTTP 200 even for logical errors like Quota Exceeded
+                    // Success is indicated by statusCode SC0000 or status SUCCESS
+                    $statusCode = $data['statusCode'] ?? null;
+                    $statusStr = $data['status'] ?? null;
+
+                    if ($statusCode === 'SC0000' || $statusStr === 'SUCCESS') {
+                        $messageId = $data['transactionId'] ?? $data['requestId'] ?? $uniqueId;
+                        return [
+                            'status' => 'SENT',
+                            'message_id' => $messageId,
+                            'network_status_code' => 'DELIVRD'
+                        ];
+                    }
+
+                    // Logical failure despite HTTP 200 (e.g. SC0011 TOTAL_QUOTA_EXCEEDED)
                     return [
-                        'status' => 'SENT',
-                        'message_id' => $messageId,
-                        'network_status_code' => 'DELIVRD'
+                        'status' => 'FAILED',
+                        'error_code' => $statusCode ?? 'API_LOGICAL_ERROR',
+                        'message' => json_encode($data)
                     ];
                 }
 
