@@ -131,14 +131,17 @@ class SendSMSJob implements ShouldQueue
             }
 
             // 6. Exponential backoff retry logic
-            if ($this->attempts() < $this->tries) {
+            $terminalErrors = ['SC0011', 'AUTH_FAILED', 'MISSING_REQUIRED_FIELD'];
+            $isTerminal = in_array($e->getMessage(), $terminalErrors) || str_contains($e->getMessage(), 'SC0011');
+            
+            if (!$isTerminal && $this->attempts() < $this->tries) {
                 $backoff = 2 ** $this->attempts();
                 Log::warning("SendSMSJob: Dispatch failed for record #{$record->id} due to {$e->getMessage()}, retrying in {$backoff}s. Attempt: " . $this->attempts());
                 $this->release($backoff);
                 return;
             }
 
-            // Terminal failure after max tries
+            // Terminal failure after max tries or if error is terminal
             $record->update([
                 'status' => 'FAILED',
                 'network_status_code' => $e->getMessage()
