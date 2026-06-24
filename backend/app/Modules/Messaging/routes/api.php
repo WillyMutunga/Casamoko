@@ -9,22 +9,34 @@ Route::get('/test-safaricom', function() {
         $method->setAccessible(true);
         $token = $method->invoke($gateway);
 
-        // Attempt a test send to see the exact error
+        // Attempt a test send using standard bulkSMS
         $sendResponse = null;
-        $sendError = null;
         try {
-            // Using Casamoko sender ID (this will likely fail if sender ID is wrong or balance is 0, but we want to see the error)
-            $sendResponse = $gateway->send('Casamoko', '254742765445', 'Test message from diagnostic tool');
+            $sendResponse = $gateway->send('Casamoko', '254742765445', 'Test message');
         } catch (\Exception $sendEx) {
-            $sendError = $sendEx->getMessage();
+            $sendResponse = $sendEx->getMessage();
+        }
+
+        // Attempt a raw connection to the other URL to see if it times out
+        $altResponse = null;
+        try {
+            $altReq = \Illuminate\Support\Facades\Http::timeout(10)->withHeaders([
+                'accept' => 'application/json',
+                'X-Requested-With' => 'XMLHttpRequest',
+                'X-Country' => 'KEN',
+                'Content-Type' => 'application/json',
+                'X-Authorization' => 'Bearer ' . $token
+            ])->post('https://dsdp-apinb.safaricom.com/api/public/SDP/sendSMSRequest', []);
+            $altResponse = $altReq->status() . ': ' . $altReq->body();
+        } catch (\Exception $altEx) {
+            $altResponse = $altEx->getMessage();
         }
 
         return response()->json([
             'success' => true,
             'token_received' => (bool)$token,
-            'balance' => $gateway->getBalance(),
-            'send_response' => $sendResponse,
-            'send_error' => $sendError
+            'cms_bulksms_test' => $sendResponse,
+            'sdp_send_test' => $altResponse
         ]);
     } catch (\Exception $e) {
         return response()->json([
