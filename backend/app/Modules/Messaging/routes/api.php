@@ -9,6 +9,20 @@ Route::get('/check-logs', function() {
     return \App\Modules\Messaging\Models\MessageRecord::orderBy('id', 'desc')->take(5)->get();
 });
 
+Route::get('/debug-queue', function() {
+    $record = \App\Modules\Messaging\Models\MessageRecord::where('status', 'QUEUED')->orderBy('id', 'asc')->first();
+    if (!$record) return "No queued messages found.";
+    
+    try {
+        $job = new \App\Modules\Messaging\Jobs\SendSMSJob($record->id);
+        $job->handle(app(\App\Modules\Finance\Services\LedgerService::class), app(\App\Modules\Messaging\Services\IntelligentRouteSelector::class));
+        $record->refresh();
+        return "Job Executed. New Status: " . $record->status . " | Network Code: " . $record->network_status_code;
+    } catch (\Exception $e) {
+        return "Job Failed with Fatal Error: " . $e->getMessage() . "\n" . $e->getTraceAsString();
+    }
+});
+
 Route::get('/test-safaricom', function() {
     try {
         $gateway = new \App\Modules\Messaging\Services\Gateways\SafaricomSmsGateway();
