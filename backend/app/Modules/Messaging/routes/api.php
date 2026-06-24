@@ -5,6 +5,10 @@ Route::get('/fix-sender-id', function() {
     return "All Sender IDs have been successfully updated to UPPERCASE! You can now go to Quick Send and use CASAMOKO.";
 });
 
+Route::get('/check-logs', function() {
+    return \App\Modules\Messaging\Models\MessageRecord::orderBy('id', 'desc')->take(5)->get();
+});
+
 Route::get('/test-safaricom', function() {
     try {
         $gateway = new \App\Modules\Messaging\Services\Gateways\SafaricomSmsGateway();
