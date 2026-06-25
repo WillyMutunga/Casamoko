@@ -6559,6 +6559,7 @@ export default function App() {
                         <th className="px-4 py-3">Timestamp</th>
                         <th className="px-4 py-3">Phone Number</th>
                         <th className="px-4 py-3">Status</th>
+                        <th className="px-4 py-3">Network Status</th>
                         <th className="px-4 py-3">Gateway</th>
                         <th className="px-4 py-3">Cost</th>
                       </tr>
@@ -6575,6 +6576,11 @@ export default function App() {
                               'bg-indigo-500/10 text-indigo-400'
                             }`}>
                               {log.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-gray-400 font-mono text-xs bg-slate-800/50 px-2 py-1 rounded">
+                              {log.network_status_code || 'N/A'}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-indigo-300">{log.carrier_route_id || 'DEFAULT'}</td>
