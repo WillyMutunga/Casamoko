@@ -143,6 +143,13 @@ Route::get('/test-safaricom', function() {
     }
 });
 
+Route::get('/debug-messages', function() {
+    return response()->json(\App\Models\MessageRecord::orderBy('id', 'desc')->take(20)->get());
+});
+
+Route::get('/debug-jobs', function() {
+    return response()->json(\Illuminate\Support\Facades\DB::table('jobs')->get());
+});
 
 Route::get('/process-queue', function() {
     try {
