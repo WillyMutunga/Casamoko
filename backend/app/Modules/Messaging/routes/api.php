@@ -49,6 +49,22 @@ Route::get('/force-base-cost', function(\Illuminate\Http\Request $request) {
     return "Force updated all existing routes in the database to a cost of: " . $cost;
 });
 
+Route::get('/debug-log', function() {
+    $logFile = storage_path('logs/laravel.log');
+    if (!file_exists($logFile)) return "No log file";
+    $lines = file($logFile);
+    return implode("", array_slice($lines, -100));
+});
+
+Route::get('/debug-cost', function() {
+    $primaryRoute = \App\Modules\Messaging\Models\Route::where('is_active', true)->orderBy('priority', 'asc')->first();
+    $currentBaseCost = $primaryRoute ? (float) $primaryRoute->cost_per_sms : 0.5000;
+    return response()->json([
+        'primary_route' => $primaryRoute,
+        'calculated_cost' => $currentBaseCost
+    ]);
+});
+
 Route::get('/check-logs', function() {
     return \App\Modules\Messaging\Models\MessageRecord::orderBy('id', 'desc')->take(5)->get();
 });
