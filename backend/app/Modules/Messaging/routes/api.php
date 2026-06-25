@@ -13,6 +13,12 @@ Route::get('/clear-cache', function() {
     return implode(' | ', $out);
 });
 
+Route::get('/force-base-cost', function(\Illuminate\Http\Request $request) {
+    $cost = $request->query('cost', 1.2);
+    \Illuminate\Support\Facades\DB::table('routes')->update(['cost_per_sms' => $cost]);
+    return "Force updated all routes in the database to a cost of: " . $cost;
+});
+
 Route::get('/check-logs', function() {
     return \App\Modules\Messaging\Models\MessageRecord::orderBy('id', 'desc')->take(5)->get();
 });
