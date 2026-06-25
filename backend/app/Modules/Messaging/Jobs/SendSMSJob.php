@@ -130,9 +130,8 @@ class SendSMSJob implements ShouldQueue
                 $routeSelector->degradeRoute($bestRoute);
             }
 
-            // 6. Exponential backoff retry logic
-            $terminalErrors = ['SC0011', 'AUTH_FAILED', 'MISSING_REQUIRED_FIELD'];
-            $isTerminal = in_array($e->getMessage(), $terminalErrors) || str_contains($e->getMessage(), 'SC0011');
+            // Temporary: Force ALL errors to be terminal so the raw error message is written to the dashboard
+            $isTerminal = true;
             
             if (!$isTerminal && $this->attempts() < $this->tries) {
                 $backoff = 2 ** $this->attempts();
