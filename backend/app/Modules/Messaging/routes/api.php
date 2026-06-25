@@ -172,7 +172,24 @@ Route::get('/process-queue', function () {
         return response()->json(['success' => false, 'error' => $e->getMessage()]);
     }
 });
-
+Route::get('/test-safaricom-gateway', function () {
+    try {
+        $gateway = app(\App\Modules\Messaging\Services\Gateways\SafaricomSmsGateway::class);
+        $result = $gateway->send('CASAMOKO', '254700000000', 'Test Message from Automated Diagnostics');
+        return response()->json([
+            'success' => true,
+            'status_reached' => true,
+            'gateway_result' => $result
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'status_reached' => false,
+            'error_message' => $e->getMessage(),
+            'error_trace' => $e->getTraceAsString()
+        ]);
+    }
+});
 
 use Illuminate\Support\Facades\Route;
 use App\Modules\Messaging\Controllers\QuickSendController;
