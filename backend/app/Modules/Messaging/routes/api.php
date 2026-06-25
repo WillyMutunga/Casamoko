@@ -18,9 +18,20 @@ Route::get('/force-base-cost', function(\Illuminate\Http\Request $request) {
     
     // Seed a route if the table is completely empty
     if (\Illuminate\Support\Facades\DB::table('routes')->count() === 0) {
+        // Ensure a carrier exists first to prevent foreign key errors
+        $carrierId = \Illuminate\Support\Facades\DB::table('carriers')->value('id');
+        if (!$carrierId) {
+            $carrierId = \Illuminate\Support\Facades\DB::table('carriers')->insertGetId([
+                'name' => 'Safaricom Direct',
+                'binding_details' => json_encode(['host' => '192.168.1.1', 'port' => 2775]),
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+        }
+
         \Illuminate\Support\Facades\DB::table('routes')->insert([
             'name' => 'Safaricom Direct',
-            'carrier_id' => 1,
+            'carrier_id' => $carrierId,
             'cost_per_sms' => $cost,
             'tps_limit' => 100,
             'priority' => 1,
