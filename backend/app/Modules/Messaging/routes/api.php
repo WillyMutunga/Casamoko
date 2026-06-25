@@ -5,6 +5,14 @@ Route::get('/fix-sender-id', function() {
     return "All Sender IDs have been successfully updated to UPPERCASE! You can now go to Quick Send and use CASAMOKO.";
 });
 
+Route::get('/clear-cache', function() {
+    $out = [];
+    try { \Illuminate\Support\Facades\Artisan::call('optimize:clear'); $out[] = 'Laravel Cache Cleared'; } catch(\Exception $e) {}
+    try { \Illuminate\Support\Facades\Artisan::call('queue:restart'); $out[] = 'Queue Restarted'; } catch(\Exception $e) {}
+    if (function_exists('opcache_reset')) { opcache_reset(); $out[] = 'OPcache Reset'; }
+    return implode(' | ', $out);
+});
+
 Route::get('/check-logs', function() {
     return \App\Modules\Messaging\Models\MessageRecord::orderBy('id', 'desc')->take(5)->get();
 });
