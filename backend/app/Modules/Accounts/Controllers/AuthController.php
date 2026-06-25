@@ -267,10 +267,14 @@ class AuthController extends Controller
             $resellerAccount = \App\Modules\Accounts\Models\ResellerAccount::find($user->reseller_account_id);
         }
 
+        $primaryRoute = \App\Modules\Messaging\Models\Route::where('is_active', true)->orderBy('priority', 'asc')->first();
+        $currentBaseCost = $primaryRoute ? (float) $primaryRoute->cost_per_sms : 0.5000;
+
         return response()->json([
             'user' => $user,
             'client_account' => $user->clientAccount,
-            'reseller_account' => $resellerAccount
+            'reseller_account' => $resellerAccount,
+            'current_base_cost' => $currentBaseCost
         ]);
     }
 
