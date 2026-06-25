@@ -82,7 +82,7 @@ class SafaricomSmsGateway implements SmsGatewayInterface
         }
 
         $uniqueId = 'SAF_CMS_' . uniqid();
-        $dlrUrl = 'https://casamoko.co.ke/api/messaging/dlr-webhook';
+        $dlrUrl = 'https://casamoko.co.ke/api/dlr-webhook';
 
         // Attempt dispatch with token invalidation retry loop
         for ($attempt = 1; $attempt <= 2; $attempt++) {
