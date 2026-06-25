@@ -6668,7 +6668,7 @@ export default function App() {
                         <th className="px-4 py-3">Timestamp</th>
                         <th className="px-4 py-3">Phone Number</th>
                         <th className="px-4 py-3">Status</th>
-                        <th className="px-4 py-3">Network Status</th>
+                        <th className="px-4 py-3">Network / Error</th>
                         <th className="px-4 py-3">Gateway</th>
                         <th className="px-4 py-3">Cost</th>
                       </tr>
@@ -6688,9 +6688,15 @@ export default function App() {
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className="text-gray-400 font-mono text-xs bg-slate-800/50 px-2 py-1 rounded">
-                              {log.network_status_code || 'N/A'}
-                            </span>
+                            {log.error_message ? (
+                              <span className="text-red-400 font-mono text-xs bg-red-950/50 border border-red-900/50 px-2 py-1 rounded">
+                                {log.error_message}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400 font-mono text-xs bg-slate-800/50 px-2 py-1 rounded">
+                                {log.network_status_code || 'N/A'}
+                              </span>
+                            )}
                           </td>
                           <td className="px-4 py-3 text-indigo-300">{log.carrier_route_id || 'DEFAULT'}</td>
                           <td className="px-4 py-3 text-gray-400">Ksh {Number(log.cost_incurred).toFixed(4)}</td>
