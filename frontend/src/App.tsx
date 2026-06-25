@@ -274,7 +274,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (currentPage === 'admin_dashboard') {
+    if (currentPage === 'dashboard') {
       fetchGatewayBalance();
     }
   }, [currentPage]);
