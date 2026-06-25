@@ -151,22 +151,25 @@ Route::get('/debug-jobs', function() {
     return response()->json(\Illuminate\Support\Facades\DB::table('jobs')->get());
 });
 
-Route::get('/process-queue', function() {
+Route::get('/process-queue', function () {
     try {
-        \Illuminate\Support\Facades\Artisan::call('queue:work', [
-            '--stop-when-empty' => true,
-            '--timeout' => 120
-        ]);
+        // Force the queue daemon to restart so it loads the new code from disk
+        \Illuminate\Support\Facades\Artisan::call('queue:restart');
+        
+        // Clear out any messages that got permanently stuck in QUEUED due to the daemon exhausting retries
+        \App\Modules\Messaging\Models\MessageRecord::where('status', 'QUEUED')
+            ->update([
+                'status' => 'FAILED',
+                'network_status_code' => 'STUCK_IN_DAEMON'
+            ]);
+
         return response()->json([
             'success' => true,
-            'message' => 'Queue processed successfully!',
+            'message' => 'Queue daemon restarted and stuck UI messages cleared!',
             'output' => \Illuminate\Support\Facades\Artisan::output()
         ]);
     } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
+        return response()->json(['success' => false, 'error' => $e->getMessage()]);
     }
 });
 
