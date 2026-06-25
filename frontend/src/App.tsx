@@ -449,18 +449,28 @@ export default function App() {
       if (resResellers.data && resResellers.data.resellers) {
         setResellers(resResellers.data.resellers);
       }
-      try {
-        const resAnalytics = await apiClient.get('/accounts/admin/analytics');
-        if (resAnalytics.data) setAdminAnalytics(resAnalytics.data);
-      } catch (e) { console.error("Admin analytics sync offline", e); }
+    } catch (e) { console.error("Admin resellers sync offline", e); }
+    
+    try {
+      const resAnalytics = await apiClient.get('/accounts/admin/analytics');
+      if (resAnalytics.data) setAdminAnalytics(resAnalytics.data);
+    } catch (e) { console.error("Admin analytics sync offline", e); }
+    
+    try {
       const resClients = await apiClient.get('/accounts/admin/clients');
       if (resClients.data && resClients.data.clients) {
         setClients(resClients.data.clients);
       }
+    } catch (e) { console.error("Admin clients sync offline", e); }
+    
+    try {
       const resPending = await apiClient.get('/accounts/admin/sender-ids/pending');
       if (resPending.data && resPending.data.pending_senders) {
         setPendingSenders(resPending.data.pending_senders);
       }
+    } catch (e) { console.error("Admin pending senders sync offline", e); }
+    
+    try {
       const resLogs = await apiClient.get('/accounts/admin/audit-logs');
       if (resLogs.data && resLogs.data.audit_logs) {
         const formattedLogs = resLogs.data.audit_logs.map((log: any) => ({
@@ -474,7 +484,9 @@ export default function App() {
         }));
         setLoginLogs(formattedLogs);
       }
-      
+    } catch (e) { console.error("Admin audit logs sync offline", e); }
+    
+    try {
       const resRoutes = await apiClient.get('/messaging/admin/routes');
       if (resRoutes.data && resRoutes.data.data) {
         setLcrRoutes(resRoutes.data.data.map((r: any) => ({
@@ -488,10 +500,7 @@ export default function App() {
           status: r.is_active ? 'ACTIVE' : 'INACTIVE'
         })));
       }
-
-    } catch (err) {
-      console.error("Backend admin sync offline.", err);
-    }
+    } catch (e) { console.error("Admin routes sync offline", e); }
   };
 
   const fetchResellerData = async () => {
