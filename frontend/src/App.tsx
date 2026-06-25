@@ -5957,7 +5957,7 @@ export default function App() {
                         <button
                           onClick={() => {
                             const headers = { 'Authorization': `Bearer ${token}` };
-                            fetch(`${import.meta.env.VITE_API_URL || ''}/api/messaging/client/reports/export`, { headers })
+                            fetch(`${import.meta.env.VITE_API_URL || ''}/api/client/reports/export`, { headers })
                               .then(res => res.blob())
                               .then(blob => {
                                 const url = window.URL.createObjectURL(blob);
