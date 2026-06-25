@@ -52,6 +52,7 @@ interface ClientAccount {
   wallet_balance: number;
   credit_limit: number;
   reseller_account_id: number | null;
+  resellerAccount?: any;
   billing_type?: string;
 }
 
