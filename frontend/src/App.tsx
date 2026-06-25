@@ -487,7 +487,8 @@ export default function App() {
     } catch (e) { console.error("Admin audit logs sync offline", e); }
     
     try {
-      const resRoutes = await apiClient.get('/messaging/admin/routes');
+      const ts = new Date().getTime();
+      const resRoutes = await apiClient.get(`/messaging/admin/routes?t=${ts}`);
       if (resRoutes.data && resRoutes.data.data) {
         setLcrRoutes(resRoutes.data.data.map((r: any) => ({
           id: r.id,
