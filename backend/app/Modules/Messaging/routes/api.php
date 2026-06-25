@@ -10,17 +10,17 @@ Route::get('/check-logs', function() {
 });
 
 Route::get('/debug-queue', function() {
-    $record = \App\Modules\Messaging\Models\MessageRecord::with('contact')->where('status', 'QUEUED')->orderBy('id', 'asc')->first();
+    $record = \App\Modules\Messaging\Models\MessageRecord::where('status', 'QUEUED')->orderBy('id', 'asc')->first();
     if (!$record) return "No queued messages found.";
     
-    $gateway = new \App\Modules\Messaging\Services\Gateways\SafaricomSmsGateway();
-    $result = $gateway->send('CASAMOKO', $record->contact->msisdn ?? '254742765445', 'Test message bypass');
-    
-    return response()->json([
-        'record_id' => $record->id,
-        'msisdn' => $record->contact->msisdn ?? 'unknown',
-        'raw_gateway_result' => $result
-    ]);
+    try {
+        $job = new \App\Modules\Messaging\Jobs\SendSMSJob($record->id);
+        $job->handle(app(\App\Modules\Finance\Services\LedgerService::class), app(\App\Modules\Messaging\Services\IntelligentRouteSelector::class));
+        $record->refresh();
+        return "Job Executed. New Status: " . $record->status . " | Network Code: " . $record->network_status_code;
+    } catch (\Exception $e) {
+        return "Job Failed with Fatal Error: " . $e->getMessage() . "\n" . $e->getTraceAsString();
+    }
 });
 
 Route::get('/test-safaricom', function() {
