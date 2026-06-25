@@ -474,6 +474,20 @@ export default function App() {
         }));
         setLoginLogs(formattedLogs);
       }
+      
+      const resRoutes = await apiClient.get('/messaging/admin/routes');
+      if (resRoutes.data && resRoutes.data.data) {
+        setLcrRoutes(resRoutes.data.data.map((r: any) => ({
+          id: r.id,
+          provider: r.name,
+          mcc: '639',
+          mnc: r.destination_network === 'Safaricom' ? '02' : '*',
+          prefix: r.destination_network === 'Safaricom' ? '2547' : '*',
+          cost: parseFloat(r.cost_per_sms || 0),
+          priority: r.priority,
+          status: r.is_active ? 'ACTIVE' : 'INACTIVE'
+        })));
+      }
 
     } catch (err) {
       console.error("Backend admin sync offline.", err);
@@ -2937,13 +2951,22 @@ export default function App() {
                               <button onClick={() => setIsRouteModalOpen(false)} className="px-4 py-2 text-sm font-bold text-gray-400 hover:text-white transition-all">
                                 Cancel
                               </button>
-                              <button onClick={() => {
-                                if (editingRoute) {
-                                  setLcrRoutes(lcrRoutes.map(r => r.id === editingRoute.id ? routeFormData : r));
-                                } else {
-                                  setLcrRoutes([...lcrRoutes, { ...routeFormData, id: Math.max(...lcrRoutes.map(r => r.id)) + 1 }]);
+                              <button onClick={async () => {
+                                try {
+                                  if (editingRoute && editingRoute.id) {
+                                    await apiClient.put(`/messaging/admin/routes/${editingRoute.id}`, {
+                                      cost_per_sms: routeFormData.cost,
+                                      priority: routeFormData.priority,
+                                      is_active: routeFormData.status === 'ACTIVE'
+                                    });
+                                    // Refresh routes from backend
+                                    fetchAdminData();
+                                  }
+                                  setIsRouteModalOpen(false);
+                                } catch (e) {
+                                  console.error("Failed to save route", e);
+                                  alert("Failed to save configuration. Please try again.");
                                 }
-                                setIsRouteModalOpen(false);
                               }} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all">
                                 Save Configuration
                               </button>
