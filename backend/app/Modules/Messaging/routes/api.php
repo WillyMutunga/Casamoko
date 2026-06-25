@@ -15,9 +15,14 @@ Route::get('/debug-queue', function() {
     
     try {
         $job = new \App\Modules\Messaging\Jobs\SendSMSJob($record->id);
+        
+        // Let's capture the exact output of the gateway before it enters the job
+        $gateway = new \App\Modules\Messaging\Services\Gateways\SafaricomSmsGateway();
+        $rawResult = $gateway->send('CASAMOKO', $record->contact->msisdn ?? '254742765445', 'Test message bypass');
+
         $job->handle(app(\App\Modules\Finance\Services\LedgerService::class), app(\App\Modules\Messaging\Services\IntelligentRouteSelector::class));
         $record->refresh();
-        return "Job Executed. New Status: " . $record->status . " | Network Code: " . $record->network_status_code;
+        return "Job Executed. New DB Status: " . $record->status . " | Raw Gateway Result: " . json_encode($rawResult);
     } catch (\Exception $e) {
         return "Job Failed with Fatal Error: " . $e->getMessage() . "\n" . $e->getTraceAsString();
     }
