@@ -132,6 +132,7 @@ export default function App() {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [clientAccount, setClientAccount] = useState<ClientAccount | null>(null);
+  const [currentBaseCost, setCurrentBaseCost] = useState<number>(0.0100);
 
   // Balance Modal State
   const [isBalanceModalOpen, setIsBalanceModalOpen] = useState(false);
@@ -567,24 +568,22 @@ export default function App() {
 
   // Calculate campaign total cost estimates
   useEffect(() => {
-    let perSmsCost = 0.0100;
+    let perSmsCost = currentBaseCost;
+    if (clientAccount?.resellerAccount) {
+      perSmsCost += (currentBaseCost * (clientAccount.resellerAccount.markup_percentage / 100));
+    }
+
     if (wizAudienceType === 'manual') {
       const nums = wizManualNumbers.split(/[\n,]/).map(n => n.trim()).filter(Boolean);
       setWizDeduplicatedCount(nums.length);
-      if (nums[0]) {
-        const clean = nums[0].replace(/[^0-9]/g, '');
-        if (clean.startsWith('2547') || clean.startsWith('07')) {
-          perSmsCost = 0.0270;
-        }
-      }
       setWizCostEstimate(perSmsCost * wizSegments * nums.length);
     } else {
       const group = contactLists.find(g => g.id === wizSelectedGroup);
-      const count = group ? 24 : 0;
+      const count = group ? 24 : 0; // Hardcoded fallback from earlier, kept intact
       setWizDeduplicatedCount(count);
       setWizCostEstimate(perSmsCost * wizSegments * count);
     }
-  }, [wizManualNumbers, wizSelectedGroup, wizAudienceType, wizSegments, contactLists]);
+  }, [wizManualNumbers, wizSelectedGroup, wizAudienceType, wizSegments, contactLists, currentBaseCost, clientAccount]);
 
   // Retrieve user session profile
   const fetchProfile = async (sessionToken: string) => {
@@ -595,6 +594,9 @@ export default function App() {
       });
       setUser(res.data.user);
       setClientAccount(res.data.client_account);
+      if (res.data.current_base_cost) {
+        setCurrentBaseCost(res.data.current_base_cost);
+      }
       if (res.data.reseller_account) {
         setResellerAccount(res.data.reseller_account);
       }
