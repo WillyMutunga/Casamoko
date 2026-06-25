@@ -293,7 +293,7 @@ export default function App() {
   const [adjustmentDesc, setAdjustmentDesc] = useState('');
 
   // Delivery Reporting & Analytics States
-  const [deliveryLogs] = useState<any[]>([]);
+  const [deliveryLogs, setDeliveryLogs] = useState<any[]>([]);
   const [searchMsisdnQuery, setSearchMsisdnQuery] = useState('');
   const [reportingEmail, setReportingEmail] = useState('');
   const [reportingInterval, setReportingInterval] = useState('DAILY');
@@ -561,6 +561,9 @@ export default function App() {
 
       const invRes = await apiClient.get('/client/finance/invoices', { headers });
       if (invRes.data.invoices) setInvoices(invRes.data.invoices);
+
+      const logsRes = await apiClient.get('/client/reports/logs', { headers });
+      if (logsRes.data.logs) setDeliveryLogs(logsRes.data.logs);
     } catch (err) {
       console.warn("Client sync failed.", err);
     }
@@ -5953,7 +5956,23 @@ export default function App() {
                         />
                         <button
                           onClick={() => {
-                            toast.success('Simulated CSV reports compiled. Outbound statement containing 14,892 entries was downloaded successfully!');
+                            const headers = { 'Authorization': `Bearer ${token}` };
+                            fetch(`${import.meta.env.VITE_API_URL || ''}/api/messaging/client/reports/export`, { headers })
+                              .then(res => res.blob())
+                              .then(blob => {
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `delivery_reports_${new Date().toISOString()}.csv`;
+                                document.body.appendChild(a);
+                                a.click();
+                                a.remove();
+                                toast.success('CSV Report generated and downloaded successfully!');
+                              })
+                              .catch(err => {
+                                console.error(err);
+                                toast.error('Failed to export CSV report.');
+                              });
                           }}
                           className="bg-slate-950 border border-slate-800 hover:bg-slate-900 text-gray-300 font-bold px-3 py-2 rounded-xl text-[10px] uppercase tracking-wider flex items-center gap-1 transition-all"
                         >

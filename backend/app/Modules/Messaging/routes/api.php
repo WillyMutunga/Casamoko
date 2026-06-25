@@ -230,6 +230,10 @@ Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry', 'ro
     Route::get('/sender-ids', [SenderIDController::class, 'index']);
     Route::post('/sender-ids', [SenderIDController::class, 'store']);
     Route::post('/sender-ids/{id}/fallback', [SenderIDController::class, 'setFallback']);
+
+    // Global Reports
+    Route::get('/client/reports/logs', [\App\Modules\Messaging\Controllers\ReportsController::class, 'getLogs']);
+    Route::get('/client/reports/export', [\App\Modules\Messaging\Controllers\ReportsController::class, 'exportCsv']);
 });
 
 // Public DLR webhook called by carrier networks

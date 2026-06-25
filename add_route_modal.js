@@ -1,0 +1,46 @@
+const fs = require('fs');
+let code = fs.readFileSync('frontend/src/App.tsx', 'utf8').replace(/\r\n/g, '\n');
+
+// 1. Update State
+code = code.replace(
+  'const [lcrRoutes] = useState([',
+  'const [lcrRoutes, setLcrRoutes] = useState(['
+);
+
+code = code.replace(
+  "provider: 'Safaricom Direct', mcc: '639', mnc: '02', prefix: '2547', cost: 0.008",
+  "provider: 'Safaricom Direct', mcc: '639', mnc: '02', prefix: '2547', cost: 0.005"
+);
+
+// 2. Add Modal State
+if (!code.includes('const [isRouteModalOpen, setIsRouteModalOpen] = useState(false);')) {
+  const target = "  // Client Campaigns List State";
+  const replacement = `  const [isRouteModalOpen, setIsRouteModalOpen] = useState(false);\n  const [editingRoute, setEditingRoute] = useState<any>(null);\n\n  // Client Campaigns List State`;
+  code = code.replace(target, replacement);
+}
+
+// 3. Add Plus icon import if missing
+if (!code.includes('Plus')) {
+  code = code.replace(/import \{ Clock, Shield/, "import { Plus, Clock, Shield");
+}
+
+// 4. Update Edit Button
+code = code.replace(
+  /<button className="px-3 py-1\.5 bg-slate-950 hover:bg-slate-900 text-gray-400 hover:text-white border border-slate-800 rounded-lg text-\[10px\] font-bold transition-all flex items-center gap-1 uppercase">\s*Edit\s*<\/button>/g,
+  `<button onClick={() => { setEditingRoute(r); setIsRouteModalOpen(true); }} className="px-3 py-1.5 bg-slate-950 hover:bg-slate-900 text-gray-400 hover:text-white border border-slate-800 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 uppercase">\n                                        Edit\n                                      </button>`
+);
+
+// 5. Add "Add Route" Button
+const addBtnTarget = `<span className="text-[10px] font-mono text-gray-500">Active LCR Routes: {lcrRoutes.length}</span>`;
+const addBtnReplacement = `<div className="flex items-center gap-4">\n                            <span className="text-[10px] font-mono text-gray-500">Active LCR Routes: {lcrRoutes.length}</span>\n                            <button onClick={() => { setEditingRoute(null); setIsRouteModalOpen(true); }} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[11px] font-bold shadow-lg shadow-emerald-500/20 flex items-center gap-1">\n                              <Plus className="w-3 h-3" /> Add Route\n                            </button>\n                          </div>`;
+code = code.replace(addBtnTarget, addBtnReplacement);
+
+// 6. Add Modal JSX using the unique end of the table
+const endOfRoutingView = `                              ))}\n                            </tbody>\n                          </table>\n                        </div>\n                      </div>\n                    </div>\n                  )}`;
+
+const modalJSX = `                              ))}\n                            </tbody>\n                          </table>\n                        </div>\n                      </div>\n                    </div>\n\n                    {isRouteModalOpen && (\n                      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn">\n                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">\n                          <div className="flex justify-between items-center mb-6">\n                            <h3 className="text-xl font-bold text-white flex items-center gap-2">\n                              <Route className="w-5 h-5 text-indigo-400" />\n                              {editingRoute ? 'Edit LCR Route' : 'Add LCR Route'}\n                            </h3>\n                            <button onClick={() => setIsRouteModalOpen(false)} className="text-gray-400 hover:text-white">\n                              <X className="w-5 h-5" />\n                            </button>\n                          </div>\n                          \n                          <div className="space-y-4">\n                            <div>\n                              <label className="block text-xs font-bold text-gray-400 mb-1">Provider Connection</label>\n                              <select className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" defaultValue={editingRoute?.provider || ''}>\n                                <option value="">Select Connection Bind...</option>\n                                <option value="Safaricom Direct">Safaricom Direct</option>\n                                <option value="RouteMobile">RouteMobile</option>\n                                <option value="Infobip Global">Infobip Global</option>\n                                <option value="Twilio">Twilio</option>\n                              </select>\n                            </div>\n                            \n                            <div className="grid grid-cols-2 gap-4">\n                              <div>\n                                <label className="block text-xs font-bold text-gray-400 mb-1">MCC (Country)</label>\n                                <input type="text" defaultValue={editingRoute?.mcc || ''} placeholder="e.g. 639" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" />\n                              </div>\n                              <div>\n                                <label className="block text-xs font-bold text-gray-400 mb-1">MNC (Network)</label>\n                                <input type="text" defaultValue={editingRoute?.mnc || ''} placeholder="e.g. 02" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" />\n                              </div>\n                            </div>\n\n                            <div className="grid grid-cols-2 gap-4">\n                              <div>\n                                <label className="block text-xs font-bold text-gray-400 mb-1">Prefix / Regex</label>\n                                <input type="text" defaultValue={editingRoute?.prefix || ''} placeholder="e.g. 2547" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" />\n                              </div>\n                              <div>\n                                <label className="block text-xs font-bold text-indigo-400 mb-1">Base Cost per SMS (Ksh)</label>\n                                <input type="number" step="0.001" defaultValue={editingRoute?.cost || ''} placeholder="0.000" className="w-full bg-slate-950 border border-indigo-500/50 rounded-xl px-4 py-2 text-sm text-white font-mono focus:outline-none focus:border-indigo-400 shadow-[0_0_10px_rgba(79,70,229,0.1)]" />\n                              </div>\n                            </div>\n\n                            <div className="grid grid-cols-2 gap-4">\n                              <div>\n                                <label className="block text-xs font-bold text-gray-400 mb-1">LCR Priority (1 = Highest)</label>\n                                <input type="number" defaultValue={editingRoute?.priority || '1'} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" />\n                              </div>\n                              <div>\n                                <label className="block text-xs font-bold text-gray-400 mb-1">Status</label>\n                                <select className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" defaultValue={editingRoute?.status || 'ACTIVE'}>\n                                  <option value="ACTIVE">ACTIVE</option>\n                                  <option value="INACTIVE">INACTIVE</option>\n                                  <option value="FAILOVER_ONLY">FAILOVER_ONLY</option>\n                                </select>\n                              </div>\n                            </div>\n                          </div>\n\n                          <div className="mt-8 flex justify-end gap-3">\n                            <button onClick={() => setIsRouteModalOpen(false)} className="px-4 py-2 text-sm font-bold text-gray-400 hover:text-white transition-all">\n                              Cancel\n                            </button>\n                            <button onClick={() => setIsRouteModalOpen(false)} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all">\n                              Save Configuration\n                            </button>\n                          </div>\n                        </div>\n                      </div>\n                    )}\n                  )}`;
+
+code = code.replace(endOfRoutingView, modalJSX);
+
+fs.writeFileSync('frontend/src/App.tsx', code);
+console.log('App.tsx route modal script complete!');

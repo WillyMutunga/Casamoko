@@ -1,0 +1,98 @@
+                  {currentPage === 'campaigns' && !isWizardOpen && (
+                    <div className="space-y-6 animate-fadeIn">
+                      <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-800/40">
+                        <div>
+                          <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                            <Send className="w-6 h-6 text-indigo-400" />
+                            Queued & Scheduled Campaigns
+                          </h3>
+                          <p className="text-xs text-gray-400 mt-1">Monitor, pause, and review all pending SMS broadcasts.</p>
+                        </div>
+                        <button 
+                          onClick={() => setIsWizardOpen(true)}
+                          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all shadow-lg shadow-indigo-500/20 text-sm font-bold"
+                        >
+                          <Plus className="w-4 h-4" />
+                          New Campaign
+                        </button>
+                      </div>
+
+                      <div className="glass-panel border border-slate-800 rounded-3xl p-6 relative overflow-hidden shadow-2xl glow-card">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse">
+                            <thead>
+                              <tr className="border-b border-slate-800/60">
+                                <th className="pb-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Campaign Details</th>
+                                <th className="pb-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
+                                <th className="pb-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Target Date</th>
+                                <th className="pb-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Progress</th>
+                                <th className="pb-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="text-sm">
+                              {campaignList.map(camp => (
+                                <tr key={camp.id} className="border-b border-slate-800/40 hover:bg-slate-900/30 transition-all">
+                                  <td className="py-5 font-bold text-white">{camp.name}</td>
+                                  <td className="py-5">
+                                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                      camp.status === 'RUNNING' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                      camp.status === 'SCHEDULED' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                                      camp.status === 'PAUSED' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                                      camp.status === 'CANCELED' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
+                                      'bg-slate-800 text-gray-400 border border-slate-700'
+                                    }`}>
+                                      {camp.status}
+                                    </span>
+                                  </td>
+                                  <td className="py-5 text-gray-400 text-xs">{camp.scheduledFor}</td>
+                                  <td className="py-5">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden max-w-[100px]">
+                                        <div 
+                                          className={`h-full ${camp.status === 'RUNNING' ? 'bg-emerald-500' : 'bg-indigo-500'}`} 
+                                          style={{ width: `${(camp.progress / camp.total) * 100}%` }}
+                                        ></div>
+                                      </div>
+                                      <span className="text-[10px] text-gray-500 font-mono">{camp.progress}/{camp.total}</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-5 text-right">
+                                    <div className="flex items-center justify-end gap-2">
+                                      {camp.status === 'RUNNING' ? (
+                                        <button 
+                                          onClick={() => setCampaignList(prev => prev.map(c => c.id === camp.id ? { ...c, status: 'PAUSED' } : c))}
+                                          className="p-2 bg-slate-900 hover:bg-slate-800 text-amber-400 rounded-lg border border-slate-800 transition-all"
+                                          title="Pause Dispatch"
+                                        >
+                                          <Pause className="w-4 h-4" />
+                                        </button>
+                                      ) : camp.status === 'PAUSED' ? (
+                                        <button 
+                                          onClick={() => setCampaignList(prev => prev.map(c => c.id === camp.id ? { ...c, status: 'RUNNING' } : c))}
+                                          className="p-2 bg-slate-900 hover:bg-slate-800 text-emerald-400 rounded-lg border border-slate-800 transition-all"
+                                          title="Resume Dispatch"
+                                        >
+                                          <Play className="w-4 h-4" />
+                                        </button>
+                                      ) : null}
+                                      {['SCHEDULED', 'RUNNING', 'PAUSED'].includes(camp.status) && (
+                                        <button 
+                                          onClick={() => setCampaignList(prev => prev.map(c => c.id === camp.id ? { ...c, status: 'CANCELED' } : c))}
+                                          className="p-2 bg-slate-900 hover:bg-red-900/40 text-red-400 rounded-lg border border-slate-800 transition-all"
+                                          title="Cancel Campaign"
+                                        >
+                                          <XCircle className="w-4 h-4" />
+                                        </button>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentPage === 'campaigns' && isWizardOpen && (
