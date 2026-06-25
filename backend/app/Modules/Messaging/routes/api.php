@@ -170,6 +170,7 @@ Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry', 'ro
     ->prefix('messaging')
     ->group(function () {
         Route::get('/admin/routes', [\App\Modules\Messaging\Controllers\RouteController::class, 'index']);
+        Route::get('/admin/routes/balance', [\App\Modules\Messaging\Controllers\RouteController::class, 'getGatewayBalance']);
         Route::put('/admin/routes/{id}', [\App\Modules\Messaging\Controllers\RouteController::class, 'update']);
         Route::post('/admin/routes/{id}/test', [\App\Modules\Messaging\Controllers\RouteController::class, 'test']);
 });

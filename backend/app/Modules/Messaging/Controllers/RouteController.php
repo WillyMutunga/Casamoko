@@ -19,6 +19,7 @@ class RouteController extends Controller
             'success' => true,
             'data' => $routes
         ]);
+    }
     
     public function getGatewayBalance()
     {
@@ -38,7 +39,6 @@ class RouteController extends Controller
             ], 500);
         }
     }
-}
 
     /**
      * Update route parameters.

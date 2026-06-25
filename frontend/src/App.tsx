@@ -259,7 +259,7 @@ export default function App() {
   const fetchGatewayBalance = async () => {
     setIsFetchingBalance(true);
     try {
-      const res = await fetch('/api/messaging/routes/balance');
+      const res = await fetch('/api/messaging/admin/routes/balance');
       const data = await res.json();
       if (data.success && data.data.safaricom_balance) {
         setGatewayBalance(data.data.safaricom_balance);
