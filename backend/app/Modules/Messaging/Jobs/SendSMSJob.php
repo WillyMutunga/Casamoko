@@ -102,7 +102,11 @@ class SendSMSJob implements ShouldQueue
             $result = $gateway->send($senderIdText, $recipientMsisdn, $messageText);
 
             if ($result['status'] !== 'SENT') {
-                throw new \Exception($result['error_code'] ?? 'GATEWAY_ERROR');
+                $errorString = $result['error_code'] ?? 'GATEWAY_ERROR';
+                if (isset($result['message'])) {
+                    $errorString .= ' - ' . (is_array($result['message']) ? json_encode($result['message']) : $result['message']);
+                }
+                throw new \Exception($errorString);
             }
 
             // Update MessageRecord to SENT with operator receipt IDs and route used
@@ -130,8 +134,15 @@ class SendSMSJob implements ShouldQueue
                 $routeSelector->degradeRoute($bestRoute);
             }
 
-            // Temporary: Force ALL errors to be terminal so the raw error message is written to the dashboard
-            $isTerminal = true;
+            // 6. Exponential backoff retry logic
+            $terminalErrors = ['SC0011', 'AUTH_FAILED', 'MISSING_REQUIRED_FIELD'];
+            $isTerminal = false;
+            foreach ($terminalErrors as $termErr) {
+                if (str_contains($e->getMessage(), $termErr)) {
+                    $isTerminal = true;
+                    break;
+                }
+            }
             
             if (!$isTerminal && $this->attempts() < $this->tries) {
                 $backoff = 2 ** $this->attempts();
