@@ -46,7 +46,7 @@ class SafaricomSmsGateway implements SmsGatewayInterface
         
         return Cache::remember($cacheKey, 3000, function () {
             try {
-                $response = Http::timeout(10)->withHeaders([
+                $response = Http::timeout(60)->withHeaders([
                     'accept' => 'application/json',
                     'X-Requested-With' => 'XMLHttpRequest',
                     'X-Country' => 'KEN',
@@ -98,7 +98,7 @@ class SafaricomSmsGateway implements SmsGatewayInterface
 
             try {
                 // Post to CMS Bulk SMS endpoint
-                $response = Http::timeout(10)->withHeaders([
+                $response = Http::timeout(60)->withHeaders([
                     'accept' => 'application/json',
                     'X-Requested-With' => 'XMLHttpRequest',
                     'X-Country' => 'KEN',
