@@ -15,8 +15,27 @@ Route::get('/clear-cache', function() {
 
 Route::get('/force-base-cost', function(\Illuminate\Http\Request $request) {
     $cost = $request->query('cost', 1.2);
+    
+    // Seed a route if the table is completely empty
+    if (\Illuminate\Support\Facades\DB::table('routes')->count() === 0) {
+        \Illuminate\Support\Facades\DB::table('routes')->insert([
+            'name' => 'Safaricom Direct',
+            'carrier_id' => 1,
+            'cost_per_sms' => $cost,
+            'tps_limit' => 100,
+            'priority' => 1,
+            'is_active' => true,
+            'destination_network' => 'Safaricom',
+            'bind_type' => 'TRANSCEIVER',
+            'window_size' => 10,
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+        return "Seeded Safaricom Direct route and set base cost to: " . $cost;
+    }
+
     \Illuminate\Support\Facades\DB::table('routes')->update(['cost_per_sms' => $cost]);
-    return "Force updated all routes in the database to a cost of: " . $cost;
+    return "Force updated all existing routes in the database to a cost of: " . $cost;
 });
 
 Route::get('/check-logs', function() {
