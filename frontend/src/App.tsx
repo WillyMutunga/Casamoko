@@ -2262,10 +2262,20 @@ export default function App() {
                 )}
 
                 {user.role_tier === 'SUPER_ADMIN' && (
-                  <div className="bg-emerald-600/10 border border-emerald-500/20 px-5 py-1.5 rounded-full flex items-center gap-2 text-emerald-350 font-bold text-xs uppercase tracking-wider">
-                    <Activity className="w-4 h-4 text-emerald-400" />
-                    <span>Compliance Core Bindings: Active</span>
-                  </div>
+                  <>
+                    <div className="bg-indigo-500/10 border border-indigo-500/20 px-4 py-1.5 rounded-full flex items-center gap-2 text-indigo-400 font-bold text-xs">
+                      {isFetchingBalance ? (
+                        <div className="w-3 h-3 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+                      ) : (
+                        <Wallet className="w-3 h-3" />
+                      )}
+                      <span className="font-mono">Ksh {gatewayBalance || '0.00'}</span>
+                    </div>
+                    <div className="bg-emerald-600/10 border border-emerald-500/20 px-5 py-1.5 rounded-full flex items-center gap-2 text-emerald-350 font-bold text-xs uppercase tracking-wider">
+                      <Activity className="w-4 h-4 text-emerald-400" />
+                      <span>Compliance Core Bindings: Active</span>
+                    </div>
+                  </>
                 )}
 
                 <button 
