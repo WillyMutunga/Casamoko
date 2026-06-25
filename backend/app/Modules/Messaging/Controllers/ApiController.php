@@ -28,7 +28,9 @@ class ApiController extends Controller
         $encoding = CampaignController::getUnicodeType($request->message);
         $segments = CampaignController::getSegmentCount($request->message, $encoding);
         
-        $baseRate = $clientAccount->sms_rate ?? 0.005; // Use default if null
+        $primaryRoute = \App\Modules\Messaging\Models\Route::where('is_active', true)->orderBy('priority', 'asc')->first();
+        $baseRate = $primaryRoute ? (float) $primaryRoute->cost_per_sms : 0.5000;
+        
         $totalCost = $baseRate * $segments;
 
         // Check balance

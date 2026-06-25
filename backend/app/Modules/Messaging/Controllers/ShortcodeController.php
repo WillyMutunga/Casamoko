@@ -276,9 +276,9 @@ class ShortcodeController extends Controller
         }
 
         if ($replyText) {
-            $pricingRule = PricingRule::whereNull('client_account_id')->first();
-            $baseCost = $pricingRule ? (float)$pricingRule->base_cost : 0.0200;
-            $markup = $pricingRule ? (float)$pricingRule->reseller_markup : 0.0050;
+            $primaryRoute = \App\Modules\Messaging\Models\Route::where('is_active', true)->orderBy('priority', 'asc')->first();
+            $baseCost = $primaryRoute ? (float) $primaryRoute->cost_per_sms : 0.5000;
+            $markup = 0.0000;
             if ($clientAccount->resellerAccount) {
                 $markup += $baseCost * ((float)$clientAccount->resellerAccount->markup_percentage / 100);
             }

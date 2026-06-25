@@ -140,26 +140,10 @@ class QuickSendController extends Controller
             ]
         );
 
-        // 4. Calculate dynamic pricing tariff
-        $pricingRule = null;
-        // Search prefix matches from specific country code to network providers (longest prefix to shortest)
-        for ($i = strlen($cleanMsisdn); $i > 0; $i--) {
-            $prefix = substr($cleanMsisdn, 0, $i);
-            $pricingRule = PricingRule::where('destination_prefix', $prefix)
-                ->where(function ($query) use ($clientAccount) {
-                    $query->where('client_account_id', $clientAccount->id)
-                          ->orWhereNull('client_account_id');
-                })
-                ->orderBy('client_account_id', 'desc') // custom pricing takes priority over generic system rules
-                ->first();
-
-            if ($pricingRule) {
-                break;
-            }
-        }
-
-        $baseCost = $pricingRule ? (float) $pricingRule->base_cost : 0.0100;
-        $resellerMarkup = $pricingRule ? (float) $pricingRule->reseller_markup : 0.0000;
+        // 4. Fetch dynamic pricing from the Primary Active Route (SMPP Gateway)
+        $primaryRoute = \App\Modules\Messaging\Models\Route::where('is_active', true)->orderBy('priority', 'asc')->first();
+        $baseCost = $primaryRoute ? (float) $primaryRoute->cost_per_sms : 0.5000;
+        $resellerMarkup = 0.0000;
 
         // Apply reseller markups if the client tenant is managed by a reseller
         if ($clientAccount->resellerAccount) {
