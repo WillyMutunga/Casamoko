@@ -133,6 +133,9 @@ export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [clientAccount, setClientAccount] = useState<ClientAccount | null>(null);
 
+  // Balance Modal State
+  const [isBalanceModalOpen, setIsBalanceModalOpen] = useState(false);
+
   // Profile Modal State
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [editProfileName, setEditProfileName] = useState('');
@@ -2263,14 +2266,17 @@ export default function App() {
 
                 {user.role_tier === 'SUPER_ADMIN' && (
                   <>
-                    <div className="bg-indigo-500/10 border border-indigo-500/20 px-4 py-1.5 rounded-full flex items-center gap-2 text-indigo-400 font-bold text-xs">
+                    <button 
+                      onClick={() => setIsBalanceModalOpen(true)}
+                      className="bg-indigo-500/10 hover:bg-indigo-500/20 transition-all cursor-pointer border border-indigo-500/20 px-4 py-1.5 rounded-full flex items-center gap-2 text-indigo-400 font-bold text-xs"
+                    >
                       {isFetchingBalance ? (
                         <div className="w-3 h-3 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
                       ) : (
                         <Wallet className="w-3 h-3" />
                       )}
                       <span className="font-mono">Ksh {gatewayBalance || '0.00'}</span>
-                    </div>
+                    </button>
                     <div className="bg-emerald-600/10 border border-emerald-500/20 px-5 py-1.5 rounded-full flex items-center gap-2 text-emerald-350 font-bold text-xs uppercase tracking-wider">
                       <Activity className="w-4 h-4 text-emerald-400" />
                       <span>Compliance Core Bindings: Active</span>
@@ -6365,6 +6371,58 @@ export default function App() {
       )}
 
       {/* --- MODALS --- */}
+
+      {isBalanceModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-lg">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-8 relative overflow-hidden shadow-2xl">
+            <button 
+              onClick={() => setIsBalanceModalOpen(false)}
+              className="absolute top-6 right-6 p-2 rounded-full bg-slate-800/50 hover:bg-slate-700 text-gray-400 hover:text-white transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">
+                <Wallet className="w-6 h-6 text-indigo-400" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-black text-white tracking-tight">Gateway Balance</h2>
+                <p className="text-sm text-indigo-400 font-medium">Safaricom DSDP (Primary Node)</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-5 bg-slate-950/50 border border-slate-800/50 rounded-2xl">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Available SMS Units</p>
+                <div className="flex items-end gap-2">
+                  <span className="text-4xl font-black text-white font-mono">{gatewayBalance || '0.00'}</span>
+                  <span className="text-lg font-bold text-gray-400 mb-1">Units</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-slate-800/20 border border-slate-800/50 rounded-xl">
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Status</p>
+                  <span className="text-sm font-bold text-emerald-400 flex items-center gap-1">
+                    <Activity className="w-3 h-3" /> Connected
+                  </span>
+                </div>
+                <div className="p-4 bg-slate-800/20 border border-slate-800/50 rounded-xl">
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Account Type</p>
+                  <span className="text-sm font-bold text-white">Postpaid</span>
+                </div>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setIsBalanceModalOpen(false)}
+              className="mt-8 w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-sm uppercase tracking-widest rounded-2xl transition-all shadow-lg shadow-indigo-500/20"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {isProfileModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-lg">
