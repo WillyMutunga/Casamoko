@@ -62,7 +62,7 @@ class SafaricomSmsGateway implements SmsGatewayInterface
                 }
                 
                 Log::error("SafaricomSDP Auth Failed - Status: {$response->status()} | Body: {$response->body()}");
-                throw new \Exception("Auth Failed - HTTP {$response->status()}: " . $response->body());
+                throw new \Exception("AUTH_FAILED");
             } catch (\Exception $e) {
                 Log::error("SafaricomSDP Auth Exception: " . $e->getMessage());
                 throw $e;
