@@ -54,6 +54,8 @@ class RouteController extends Controller
             ], 404);
         }
 
+        \Illuminate\Support\Facades\Log::info("Route Update Request for ID: $id", $request->all());
+
         $validated = $request->validate([
             'priority' => 'nullable|integer|min:1',
             'window_size' => 'nullable|integer|min:1',
@@ -64,7 +66,22 @@ class RouteController extends Controller
             'cost_per_sms' => 'nullable|numeric|min:0',
         ]);
 
-        $route->update($validated);
+        \Illuminate\Support\Facades\Log::info("Validated Data:", $validated);
+
+        // Force explicit assignment instead of mass assignment to bypass any guarded issues
+        if (isset($validated['cost_per_sms'])) {
+            $route->cost_per_sms = $validated['cost_per_sms'];
+        }
+        if (isset($validated['priority'])) {
+            $route->priority = $validated['priority'];
+        }
+        if (isset($validated['is_active'])) {
+            $route->is_active = $validated['is_active'];
+        }
+        
+        $route->save();
+
+        \Illuminate\Support\Facades\Log::info("Route Saved:", $route->toArray());
 
         return response()->json([
             'success' => true,
