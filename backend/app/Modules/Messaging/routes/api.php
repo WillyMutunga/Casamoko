@@ -180,16 +180,17 @@ Route::get('/debug-logs', function () {
         return response()->json(['error' => 'Log file not found']);
     }
     
-    // Read the last 100 lines using shell command (works on most linux systems)
-    $lines = shell_exec('tail -n 100 ' . escapeshellarg($logFile));
-    
-    // Fallback if shell_exec is disabled
-    if (!$lines) {
+    // Completely native PHP fallback
+    try {
         $file = file($logFile);
+        if ($file === false) {
+             return response()->json(['error' => 'Failed to read log file']);
+        }
         $lines = implode("", array_slice($file, -100));
+        return response()->json(['logs' => $lines]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()]);
     }
-    
-    return response()->json(['logs' => $lines]);
 });
 Route::get('/test-safaricom-gateway', function () {
     try {
