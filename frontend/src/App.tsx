@@ -1427,6 +1427,7 @@ export default function App() {
           setWizManualNumbers('');
           setWizIsAbTest(false);
           setWizTemplateB('');
+          setCurrentPage('reports');
         }
       } catch (err: any) {
         console.error("Campaign launch failed", err);
@@ -2046,7 +2047,7 @@ export default function App() {
             </div>
 
             {/* Role-Based Sidebar Navigation list */}
-            <nav className="flex-1 px-4 py-6 space-y-2">
+            <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
               
               {/* --- 2.1.1 SUPER_ADMIN TABS --- */}
               {user.role_tier === 'SUPER_ADMIN' && (
