@@ -263,18 +263,20 @@ class ShortcodeController extends Controller
         }
 
         if ($actionType === 'WEBHOOK' && $keyword && $keyword->callback_webhook) {
-            try {
-                $response = Http::timeout(2)->post($keyword->callback_webhook, [
-                    'msisdn' => $msisdn,
-                    'shortcode' => $shortcodeText,
-                    'message' => $messageText,
-                    'keyword' => $firstWord,
-                    'timestamp' => now()->toIso8601String()
-                ]);
-                $webhookStatus = $response->successful() ? 'DELIVERED' : 'FAILED_HTTP_' . $response->status();
-            } catch (\Exception $e) {
-                $webhookStatus = 'WEBHOOK_TIMEOUT_ERROR';
-            }
+            $payload = [
+                'msisdn' => $msisdn,
+                'shortcode' => $shortcodeText,
+                'message' => $messageText,
+                'keyword' => $firstWord,
+                'timestamp' => now()->toIso8601String()
+            ];
+            
+            \App\Modules\Messaging\Jobs\DispatchClientWebhookJob::dispatch(
+                $keyword->callback_webhook, 
+                $payload, 
+                $clientAccount->id
+            );
+            $webhookStatus = 'QUEUED';
         }
 
         if ($replyText) {
