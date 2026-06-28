@@ -5950,11 +5950,9 @@ export default function App() {
                         />
                         <button
                           onClick={() => {
-                            const headers = { 'Authorization': `Bearer ${token}` };
-                            fetch(`${import.meta.env.VITE_API_URL || ''}/api/client/reports/export`, { headers })
-                              .then(res => res.blob())
-                              .then(blob => {
-                                const url = window.URL.createObjectURL(blob);
+                            apiClient.get('/client/reports/export', { responseType: 'blob' })
+                              .then(res => {
+                                const url = window.URL.createObjectURL(new Blob([res.data]));
                                 const a = document.createElement('a');
                                 a.href = url;
                                 a.download = `delivery_reports_${new Date().toISOString()}.csv`;
