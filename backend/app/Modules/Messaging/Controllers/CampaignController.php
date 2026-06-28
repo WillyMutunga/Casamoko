@@ -448,9 +448,10 @@ class CampaignController extends Controller
                 'msisdn' => $log->contact ? $log->contact->msisdn : 'Unknown',
                 'status' => $log->status,
                 'network_status_code' => $log->network_status_code,
-                'error_message' => null, // Provide a default if frontend expects it
+                'error_message' => null, 
                 'created_at' => $log->created_at,
                 'cost' => $log->price,
+                'cost_incurred' => $log->price,
                 'route' => $log->route,
             ];
         });
