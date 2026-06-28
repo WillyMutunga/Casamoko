@@ -12,5 +12,5 @@ interface SmsGatewayInterface
      * @param string $message UCS-2/GSM-7 message template text
      * @return array Standardized response containing ['status' => 'SENT|FAILED', 'message_id' => '...', 'error_code' => '...']
      */
-    public function send(string $senderId, string $msisdn, string $message): array;
+    public function send(string $senderId, string $msisdn, string $message, ?string $linkId = null): array;
 }

@@ -73,7 +73,7 @@ class SafaricomSmsGateway implements SmsGatewayInterface
     /**
      * Outbound Safaricom Digital SDP CMS Bulk SMS Gateway Dispatcher.
      */
-    public function send(string $senderId, string $msisdn, string $message): array
+    public function send(string $senderId, string $msisdn, string $message, ?string $linkId = null): array
     {
         // Enforce Safaricom's international MSISDN E.164 format without leading plus (+)
         $cleanMsisdn = preg_replace('/[^0-9]/', '', $msisdn);
@@ -108,7 +108,7 @@ class SafaricomSmsGateway implements SmsGatewayInterface
                 ])->post($this->sendUrl, [
                     'timeStamp' => (int) round(microtime(true) * 1000),
                     'dataSet' => [
-                        [
+                        array_filter([
                             'userName' => $this->cpId,
                             'channel' => 'sms',
                             'packageId' => $this->packageId,
@@ -117,8 +117,9 @@ class SafaricomSmsGateway implements SmsGatewayInterface
                             'message' => $message,
                             'uniqueId' => $uniqueId,
                             'actionResponseURL' => $dlrUrl,
-                            'hashed' => 'no'
-                        ]
+                            'hashed' => 'no',
+                            'linkId' => $linkId
+                        ], fn($val) => !is_null($val))
                     ]
                 ]);
 

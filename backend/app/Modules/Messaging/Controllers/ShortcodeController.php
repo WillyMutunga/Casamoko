@@ -152,18 +152,19 @@ class ShortcodeController extends Controller
         $shortcodeText = $payload['smsServiceActivationNumber'] ?? $payload['shortcode'] ?? null;
         $msisdn = $payload['senderAddress'] ?? $payload['msisdn'] ?? null;
         $messageText = $payload['message'] ?? null;
+        $linkId = $payload['linkId'] ?? null;
 
         if (!$shortcodeText || !$msisdn || !$messageText) {
             Log::warning('Safaricom MO Webhook missing fields', $payload);
             return response()->json(['error' => 'Invalid payload structure'], 400);
         }
 
-        return $this->processMO($shortcodeText, $msisdn, $messageText, $request->ip(), null);
+        return $this->processMO($shortcodeText, $msisdn, $messageText, $request->ip(), null, $linkId);
     }
 
 
 
-    protected function processMO($shortcodeText, $rawMsisdn, $messageText, $requestIp, $clientAccountFallback = null)
+    protected function processMO($shortcodeText, $rawMsisdn, $messageText, $requestIp, $clientAccountFallback = null, $linkId = null)
     {
         $msisdn = preg_replace('/[^0-9]/', '', $rawMsisdn);
         if (str_starts_with($msisdn, '0')) {
@@ -206,6 +207,7 @@ class ShortcodeController extends Controller
             'msisdn' => $msisdn,
             'msisdn_hash' => $msisdnHash,
             'message' => $messageText,
+            'link_id' => $linkId,
         ]);
 
         $actionType = $keyword ? $keyword->action_type : 'WEBHOOK';
@@ -276,13 +278,17 @@ class ShortcodeController extends Controller
         }
 
         if ($replyText) {
-            $primaryRoute = \App\Modules\Messaging\Models\Route::where('is_active', true)->orderBy('priority', 'asc')->first();
-            $baseCost = $primaryRoute ? (float) $primaryRoute->cost_per_sms : 0.5000;
-            $markup = 0.0000;
-            if ($clientAccount->resellerAccount) {
-                $markup += $baseCost * ((float)$clientAccount->resellerAccount->markup_percentage / 100);
+            if ($shortcode->is_premium) {
+                $cost = (float) $shortcode->premium_rate;
+            } else {
+                $primaryRoute = \App\Modules\Messaging\Models\Route::where('is_active', true)->orderBy('priority', 'asc')->first();
+                $baseCost = $primaryRoute ? (float) $primaryRoute->cost_per_sms : 0.5000;
+                $markup = 0.0000;
+                if ($clientAccount->resellerAccount) {
+                    $markup += $baseCost * ((float)$clientAccount->resellerAccount->markup_percentage / 100);
+                }
+                $cost = $baseCost + $markup;
             }
-            $cost = $baseCost + $markup;
 
             // Create a dummy campaign to hold the auto-reply context for SendSMSJob
             $campaign = \App\Modules\Messaging\Models\Campaign::create([
@@ -298,6 +304,7 @@ class ShortcodeController extends Controller
                 'msisdn_hash' => $msisdnHash,
                 'price' => $cost,
                 'status' => 'QUEUED',
+                'link_id' => $linkId,
             ]);
 
             try {

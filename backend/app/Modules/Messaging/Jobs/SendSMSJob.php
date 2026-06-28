@@ -99,7 +99,7 @@ class SendSMSJob implements ShouldQueue
             }
 
             // 5. Trigger dispatch to carrier gateway
-            $result = $gateway->send($senderIdText, $recipientMsisdn, $messageText);
+            $result = $gateway->send($senderIdText, $recipientMsisdn, $messageText, $record->link_id ?? null);
 
             if ($result['status'] !== 'SENT') {
                 $errorString = $result['error_code'] ?? 'GATEWAY_ERROR';
