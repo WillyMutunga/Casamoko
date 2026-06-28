@@ -173,6 +173,24 @@ Route::get('/process-queue', function () {
         ]);
     }
 });
+
+Route::get('/debug-logs', function () {
+    $logFile = storage_path('logs/laravel.log');
+    if (!file_exists($logFile)) {
+        return response()->json(['error' => 'Log file not found']);
+    }
+    
+    // Read the last 100 lines using shell command (works on most linux systems)
+    $lines = shell_exec('tail -n 100 ' . escapeshellarg($logFile));
+    
+    // Fallback if shell_exec is disabled
+    if (!$lines) {
+        $file = file($logFile);
+        $lines = implode("", array_slice($file, -100));
+    }
+    
+    return response()->json(['logs' => $lines]);
+});
 Route::get('/test-safaricom-gateway', function () {
     try {
         $gateway = app(\App\Modules\Messaging\Services\Gateways\SafaricomSmsGateway::class);
