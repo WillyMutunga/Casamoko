@@ -153,16 +153,24 @@ Route::get('/debug-jobs', function() {
 
 Route::get('/process-queue', function () {
     try {
-        // Run the queue worker and process any pending jobs until empty
+        $basePath = base_path();
+        $cronCommand = "/usr/local/bin/php {$basePath}/artisan queue:work --stop-when-empty";
+        
+        // Attempt to run it directly
         \Illuminate\Support\Facades\Artisan::call('queue:work', ['--stop-when-empty' => true]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Queue processed successfully!',
-            'output' => \Illuminate\Support\Facades\Artisan::output()
+            'message' => 'Queue worker executed!',
+            'your_exact_cron_command' => $cronCommand,
+            'server_path' => $basePath,
+            'worker_output' => \Illuminate\Support\Facades\Artisan::output()
         ]);
     } catch (\Exception $e) {
-        return response()->json(['success' => false, 'error' => $e->getMessage()]);
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
     }
 });
 Route::get('/test-safaricom-gateway', function () {
