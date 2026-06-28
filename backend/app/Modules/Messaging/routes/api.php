@@ -180,14 +180,20 @@ Route::get('/debug-logs', function () {
         return response()->json(['error' => 'Log file not found']);
     }
     
-    // Completely native PHP fallback
     try {
-        $file = file($logFile);
-        if ($file === false) {
-             return response()->json(['error' => 'Failed to read log file']);
-        }
-        $lines = implode("", array_slice($file, -100));
-        return response()->json(['logs' => $lines]);
+        $fp = fopen($logFile, 'r');
+        if (!$fp) return response()->json(['error' => 'Failed to open log file']);
+        
+        fseek($fp, 0, SEEK_END);
+        $pos = ftell($fp);
+        
+        // Read last 20KB to ensure we catch recent errors
+        $bytesToRead = min(20000, $pos);
+        fseek($fp, -$bytesToRead, SEEK_END);
+        $text = fread($fp, $bytesToRead);
+        fclose($fp);
+        
+        return response()->json(['logs' => mb_convert_encoding($text, 'UTF-8', 'UTF-8')]);
     } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()]);
     }
