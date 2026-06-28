@@ -434,13 +434,26 @@ class CampaignController extends Controller
         }
 
         $status = $request->input('status');
-        $query = \App\Modules\Messaging\Models\MessageRecord::where('campaign_id', $campaign->id);
+        $query = \App\Modules\Messaging\Models\MessageRecord::with(['contact', 'route'])
+            ->where('campaign_id', $campaign->id);
         
         if ($status) {
             $query->where('status', $status);
         }
 
         $logs = $query->orderBy('id', 'desc')->paginate(50);
+        $logs->getCollection()->transform(function ($log) {
+            return [
+                'id' => $log->id,
+                'msisdn' => $log->contact ? $log->contact->msisdn : 'Unknown',
+                'status' => $log->status,
+                'network_status_code' => $log->network_status_code,
+                'error_message' => null, // Provide a default if frontend expects it
+                'created_at' => $log->created_at,
+                'cost' => $log->price,
+                'route' => $log->route,
+            ];
+        });
 
         return response()->json([
             'status' => 'SUCCESS',
