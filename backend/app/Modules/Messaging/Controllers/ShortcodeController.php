@@ -182,13 +182,27 @@ class ShortcodeController extends Controller
         $firstWord = strtoupper($words[0]);
         $isGlobalStop = in_array($firstWord, ['STOP', 'UNSUBSCRIBE', 'QUIT']);
 
-        $keyword = Keyword::where('shortcode_id', $shortcode->id)
-            ->where(function ($query) use ($firstWord) {
-                $query->whereRaw('UPPER(keyword) = ?', [$firstWord])
-                      ->orWhere('keyword', '*');
-            })
-            ->orderByRaw("CASE WHEN UPPER(keyword) = ? THEN 1 WHEN keyword = '*' THEN 2 ELSE 3 END", [$firstWord])
-            ->first();
+        $keyword = null;
+        $activeSession = null;
+
+        if (!$isGlobalStop) {
+            $activeSession = \App\Modules\Messaging\Models\ShortcodeSession::where('shortcode_id', $shortcode->id)
+                ->where('msisdn_hash', $msisdnHash)
+                ->where(function($q) {
+                    $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                })
+                ->first();
+                
+            if (!$activeSession) {
+                $keyword = Keyword::where('shortcode_id', $shortcode->id)
+                    ->where(function ($query) use ($firstWord) {
+                        $query->whereRaw('UPPER(keyword) = ?', [$firstWord])
+                              ->orWhere('keyword', '*');
+                    })
+                    ->orderByRaw("CASE WHEN UPPER(keyword) = ? THEN 1 WHEN keyword = '*' THEN 2 ELSE 3 END", [$firstWord])
+                    ->first();
+            }
+        }
 
         $clientAccount = null;
         if ($shortcode->is_dedicated) {
@@ -210,8 +224,15 @@ class ShortcodeController extends Controller
             'link_id' => $linkId,
         ]);
 
-        $actionType = $keyword ? $keyword->action_type : 'WEBHOOK';
-        $replyText = $keyword ? $keyword->reply_message : null;
+        $actionType = 'WEBHOOK';
+        $replyText = null;
+        
+        if ($keyword) {
+            $actionType = $keyword->action_type;
+            $replyText = $keyword->reply_message;
+        } elseif ($activeSession) {
+            $actionType = 'SESSION_WEBHOOK';
+        }
 
         if ($isGlobalStop) {
             $actionType = 'OPT_OUT';
@@ -262,7 +283,9 @@ class ShortcodeController extends Controller
             ]);
         }
 
-        if ($actionType === 'WEBHOOK' && $keyword && $keyword->callback_webhook) {
+        if (($actionType === 'WEBHOOK' && $keyword && $keyword->callback_webhook) || ($actionType === 'SESSION_WEBHOOK' && $activeSession && $activeSession->webhook_url)) {
+            $webhookUrl = $activeSession ? $activeSession->webhook_url : $keyword->callback_webhook;
+            
             $payload = [
                 'msisdn' => $msisdn,
                 'shortcode' => $shortcodeText,
@@ -270,9 +293,14 @@ class ShortcodeController extends Controller
                 'keyword' => $firstWord,
                 'timestamp' => now()->toIso8601String()
             ];
+
+            if ($activeSession) {
+                $payload['session_id'] = $activeSession->id;
+                $payload['current_state'] = $activeSession->current_state;
+            }
             
             \App\Modules\Messaging\Jobs\DispatchClientWebhookJob::dispatch(
-                $keyword->callback_webhook, 
+                $webhookUrl, 
                 $payload, 
                 $clientAccount->id
             );
