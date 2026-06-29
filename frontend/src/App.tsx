@@ -623,7 +623,7 @@ export default function App() {
       setWizCostEstimate(perSmsCost * wizSegments * nums.length);
     } else {
       const group = contactLists.find(g => g.id === wizSelectedGroup);
-      const count = group ? 24 : 0; // Hardcoded fallback from earlier, kept intact
+      const count = group ? (group.contact_count || 0) : 0;
       setWizDeduplicatedCount(count);
       setWizCostEstimate(perSmsCost * wizSegments * count);
     }
