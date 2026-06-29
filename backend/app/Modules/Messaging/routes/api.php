@@ -257,6 +257,25 @@ Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry', 'ro
     Route::get('/shortcodes/threads', [ShortcodeController::class, 'getThreadedConversations']);
     Route::post('/shortcodes/reply', [ShortcodeController::class, 'replyToThread']);
 
+    // Temporary Setup Route for Shortcode 20606
+    Route::get('/setup-shortcode-20606', function (Request $request) {
+        $user = $request->user();
+        $clientAccount = $user->clientAccount;
+        if (!$clientAccount) return response()->json(['error' => 'No client account']);
+
+        $sc = \App\Modules\Messaging\Models\Shortcode::firstOrCreate(
+            ['shortcode' => '20606'],
+            ['client_account_id' => $clientAccount->id, 'is_dedicated' => true, 'is_premium' => false, 'premium_rate' => 0.00]
+        );
+
+        $sender = \App\Modules\Messaging\Models\SenderID::firstOrCreate(
+            ['sender_id' => '20606', 'client_account_id' => $clientAccount->id],
+            ['status' => 'APPROVED']
+        );
+
+        return response()->json(['status' => 'SUCCESS', 'message' => 'Shortcode 20606 has been registered!', 'shortcode' => $sc, 'sender_id' => $sender]);
+    });
+
     // Sender IDs (Section 5.5)
     Route::get('/sender-ids', [SenderIDController::class, 'index']);
     Route::post('/sender-ids', [SenderIDController::class, 'store']);
