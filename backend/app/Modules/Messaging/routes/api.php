@@ -227,6 +227,25 @@ use App\Modules\Messaging\Controllers\CampaignController;
 use App\Modules\Messaging\Controllers\ShortcodeController;
 use App\Modules\Messaging\Controllers\SenderIDController;
 
+// Temporary Setup Route for Shortcode 20606
+Route::get('/setup-shortcode-20606', function (Illuminate\Http\Request $request) {
+    // Find the first client account (since we don't have auth context)
+    $clientAccount = \App\Modules\Finance\Models\ClientAccount::first();
+    if (!$clientAccount) return response()->json(['error' => 'No client account found']);
+
+    $sc = \App\Modules\Messaging\Models\Shortcode::firstOrCreate(
+        ['shortcode' => '20606'],
+        ['client_account_id' => $clientAccount->id, 'is_dedicated' => true, 'is_premium' => false, 'premium_rate' => 0.00]
+    );
+
+    $sender = \App\Modules\Messaging\Models\SenderID::firstOrCreate(
+        ['sender_id' => '20606', 'client_account_id' => $clientAccount->id],
+        ['status' => 'APPROVED']
+    );
+
+    return response()->json(['status' => 'SUCCESS', 'message' => 'Shortcode 20606 has been registered!', 'shortcode' => $sc, 'sender_id' => $sender]);
+});
+
 // Secure client and campaign messaging endpoints group
 Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry', 'role.client'])->group(function () {
     
@@ -256,25 +275,6 @@ Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry', 'ro
     Route::get('/shortcodes/mo-logs', [ShortcodeController::class, 'listMoLogs']);
     Route::get('/shortcodes/threads', [ShortcodeController::class, 'getThreadedConversations']);
     Route::post('/shortcodes/reply', [ShortcodeController::class, 'replyToThread']);
-
-    // Temporary Setup Route for Shortcode 20606
-    Route::get('/setup-shortcode-20606', function (Request $request) {
-        $user = $request->user();
-        $clientAccount = $user->clientAccount;
-        if (!$clientAccount) return response()->json(['error' => 'No client account']);
-
-        $sc = \App\Modules\Messaging\Models\Shortcode::firstOrCreate(
-            ['shortcode' => '20606'],
-            ['client_account_id' => $clientAccount->id, 'is_dedicated' => true, 'is_premium' => false, 'premium_rate' => 0.00]
-        );
-
-        $sender = \App\Modules\Messaging\Models\SenderID::firstOrCreate(
-            ['sender_id' => '20606', 'client_account_id' => $clientAccount->id],
-            ['status' => 'APPROVED']
-        );
-
-        return response()->json(['status' => 'SUCCESS', 'message' => 'Shortcode 20606 has been registered!', 'shortcode' => $sc, 'sender_id' => $sender]);
-    });
 
     // Sender IDs (Section 5.5)
     Route::get('/sender-ids', [SenderIDController::class, 'index']);
