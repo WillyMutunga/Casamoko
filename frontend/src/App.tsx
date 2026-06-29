@@ -796,6 +796,86 @@ export default function App() {
 
   // --- UAM & CLM CUSTOM ACTION HANDLERS ---
   const [importWizardStatus, setImportWizardStatus] = useState<string | null>(null);
+  
+  // Group Manager Modal
+  const [selectedManagerGroup, setSelectedManagerGroup] = useState<any>(null);
+  const [managerGroupContacts, setManagerGroupContacts] = useState<any[]>([]);
+  const [managerGroupLoading, setManagerGroupLoading] = useState(false);
+  const [managerNewContactPhone, setManagerNewContactPhone] = useState('');
+  const [managerNewContactName, setManagerNewContactName] = useState('');
+
+  const fetchManagerGroupContacts = async (groupId: number) => {
+    if (!token) return;
+    setManagerGroupLoading(true);
+    try {
+      const res = await apiClient.get(`/client/contacts?list_id=${groupId}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.data.contacts) {
+        setManagerGroupContacts(res.data.contacts.data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    setManagerGroupLoading(false);
+  };
+
+  const handleUpdateManagerGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !selectedManagerGroup) return;
+    try {
+      await apiClient.put(`/client/contacts/lists/${selectedManagerGroup.id}`, {
+        name: selectedManagerGroup.name,
+        description: selectedManagerGroup.description
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success('Group updated successfully');
+      fetchClientData(token);
+    } catch (err) {
+      toast.error('Failed to update group');
+    }
+  };
+
+  const handleDeleteManagerGroup = async () => {
+    if (!token || !selectedManagerGroup) return;
+    if (!window.confirm('Are you sure you want to delete this entire group and its contacts?')) return;
+    try {
+      await apiClient.delete(`/client/contacts/lists/${selectedManagerGroup.id}`, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success('Group deleted successfully');
+      setSelectedManagerGroup(null);
+      fetchClientData(token);
+    } catch (err) {
+      toast.error('Failed to delete group');
+    }
+  };
+
+  const handleAddManagerContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !selectedManagerGroup) return;
+    if (!managerNewContactPhone) return;
+    try {
+      await apiClient.post(`/client/contacts/lists/${selectedManagerGroup.id}/import`, {
+        contacts: [
+          { msisdn: managerNewContactPhone, name: managerNewContactName }
+        ]
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success('Contact added successfully');
+      setManagerNewContactPhone('');
+      setManagerNewContactName('');
+      fetchManagerGroupContacts(selectedManagerGroup.id);
+    } catch (err) {
+      toast.error('Failed to add contact');
+    }
+  };
+
+  const handleDeleteManagerContact = async (contactId: number) => {
+    if (!token) return;
+    if (!window.confirm('Are you sure you want to remove this contact?')) return;
+    try {
+      await apiClient.delete(`/client/contacts/${contactId}`, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success('Contact removed');
+      fetchManagerGroupContacts(selectedManagerGroup.id);
+    } catch (err) {
+      toast.error('Failed to remove contact');
+    }
+  };
 
 
 
@@ -3866,6 +3946,28 @@ export default function App() {
                                     Approve
                                   </button>
                                 )}
+                                {user?.sub_role === 'CLIENT_ADMIN' && (
+                                  <button
+                                    onClick={async () => {
+                                      if (window.confirm('Are you sure you want to delete this campaign? This cannot be undone.')) {
+                                        if (token) {
+                                          try {
+                                            await apiClient.delete(`/campaigns/${camp.id}`, { headers: { Authorization: `Bearer ${token}` } });
+                                            fetchClientData(token);
+                                          } catch (err) {
+                                            toast.error('Failed to delete campaign');
+                                          }
+                                        } else {
+                                          setClientCampaigns(clientCampaigns.filter(c => c.id !== camp.id));
+                                        }
+                                      }
+                                    }}
+                                    className="p-1.5 bg-red-900/30 border border-red-800/50 hover:bg-red-800/50 text-red-400 rounded-lg transition-all ml-1"
+                                    title="Delete Campaign"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                               </td>
                             </tr>
                           ))}
@@ -4429,13 +4531,27 @@ export default function App() {
                               </div>
                             </div>
 
-                            <button
-                              type="button"
-                              onClick={handleContactsImportWizardSubmit}
-                              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition-all uppercase tracking-wider text-xs flex items-center justify-center gap-1.5 shadow-sm"
-                            >
-                              <CheckCircle2 className="w-4 h-4" /> Run Programmatic Auditing & Import
-                            </button>
+                            <div className="flex gap-4">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setImportWizardStep(1);
+                                  setRawImportData('');
+                                  setImportHeaders([]);
+                                  setImportWizardStatus(null);
+                                }}
+                                className="w-1/3 bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl transition-all uppercase tracking-wider text-xs flex items-center justify-center shadow-sm"
+                              >
+                                Back to Upload
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleContactsImportWizardSubmit}
+                                className="w-2/3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition-all uppercase tracking-wider text-xs flex items-center justify-center gap-1.5 shadow-sm"
+                              >
+                                <CheckCircle2 className="w-4 h-4" /> Run Programmatic Auditing & Import
+                              </button>
+                            </div>
                           </div>
                         )}
 
@@ -4546,7 +4662,14 @@ export default function App() {
                         </thead>
                         <tbody className="divide-y divide-slate-800/40">
                           {contactLists.map(g => (
-                            <tr key={g.id} className="hover:bg-slate-900/20">
+                            <tr 
+                              key={g.id} 
+                              className="hover:bg-slate-900/40 cursor-pointer transition-all"
+                              onClick={() => {
+                                setSelectedManagerGroup(g);
+                                fetchManagerGroupContacts(g.id);
+                              }}
+                            >
                               <td className="px-6 py-4 font-bold text-white">{g.name}</td>
                               <td className="px-6 py-4 text-xs text-gray-400">{g.description}</td>
                               <td className="px-6 py-4 text-xs text-indigo-300">{g.subscription_source}</td>
@@ -4557,7 +4680,10 @@ export default function App() {
                               </td>
                               <td className="px-6 py-4 text-center">
                                 <button 
-                                  onClick={() => handleExportCSVList(g.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleExportCSVList(g.id);
+                                  }}
                                   className="px-3 py-1.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-indigo-400 font-bold text-xs rounded-xl transition-all shadow-sm flex items-center gap-1.5 mx-auto"
                                 >
                                   <ArrowUpRight className="w-3.5 h-3.5" /> Export (CSV)
@@ -6664,6 +6790,136 @@ export default function App() {
             <div className="flex gap-4">
               <button onClick={() => setDeletingReseller(null)} className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition-all">Cancel</button>
               <button onClick={handleDeleteReseller} className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-xl transition-all">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GROUP MANAGER MODAL */}
+      {selectedManagerGroup && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-darkBg border border-slate-800 w-full max-w-4xl rounded-2xl shadow-2xl flex flex-col max-h-[85vh]">
+            <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50 rounded-t-2xl">
+              <div>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Users className="w-5 h-5 text-indigo-400" />
+                  Manage Group: {selectedManagerGroup.name}
+                </h2>
+              </div>
+              <button onClick={() => setSelectedManagerGroup(null)} className="p-2 text-gray-400 hover:text-white bg-slate-800 rounded-full">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 flex-1 overflow-y-auto space-y-8">
+              {/* Group Edit Form */}
+              <div className="bg-slate-900/40 p-4 rounded-xl border border-slate-800">
+                <h4 className="font-bold text-white mb-4 text-sm">Edit Group Details</h4>
+                <form onSubmit={handleUpdateManagerGroup} className="flex gap-4 items-end">
+                  <div className="flex-1">
+                    <label className="block text-[10px] font-semibold text-gray-400 uppercase mb-1">Group Name</label>
+                    <input 
+                      type="text" 
+                      value={selectedManagerGroup.name} 
+                      onChange={e => setSelectedManagerGroup({ ...selectedManagerGroup, name: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" 
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-[10px] font-semibold text-gray-400 uppercase mb-1">Description</label>
+                    <input 
+                      type="text" 
+                      value={selectedManagerGroup.description || ''} 
+                      onChange={e => setSelectedManagerGroup({ ...selectedManagerGroup, description: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" 
+                    />
+                  </div>
+                  <button type="submit" className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-sm transition-all h-fit">
+                    Update Details
+                  </button>
+                </form>
+                
+                <div className="mt-4 pt-4 border-t border-slate-800">
+                  <button onClick={handleDeleteManagerGroup} className="flex items-center gap-1.5 px-3 py-1.5 bg-red-900/30 border border-red-800/50 hover:bg-red-800/50 text-red-400 rounded-lg text-xs font-bold transition-all">
+                    <Trash2 className="w-3.5 h-3.5" /> Delete Entire Group
+                  </button>
+                </div>
+              </div>
+
+              {/* Add Single Contact Form */}
+              <div className="bg-slate-900/40 p-4 rounded-xl border border-slate-800">
+                <h4 className="font-bold text-white mb-4 text-sm">Add Single Contact</h4>
+                <form onSubmit={handleAddManagerContact} className="flex gap-4 items-end">
+                  <div className="flex-1">
+                    <label className="block text-[10px] font-semibold text-gray-400 uppercase mb-1">Phone Number (Required)</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. 254712345678"
+                      value={managerNewContactPhone} 
+                      onChange={e => setManagerNewContactPhone(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-mono" 
+                      required
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-[10px] font-semibold text-gray-400 uppercase mb-1">Name (Optional)</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. John Doe"
+                      value={managerNewContactName} 
+                      onChange={e => setManagerNewContactName(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" 
+                    />
+                  </div>
+                  <button type="submit" className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-sm transition-all h-fit flex items-center gap-1.5">
+                    <Plus className="w-4 h-4" /> Add
+                  </button>
+                </form>
+              </div>
+
+              {/* Contact List Table */}
+              <div>
+                <h4 className="font-bold text-white mb-4 text-sm">Contacts in this Group</h4>
+                {managerGroupLoading ? (
+                  <div className="flex justify-center items-center py-8">
+                    <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : managerGroupContacts.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 text-sm bg-slate-900/20 rounded-xl border border-slate-800">
+                    No contacts found in this group.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto rounded-xl border border-slate-800/60">
+                    <table className="w-full text-left text-sm text-gray-300">
+                      <thead className="bg-slate-900/60 uppercase tracking-widest text-[10px] text-gray-400">
+                        <tr>
+                          <th className="px-4 py-3">Phone Number</th>
+                          <th className="px-4 py-3">Name</th>
+                          <th className="px-4 py-3 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/40">
+                        {managerGroupContacts.map((c: any) => (
+                          <tr key={c.id} className="hover:bg-slate-900/40">
+                            <td className="px-4 py-3 font-bold text-white font-mono">{c.msisdn}</td>
+                            <td className="px-4 py-3 text-gray-400">{c.name || '-'}</td>
+                            <td className="px-4 py-3 text-right">
+                              <button 
+                                onClick={() => handleDeleteManagerContact(c.id)}
+                                className="p-1.5 bg-slate-800 hover:bg-red-900/40 text-gray-400 hover:text-red-400 rounded transition-all inline-flex"
+                                title="Remove Contact"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
         </div>

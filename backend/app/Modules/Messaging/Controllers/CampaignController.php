@@ -461,4 +461,31 @@ class CampaignController extends Controller
             'logs' => $logs
         ]);
     }
+
+    /**
+     * Delete an old campaign.
+     */
+    public function destroy(Request $request, $id)
+    {
+        $user = $request->user();
+        $clientAccount = $user->clientAccount;
+
+        if (!$clientAccount) {
+            return response()->json(['error' => 'TENANT_NOT_FOUND'], 403);
+        }
+
+        $campaign = Campaign::where('client_account_id', $clientAccount->id)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        // Optionally, delete associated message records to free up space
+        MessageRecord::where('campaign_id', $campaign->id)->delete();
+        
+        $campaign->delete();
+
+        return response()->json([
+            'status' => 'SUCCESS',
+            'message' => 'Campaign deleted successfully'
+        ]);
+    }
 }

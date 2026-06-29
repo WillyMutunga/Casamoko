@@ -49,6 +49,49 @@ class ContactController extends Controller
         ]);
     }
 
+    public function updateList(Request $request, $listId)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+
+        $clientAccountId = $request->user()->client_account_id;
+
+        $list = ContactList::where('client_account_id', $clientAccountId)
+                           ->where('id', $listId)
+                           ->firstOrFail();
+
+        $list->update([
+            'name' => $request->name,
+            'description' => $request->description ?? '',
+        ]);
+
+        return response()->json([
+            'status' => 'SUCCESS',
+            'contact_list' => $list
+        ]);
+    }
+
+    public function deleteList(Request $request, $listId)
+    {
+        $clientAccountId = $request->user()->client_account_id;
+
+        $list = ContactList::where('client_account_id', $clientAccountId)
+                           ->where('id', $listId)
+                           ->firstOrFail();
+
+        // Delete the list. The DB cascade should handle removing the members from contact_list_members.
+        // If not using cascade, we can manually delete the relationship:
+        DB::table('contact_list_members')->where('contact_list_id', $list->id)->delete();
+        $list->delete();
+
+        return response()->json([
+            'status' => 'SUCCESS',
+            'message' => 'Contact list deleted successfully'
+        ]);
+    }
+
     public function importContacts(Request $request, $listId)
     {
         $request->validate([
@@ -112,6 +155,24 @@ class ContactController extends Controller
         
         return response()->json([
             'contacts' => $contacts
+        ]);
+    }
+
+    public function deleteContact(Request $request, $contactId)
+    {
+        $clientAccountId = $request->user()->client_account_id;
+
+        $contact = Contact::where('client_account_id', $clientAccountId)
+                          ->where('id', $contactId)
+                          ->firstOrFail();
+
+        // Delete the contact. The DB cascade should handle removing the members from contact_list_members.
+        DB::table('contact_list_members')->where('contact_id', $contact->id)->delete();
+        $contact->delete();
+
+        return response()->json([
+            'status' => 'SUCCESS',
+            'message' => 'Contact deleted successfully'
         ]);
     }
 

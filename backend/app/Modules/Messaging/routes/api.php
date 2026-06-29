@@ -238,6 +238,7 @@ Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry', 'ro
     Route::get('/campaigns', [CampaignController::class, 'index']);
     Route::post('/campaigns', [CampaignController::class, 'store']);
     Route::post('/campaigns/preview', [CampaignController::class, 'preview']);
+    Route::delete('/campaigns/{id}', [CampaignController::class, 'destroy']);
 
     // Templates
     Route::get('/templates', [\App\Modules\Messaging\Controllers\TemplateController::class, 'index']);
