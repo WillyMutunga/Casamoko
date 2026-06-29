@@ -227,23 +227,12 @@ use App\Modules\Messaging\Controllers\CampaignController;
 use App\Modules\Messaging\Controllers\ShortcodeController;
 use App\Modules\Messaging\Controllers\SenderIDController;
 
-// Temporary Setup Route for Shortcode 20606
-Route::get('/setup-shortcode-20606', function (Illuminate\Http\Request $request) {
-    $clients = \App\Modules\Accounts\Models\ClientAccount::all();
-    
-    foreach ($clients as $client) {
-        \App\Modules\Messaging\Models\Shortcode::updateOrCreate(
-            ['shortcode' => '20606', 'client_account_id' => $client->id],
-            ['is_dedicated' => false, 'is_premium' => false, 'premium_rate' => 0.00]
-        );
-
-        \App\Modules\Messaging\Models\SenderID::updateOrCreate(
-            ['sender_id' => '20606', 'client_account_id' => $client->id],
-            ['status' => 'APPROVED']
-        );
-    }
-
-    return response()->json(['status' => 'SUCCESS', 'message' => 'Shortcode 20606 has been registered to all ' . $clients->count() . ' accounts!']);
+// Cleanup Duplicate Route
+Route::get('/cleanup-duplicate-shortcode', function () {
+    \App\Modules\Messaging\Models\Shortcode::where('shortcode', '20606')
+        ->whereNull('client_account_id')
+        ->delete();
+    return response()->json(['status' => 'SUCCESS', 'message' => 'Duplicate cleaned up! You can safely delete this route now.']);
 });
 
 // Secure client and campaign messaging endpoints group
