@@ -588,6 +588,28 @@ export default function App() {
     }
   }, [wizTemplate]);
 
+  // Live polling for Shortcode Inbox (Radio Station Live Feed)
+  useEffect(() => {
+    let interval: any;
+    if (currentPage === 'shortcodes' && token) {
+      interval = setInterval(async () => {
+        try {
+          const res = await apiClient.get('/shortcodes/threads', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.data.threads) {
+            setThreadedConversations(res.data.threads);
+          }
+        } catch (e) {
+          console.error("Live Inbox Polling Failed", e);
+        }
+      }, 3000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [currentPage, token]);
+
   // Calculate campaign total cost estimates
   useEffect(() => {
     let perSmsCost = currentBaseCost;
@@ -1690,7 +1712,7 @@ export default function App() {
     const payload = {
       msisdn: activeConversationMsisdn,
       message: threadReplyText,
-      shortcode_id: 1
+      shortcode_id: shortcodes.length > 0 ? shortcodes[0].id : 1
     };
 
     if (token) {

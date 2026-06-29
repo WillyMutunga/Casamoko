@@ -255,6 +255,7 @@ Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry', 'ro
     Route::post('/shortcodes/keywords', [ShortcodeController::class, 'storeKeyword']);
     Route::get('/shortcodes/mo-logs', [ShortcodeController::class, 'listMoLogs']);
     Route::get('/shortcodes/threads', [ShortcodeController::class, 'getThreadedConversations']);
+    Route::post('/shortcodes/reply', [ShortcodeController::class, 'replyToThread']);
 
     // Sender IDs (Section 5.5)
     Route::get('/sender-ids', [SenderIDController::class, 'index']);

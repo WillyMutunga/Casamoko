@@ -464,4 +464,101 @@ class ShortcodeController extends Controller
             'threads' => $threads
         ]);
     }
+
+    /**
+     * Dispatch an outgoing MT SMS reply from the Anchor back to the user.
+     */
+    public function replyToThread(Request $request)
+    {
+        $user = $request->user();
+        $clientAccount = $user->clientAccount;
+
+        if (!$clientAccount) {
+            return response()->json(['error' => 'TENANT_NOT_FOUND'], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'msisdn' => 'required|string',
+            'message' => 'required|string',
+            'shortcode_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $shortcode = Shortcode::find($request->input('shortcode_id'));
+        if (!$shortcode || ($shortcode->is_dedicated && $shortcode->client_account_id !== $clientAccount->id)) {
+            return response()->json(['error' => 'UNAUTHORIZED_SHORTCODE'], 403);
+        }
+
+        // 1. Resolve Contact
+        $msisdn = preg_replace('/[^0-9]/', '', $request->input('msisdn'));
+        if (str_starts_with($msisdn, '0')) {
+            $msisdn = '254' . substr($msisdn, 1);
+        }
+        $msisdnHash = Contact::hashMsisdn($msisdn);
+        
+        $contact = Contact::updateOrCreate(
+            ['client_account_id' => $clientAccount->id, 'msisdn_hash' => $msisdnHash],
+            ['msisdn' => $msisdn, 'name' => 'Shortcode Interaction']
+        );
+
+        // 2. Resolve Pricing
+        $primaryRoute = \App\Modules\Messaging\Models\Route::where('is_active', true)->orderBy('priority', 'asc')->first();
+        $totalCost = $primaryRoute ? (float) $primaryRoute->cost_per_sms : 0.5000;
+
+        if ($clientAccount->resellerAccount) {
+            $markupRatio = (float) $clientAccount->resellerAccount->markup_percentage;
+            $totalCost += $totalCost * ($markupRatio / 100);
+        }
+
+        // 3. Resolve Sender ID
+        $senderID = \App\Modules\Messaging\Models\SenderID::firstOrCreate(
+            ['client_account_id' => $clientAccount->id, 'sender_id' => $shortcode->shortcode],
+            ['status' => 'APPROVED']
+        );
+
+        $messageText = $request->input('message');
+
+        // 4. Create Campaign
+        $campaign = \App\Modules\Messaging\Models\Campaign::create([
+            'client_account_id' => $clientAccount->id,
+            'sender_id_id' => $senderID->id,
+            'name' => "Shortcode Reply to " . substr($msisdn, 0, 6) . "xxxx",
+            'template' => $messageText,
+            'unicode_type' => (strlen($messageText) !== utf8_decode($messageText)) ? 'UCS-2' : 'GSM-7',
+            'status' => 'PROCESSING',
+            'sent_count' => 0,
+            'delivered_count' => 0,
+            'failed_count' => 0,
+        ]);
+
+        // 5. Create MessageRecord
+        $record = MessageRecord::create([
+            'campaign_id' => $campaign->id,
+            'contact_id' => $contact->id,
+            'msisdn_hash' => $msisdnHash,
+            'route_id' => null,
+            'price' => $totalCost,
+            'status' => 'QUEUED',
+            'link_id' => null, // MT Replies don't strictly need a link_id unless it's PRSP on-demand
+        ]);
+
+        // 6. Charge Ledger & Dispatch
+        try {
+            $this->ledgerService->reserveFunds($clientAccount->id, $totalCost, "Shortcode MT Reply to {$msisdn}");
+            
+            SendSMSJob::dispatch($record->id);
+            
+            return response()->json([
+                'status' => 'SUCCESS',
+                'message' => 'Reply dispatched successfully.'
+            ]);
+        } catch (\App\Modules\Finance\Exceptions\InsufficientFundsException $e) {
+            $record->update(['status' => 'FAILED', 'network_status_code' => 'INSUFFICIENT_FUNDS']);
+            $campaign->update(['status' => 'FAILED', 'failed_count' => 1]);
+            return response()->json(['error' => 'INSUFFICIENT_FUNDS', 'message' => $e->getMessage()], 402);
+        }
+    }
 }
