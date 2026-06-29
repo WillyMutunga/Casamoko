@@ -32,6 +32,13 @@ class ContactList extends Model
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['contact_count'];
+
+    /**
      * The tenant account associated with this contact group list.
      */
     public function clientAccount()
@@ -45,5 +52,15 @@ class ContactList extends Model
     public function contacts()
     {
         return $this->belongsToMany(Contact::class, 'contact_list_members', 'contact_list_id', 'contact_id');
+    }
+
+    /**
+     * Get the dynamic count of contacts in this list.
+     */
+    public function getContactCountAttribute()
+    {
+        return \Illuminate\Support\Facades\DB::table('contact_list_members')
+            ->where('contact_list_id', $this->id)
+            ->count();
     }
 }

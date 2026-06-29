@@ -82,8 +82,7 @@ class ContactController extends Controller
             $importedCount++;
         }
 
-        $list->contact_count = DB::table('contact_list_members')->where('contact_list_id', $list->id)->count();
-        $list->save();
+        // The contact_count is now dynamically appended by the ContactList model accessor
 
         return response()->json([
             'status' => 'SUCCESS',
