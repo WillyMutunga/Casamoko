@@ -2345,15 +2345,15 @@ export default function App() {
             <div className="absolute w-[400px] h-[400px] rounded-full bg-blue-600/5 blur-3xl bottom-20 right-20 pointer-events-none"></div>
 
             {/* Header Navbar */}
-            <header className="h-16 bg-slate-900/20 backdrop-blur-md border-b border-slate-850 flex items-center justify-between px-8 sticky top-0 z-10">
-              <div className="flex items-center gap-4">
+            <header className="h-16 bg-slate-900/20 backdrop-blur-md border-b border-slate-850 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 w-full">
+              <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
                 <button 
                   onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="p-1.5 bg-slate-900/60 border border-slate-800 rounded-lg text-gray-400 hover:text-white"
+                  className="p-1.5 shrink-0 bg-slate-900/60 border border-slate-800 rounded-lg text-gray-400 hover:text-white"
                 >
                   <Menu className="w-5 h-5" />
                 </button>
-                <h1 className="text-xl font-black text-white tracking-wide uppercase">
+                <h1 className="text-sm md:text-xl font-black text-white tracking-wide uppercase truncate">
                   {currentPage === 'dashboard' 
                     ? `${user.role_tier} OVERVIEW` 
                     : currentPage === 'shortcodes' 
@@ -2371,39 +2371,37 @@ export default function App() {
               </div>
 
               {/* Header Right Widgets depending on role */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 md:gap-4 shrink-0 pl-2">
                 {user.role_tier === 'CLIENT' && clientAccount && (
                   <>
-                    {/* Sub-Role Simulator Dropdown */}
-
-                    <div className="bg-slate-900/60 border border-slate-800/80 px-4 py-1.5 rounded-full flex items-center gap-3">
+                    <div className="bg-slate-900/60 border border-slate-800/80 px-4 py-1.5 rounded-full hidden lg:flex items-center gap-3">
                       <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></div>
-                      <span className="text-xs text-gray-300 font-semibold">{clientAccount.name}</span>
+                      <span className="text-xs text-gray-300 font-semibold truncate max-w-[120px]">{clientAccount.name}</span>
                     </div>
-                    <div className="bg-indigo-600/10 border border-indigo-500/20 px-5 py-1.5 rounded-full flex items-center gap-2 text-indigo-300 font-mono text-sm">
-                      <Wallet className="w-4 h-4" />
-                      <span>Balance:</span>
-                      <span className="font-extrabold">Ksh {Number(clientAccount.wallet_balance).toFixed(4)}</span>
+                    <div className="bg-indigo-600/10 border border-indigo-500/20 px-3 md:px-5 py-1.5 rounded-full flex items-center gap-1.5 md:gap-2 text-indigo-300 font-mono text-xs md:text-sm">
+                      <Wallet className="w-3 h-3 md:w-4 md:h-4" />
+                      <span className="hidden sm:inline">Balance:</span>
+                      <span className="font-extrabold">Ksh {Number(clientAccount.wallet_balance).toFixed(2)}</span>
                     </div>
                     <button 
                       onClick={() => setTopupDrawerOpen(true)}
-                      className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold px-4 py-1.5 rounded-full text-xs shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all flex items-center gap-1"
+                      className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold px-3 py-1.5 rounded-full text-xs shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all flex items-center gap-1"
                     >
-                      <ArrowUpRight className="w-3 h-3" /> Top Up
+                      <ArrowUpRight className="w-3 h-3" /> <span className="hidden sm:inline">Top Up</span>
                     </button>
                   </>
                 )}
 
                 {user.role_tier === 'RESELLER' && resellerAccount && (
                   <>
-                    <div className="bg-slate-900/60 border border-slate-800/80 px-4 py-1.5 rounded-full flex items-center gap-3">
+                    <div className="bg-slate-900/60 border border-slate-800/80 px-4 py-1.5 rounded-full hidden md:flex items-center gap-3">
                       <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></div>
                       <span className="text-xs text-gray-300 font-semibold">{resellerAccount.name}</span>
                     </div>
-                    <div className="bg-indigo-600/10 border border-indigo-500/20 px-5 py-1.5 rounded-full flex items-center gap-2 text-indigo-300 font-mono text-sm">
+                    <div className="bg-indigo-600/10 border border-indigo-500/20 px-5 py-1.5 rounded-full hidden sm:flex items-center gap-2 text-indigo-300 font-mono text-sm">
                       <Wallet className="w-4 h-4" />
-                      <span>API Credits:</span>
-                      <span className="font-extrabold">Ksh {Number(resellerAccount.api_credits).toFixed(2)}</span>
+                      <span>Pool:</span>
+                      <span className="font-extrabold">Ksh {Number(resellerAccount.wallet_pool || 0).toFixed(2)}</span>
                     </div>
                   </>
                 )}
@@ -2421,7 +2419,7 @@ export default function App() {
                       )}
                       <span className="font-mono">Ksh {gatewayBalance || '0.00'}</span>
                     </button>
-                    <div className="bg-emerald-600/10 border border-emerald-500/20 px-5 py-1.5 rounded-full flex items-center gap-2 text-emerald-350 font-bold text-xs uppercase tracking-wider">
+                    <div className="bg-emerald-600/10 border border-emerald-500/20 px-5 py-1.5 rounded-full hidden md:flex items-center gap-2 text-emerald-350 font-bold text-xs uppercase tracking-wider">
                       <Activity className="w-4 h-4 text-emerald-400" />
                       <span>Compliance Core Bindings: Active</span>
                     </div>
