@@ -266,6 +266,9 @@ Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry', 'ro
     // Global Reports
     Route::get('/client/reports/logs', [\App\Modules\Messaging\Controllers\ReportsController::class, 'getLogs']);
     Route::get('/client/reports/export', [\App\Modules\Messaging\Controllers\ReportsController::class, 'exportCsv']);
+
+    // Analytics Dashboard
+    Route::get('/analytics', [\App\Modules\Messaging\Controllers\AnalyticsController::class, 'index']);
 });
 
 // Public DLR webhook called by carrier networks

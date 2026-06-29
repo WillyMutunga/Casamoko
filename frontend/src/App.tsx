@@ -405,6 +405,7 @@ export default function App() {
     total_sms_fired: 0,
     peak_capacity_tps: 0
   });
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [clientAnalytics, setClientAnalytics] = useState<any>({
     total_spent: 0,
     total_sms: 0,
@@ -510,6 +511,19 @@ export default function App() {
     }
   };
 
+  const fetchAnalyticsData = async (sessionToken?: string) => {
+    const activeToken = sessionToken || token;
+    if (!activeToken) return;
+    try {
+      const res = await apiClient.get('/analytics', { headers: { Authorization: `Bearer ${activeToken}` } });
+      if (res.data.status === 'SUCCESS') {
+        setAnalyticsData(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch analytics", err);
+    }
+  };
+
   const fetchClientData = async (sessionToken?: string) => {
     const activeToken = sessionToken || token;
     if (!activeToken) return;
@@ -558,6 +572,9 @@ export default function App() {
 
       const logsRes = await apiClient.get('/client/reports/logs', { headers });
       if (logsRes.data.logs) setDeliveryLogs(logsRes.data.logs);
+
+      // Load analytics for the dashboard
+      fetchAnalyticsData(activeToken);
     } catch (err) {
       console.warn("Client sync failed.", err);
     }
@@ -5932,7 +5949,7 @@ export default function App() {
                     <div className="glass-panel p-5 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
                       <div>
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Campaign Volume</p>
-                        <h3 className="text-2xl font-black text-white font-mono">14,892</h3>
+                        <h3 className="text-2xl font-black text-white font-mono">{analyticsData?.kpis?.total_dispatches?.toLocaleString() || 0}</h3>
                         <p className="text-[9px] text-gray-500 mt-1 font-sans">Total dispatches fired</p>
                       </div>
                       <div className="p-3.5 bg-indigo-500/10 rounded-2xl text-indigo-400 border border-indigo-500/20">
@@ -5943,9 +5960,9 @@ export default function App() {
                     <div className="glass-panel p-5 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
                       <div>
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Successful Delivery</p>
-                        <h3 className="text-2xl font-black text-emerald-450 font-mono">14,821</h3>
+                        <h3 className="text-2xl font-black text-emerald-450 font-mono">{analyticsData?.kpis?.delivered_count?.toLocaleString() || 0}</h3>
                         <p className="text-[9px] text-emerald-400 mt-1 font-sans flex items-center gap-0.5">
-                          <CheckCircle className="w-3 h-3 text-emerald-450" /> 99.52% Delivery Rate
+                          <CheckCircle className="w-3 h-3 text-emerald-450" /> {analyticsData?.kpis?.delivery_rate || 0}% Delivery Rate
                         </p>
                       </div>
                       <div className="p-3.5 bg-emerald-500/10 rounded-2xl text-emerald-400 border border-emerald-500/20">
@@ -5956,7 +5973,7 @@ export default function App() {
                     <div className="glass-panel p-5 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
                       <div>
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Failed Submissions</p>
-                        <h3 className="text-2xl font-black text-red-450 font-mono">71</h3>
+                        <h3 className="text-2xl font-black text-red-450 font-mono">{analyticsData?.kpis?.failed_count?.toLocaleString() || 0}</h3>
                         <p className="text-[9px] text-red-400 mt-1 font-sans">Refunded programmatically</p>
                       </div>
                       <div className="p-3.5 bg-red-500/10 rounded-2xl text-red-400 border border-red-500/20">
@@ -5967,7 +5984,7 @@ export default function App() {
                     <div className="glass-panel p-5 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
                       <div>
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Pending Delivery</p>
-                        <h3 className="text-2xl font-black text-amber-450 font-mono">0</h3>
+                        <h3 className="text-2xl font-black text-amber-450 font-mono">{analyticsData?.kpis?.pending_count?.toLocaleString() || 0}</h3>
                         <p className="text-[9px] text-gray-500 mt-1 font-sans">Ordered queues empty</p>
                       </div>
                       <div className="p-3.5 bg-amber-500/10 rounded-2xl text-amber-400 border border-amber-500/20">
@@ -5987,9 +6004,9 @@ export default function App() {
                           <p className="text-[9px] text-gray-450">Mobile network operators real-time delivery success tracking.</p>
                         </div>
                         <div className="flex items-center gap-4 text-[9px] font-bold">
-                          <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Safaricom (99.8%)</span>
-                          <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> Airtel (97.5%)</span>
-                          <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-violet-500"></div> Telkom (96.0%)</span>
+                          <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Safaricom ({analyticsData?.trend?.Safaricom || 0}%)</span>
+                          <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> Airtel ({analyticsData?.trend?.Airtel || 0}%)</span>
+                          <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-violet-500"></div> Telkom ({analyticsData?.trend?.Telkom || 0}%)</span>
                         </div>
                       </div>
 
@@ -6136,14 +6153,14 @@ export default function App() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-850 bg-slate-900/10">
-                          {deliveryLogs
-                            .filter(l => !searchMsisdnQuery || l.msisdn_hash.toLowerCase().includes(searchMsisdnQuery.toLowerCase()))
-                            .map(l => (
+                          {(analyticsData?.logs || [])
+                            .filter((l: any) => !searchMsisdnQuery || l.msisdn_hash.toLowerCase().includes(searchMsisdnQuery.toLowerCase()))
+                            .map((l: any) => (
                               <tr key={l.id} className="hover:bg-slate-900/20 transition-all font-mono">
                                 <td className="px-6 py-4 font-bold text-gray-400">#{l.id}</td>
                                 <td className="px-6 py-4 text-indigo-300 font-bold tracking-wider select-all">{l.msisdn_hash}</td>
                                 <td className="px-6 py-4 text-center font-sans font-bold text-white">{l.network}</td>
-                                <td className="px-6 py-4 text-gray-400 text-[10px]">{l.timestamp}</td>
+                                <td className="px-6 py-4 text-gray-400 text-[10px]">{l.created_at || l.timestamp}</td>
                                 <td className="px-6 py-4 text-center">
                                   <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${l.status === 'DELIVERED' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
                                     {l.status}
@@ -6151,7 +6168,7 @@ export default function App() {
                                 </td>
                                 <td className="px-6 py-4 text-center">
                                   <span className={`text-[10px] font-bold ${l.status === 'DELIVERED' ? 'text-emerald-450' : 'text-red-450'}`}>
-                                    {l.error_code}
+                                    {l.error_code || '000'}
                                   </span>
                                 </td>
                               </tr>
