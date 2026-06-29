@@ -227,14 +227,6 @@ use App\Modules\Messaging\Controllers\CampaignController;
 use App\Modules\Messaging\Controllers\ShortcodeController;
 use App\Modules\Messaging\Controllers\SenderIDController;
 
-// Cleanup Duplicate Route
-Route::get('/cleanup-duplicate-shortcode', function () {
-    \App\Modules\Messaging\Models\Shortcode::where('shortcode', '20606')
-        ->whereNull('client_account_id')
-        ->delete();
-    return response()->json(['status' => 'SUCCESS', 'message' => 'Duplicate cleaned up! You can safely delete this route now.']);
-});
-
 // Secure client and campaign messaging endpoints group
 Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry', 'role.client'])->group(function () {
     
