@@ -229,17 +229,21 @@ use App\Modules\Messaging\Controllers\SenderIDController;
 
 // Temporary Setup Route for Shortcode 20606
 Route::get('/setup-shortcode-20606', function (Illuminate\Http\Request $request) {
-    $sc = \App\Modules\Messaging\Models\Shortcode::updateOrCreate(
-        ['shortcode' => '20606'],
-        ['client_account_id' => null, 'is_dedicated' => false, 'is_premium' => false, 'premium_rate' => 0.00]
-    );
+    $clients = \App\Modules\Accounts\Models\ClientAccount::all();
+    
+    foreach ($clients as $client) {
+        \App\Modules\Messaging\Models\Shortcode::updateOrCreate(
+            ['shortcode' => '20606', 'client_account_id' => $client->id],
+            ['is_dedicated' => false, 'is_premium' => false, 'premium_rate' => 0.00]
+        );
 
-    $sender = \App\Modules\Messaging\Models\SenderID::updateOrCreate(
-        ['sender_id' => '20606'],
-        ['client_account_id' => null, 'status' => 'APPROVED']
-    );
+        \App\Modules\Messaging\Models\SenderID::updateOrCreate(
+            ['sender_id' => '20606', 'client_account_id' => $client->id],
+            ['status' => 'APPROVED']
+        );
+    }
 
-    return response()->json(['status' => 'SUCCESS', 'message' => 'Shortcode 20606 has been registered globally!', 'shortcode' => $sc, 'sender_id' => $sender]);
+    return response()->json(['status' => 'SUCCESS', 'message' => 'Shortcode 20606 has been registered to all ' . $clients->count() . ' accounts!']);
 });
 
 // Secure client and campaign messaging endpoints group
