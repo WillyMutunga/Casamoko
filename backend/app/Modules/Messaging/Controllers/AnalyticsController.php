@@ -22,13 +22,14 @@ class AnalyticsController extends Controller
         }
 
         // Get global counts for KPIs
-        $totalDispatches = MessageRecord::where('client_account_id', $clientAccount->id)->count();
-        $deliveredCount = MessageRecord::where('client_account_id', $clientAccount->id)
-            ->where('status', 'DELIVERED')->count();
-        $failedCount = MessageRecord::where('client_account_id', $clientAccount->id)
-            ->where('status', 'FAILED')->count();
-        $pendingCount = MessageRecord::where('client_account_id', $clientAccount->id)
-            ->whereIn('status', ['PENDING', 'PROCESSING', 'QUEUED'])->count();
+        $baseQuery = MessageRecord::whereHas('campaign', function($q) use ($clientAccount) {
+            $q->where('client_account_id', $clientAccount->id);
+        });
+
+        $totalDispatches = (clone $baseQuery)->count();
+        $deliveredCount = (clone $baseQuery)->where('status', 'DELIVERED')->count();
+        $failedCount = (clone $baseQuery)->where('status', 'FAILED')->count();
+        $pendingCount = (clone $baseQuery)->whereIn('status', ['PENDING', 'PROCESSING', 'QUEUED'])->count();
 
         // Calculate deliverability rate
         $deliverabilityRate = $totalDispatches > 0 
@@ -45,7 +46,7 @@ class AnalyticsController extends Controller
         ];
 
         // Fetch paginated global message logs (most recent 50)
-        $logs = MessageRecord::where('client_account_id', $clientAccount->id)
+        $logs = (clone $baseQuery)
             ->orderBy('created_at', 'desc')
             ->take(50)
             ->get();
