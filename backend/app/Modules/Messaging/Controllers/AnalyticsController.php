@@ -27,7 +27,7 @@ class AnalyticsController extends Controller
         });
 
         $totalDispatches = (clone $baseQuery)->count();
-        $deliveredCount = (clone $baseQuery)->where('status', 'DELIVERED')->count();
+        $deliveredCount = (clone $baseQuery)->whereIn('status', ['DELIVERED', 'SENT'])->count();
         $failedCount = (clone $baseQuery)->where('status', 'FAILED')->count();
         $pendingCount = (clone $baseQuery)->whereIn('status', ['PENDING', 'PROCESSING', 'QUEUED'])->count();
 
