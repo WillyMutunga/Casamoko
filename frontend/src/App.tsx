@@ -1144,9 +1144,10 @@ export default function App() {
           }))
         }, { headers: { Authorization: `Bearer ${token}` } });
         fetchClientData(token || undefined);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Import failed", err);
-      setImportWizardStatus("Import failed: Network error");
+      const backendError = err.response?.data?.message || err.response?.data?.error || err.message;
+      setImportWizardStatus(`Import failed: ${backendError}`);
       return;
     }
 
