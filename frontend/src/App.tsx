@@ -287,7 +287,7 @@ export default function App() {
   const [adjustmentDesc, setAdjustmentDesc] = useState('');
 
   // Delivery Reporting & Analytics States
-  const [deliveryLogs, setDeliveryLogs] = useState<any[]>([]);
+
   const [searchMsisdnQuery, setSearchMsisdnQuery] = useState('');
   const [reportingEmail, setReportingEmail] = useState('');
   const [reportingInterval, setReportingInterval] = useState('DAILY');
@@ -570,8 +570,7 @@ export default function App() {
       const invRes = await apiClient.get('/client/finance/invoices', { headers });
       if (invRes.data.invoices) setInvoices(invRes.data.invoices);
 
-      const logsRes = await apiClient.get('/client/reports/logs', { headers });
-      if (logsRes.data.logs) setDeliveryLogs(logsRes.data.logs);
+
 
       // Load analytics for the dashboard
       fetchAnalyticsData(activeToken);
