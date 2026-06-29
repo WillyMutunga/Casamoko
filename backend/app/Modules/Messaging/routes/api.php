@@ -174,6 +174,10 @@ Route::get('/process-queue', function () {
     }
 });
 
+Route::get('/debug-routes', function () {
+    return \App\Modules\Messaging\Models\Route::all();
+});
+
 Route::get('/debug-logs', function () {
     $logFile = storage_path('logs/laravel.log');
     if (!file_exists($logFile)) {

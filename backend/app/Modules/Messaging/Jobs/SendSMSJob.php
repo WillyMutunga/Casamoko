@@ -92,7 +92,7 @@ class SendSMSJob implements ShouldQueue
             }
 
             // 4. Instantiate carrier gateway based on route details
-            if ($bestRoute->destination_network === 'SAFARICOM') {
+            if (strtoupper($bestRoute->destination_network) === 'SAFARICOM') {
                 $gateway = new SafaricomSmsGateway();
             } else {
                 throw new \Exception("UNSUPPORTED_ROUTE_NETWORK");
