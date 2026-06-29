@@ -147,11 +147,17 @@ class SendSMSJob implements ShouldQueue
             if (!$isTerminal && $this->attempts() < $this->tries) {
                 $backoff = 2 ** $this->attempts();
                 Log::warning("SendSMSJob: Dispatch failed for record #{$record->id} due to {$e->getMessage()}, retrying in {$backoff}s. Attempt: " . $this->attempts());
-                $this->release($backoff);
-                return;
+                
+                // If using sync driver, it drops released jobs. Mark as failed immediately to show the error.
+                if (config('queue.default') === 'sync') {
+                    $isTerminal = true;
+                } else {
+                    $this->release($backoff);
+                    return;
+                }
             }
 
-            // Terminal failure after max tries or if error is terminal
+            // Terminal failure after max tries or if error is terminal (or sync driver)
             $record->update([
                 'status' => 'FAILED',
                 'network_status_code' => $e->getMessage()
