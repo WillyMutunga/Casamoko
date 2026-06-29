@@ -230,7 +230,7 @@ use App\Modules\Messaging\Controllers\SenderIDController;
 // Temporary Setup Route for Shortcode 20606
 Route::get('/setup-shortcode-20606', function (Illuminate\Http\Request $request) {
     // Find the first client account (since we don't have auth context)
-    $clientAccount = \App\Modules\Finance\Models\ClientAccount::first();
+    $clientAccount = \App\Modules\Accounts\Models\ClientAccount::first();
     if (!$clientAccount) return response()->json(['error' => 'No client account found']);
 
     $sc = \App\Modules\Messaging\Models\Shortcode::firstOrCreate(
