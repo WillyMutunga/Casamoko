@@ -221,23 +221,6 @@ Route::get('/test-safaricom-gateway', function () {
     }
 });
 
-Route::get('/fix-database', function () {
-    // Keyword is on shortcode_id 4. Let's find who owns shortcode 4
-    $shortcode = \App\Modules\Messaging\Models\Shortcode::find(4);
-    if ($shortcode) {
-        $correctClientId = $shortcode->client_account_id;
-        
-        // Fix keyword
-        \App\Modules\Messaging\Models\Keyword::where('shortcode_id', 4)->update(['client_account_id' => $correctClientId]);
-        
-        // Fix incoming messages
-        \App\Modules\Messaging\Models\IncomingMessage::where('shortcode_id', 4)->update(['client_account_id' => $correctClientId]);
-        
-        return response()->json(['status' => 'fixed', 'correct_client_id' => $correctClientId]);
-    }
-    return response()->json(['error' => 'not found']);
-});
-
 use Illuminate\Support\Facades\Route;
 use App\Modules\Messaging\Controllers\QuickSendController;
 use App\Modules\Messaging\Controllers\CampaignController;
