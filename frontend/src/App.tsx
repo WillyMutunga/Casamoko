@@ -345,7 +345,7 @@ export default function App() {
       
   // Shortcode Form State
   const [newKeywordText, setNewKeywordText] = useState('');
-  const [newKeywordShortcode, setNewKeywordShortcode] = useState<number>(1);
+  const [newKeywordShortcode, setNewKeywordShortcode] = useState<number | ''>('');
   const [newKeywordAction, setNewKeywordAction] = useState('OPT_IN');
   const [newKeywordWebhook, setNewKeywordWebhook] = useState('');
   const [newKeywordReply, setNewKeywordReply] = useState('');
@@ -544,7 +544,12 @@ export default function App() {
 
       // Sync campaigns and shortcodes logic if online
       const scRes = await apiClient.get('/shortcodes', { headers });
-      if (scRes.data.shortcodes) setShortcodes(scRes.data.shortcodes);
+      if (scRes.data.shortcodes) {
+        setShortcodes(scRes.data.shortcodes);
+        if (scRes.data.shortcodes.length > 0) {
+          setNewKeywordShortcode(prev => prev === '' || prev === 1 ? scRes.data.shortcodes[0].id : prev);
+        }
+      }
       
       const kwRes = await apiClient.get('/shortcodes/keywords', { headers });
       if (kwRes.data.keywords) setKeywords(kwRes.data.keywords);
