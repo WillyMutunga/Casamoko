@@ -145,6 +145,36 @@ class ShortcodeController extends Controller
         ], 201);
     }
 
+    /**
+     * Delete keyword rule.
+     */
+    public function deleteKeyword(Request $request, $id)
+    {
+        $user = $request->user();
+        $clientAccount = $user->clientAccount;
+
+        if (!$clientAccount) {
+            return response()->json(['error' => 'TENANT_NOT_FOUND'], 403);
+        }
+
+        $keyword = Keyword::find($id);
+
+        if (!$keyword) {
+            return response()->json(['error' => 'KEYWORD_NOT_FOUND'], 404);
+        }
+
+        if ($keyword->client_account_id !== $clientAccount->id) {
+            return response()->json(['error' => 'UNAUTHORIZED'], 403);
+        }
+
+        $keyword->delete();
+
+        return response()->json([
+            'status' => 'SUCCESS',
+            'message' => 'Keyword deleted successfully.'
+        ]);
+    }
+
     public function handleSafaricomMO(Request $request)
     {
         // Safaricom SDP pushes JSON like: { "smsServiceActivationNumber": "22344", "senderAddress": "254712345678", "message": "JOIN" }

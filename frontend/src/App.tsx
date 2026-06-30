@@ -5474,6 +5474,7 @@ export default function App() {
                                 <th className="px-4 py-3">Keyword</th>
                                 <th className="px-4 py-3">Action Class</th>
                                 <th className="px-4 py-3 font-semibold">Reply Template / Webhook Callback</th>
+                                <th className="px-4 py-3 rounded-r-xl"></th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800/30">
@@ -5501,6 +5502,27 @@ export default function App() {
                                       ) : (
                                         <span className="text-gray-400">"{kw.reply_message}"</span>
                                       )}
+                                    </td>
+                                    <td className="px-4 py-3 text-right">
+                                      <button 
+                                        onClick={async () => {
+                                          if (confirm(`Are you sure you want to delete the keyword "${kw.keyword}"?`)) {
+                                            try {
+                                              const token = localStorage.getItem('casamoko_session_token');
+                                              const headers = { Authorization: `Bearer ${token}` };
+                                              await apiClient.delete(`/shortcodes/keywords/${kw.id}`, { headers });
+                                              setKeywords(keywords.filter(k => k.id !== kw.id));
+                                              toast.success('Keyword deleted successfully');
+                                            } catch (err: any) {
+                                              toast.error(err.response?.data?.error || 'Failed to delete keyword');
+                                            }
+                                          }
+                                        }}
+                                        className="text-gray-500 hover:text-red-400 transition-colors p-1"
+                                        title="Delete Keyword"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
                                     </td>
                                   </tr>
                                 );

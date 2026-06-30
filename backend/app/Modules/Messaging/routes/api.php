@@ -254,6 +254,7 @@ Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry', 'ro
     Route::get('/shortcodes', [ShortcodeController::class, 'listShortcodes']);
     Route::get('/shortcodes/keywords', [ShortcodeController::class, 'listKeywords']);
     Route::post('/shortcodes/keywords', [ShortcodeController::class, 'storeKeyword']);
+    Route::delete('/shortcodes/keywords/{id}', [ShortcodeController::class, 'deleteKeyword']);
     Route::get('/shortcodes/mo-logs', [ShortcodeController::class, 'listMoLogs']);
     Route::get('/shortcodes/threads', [ShortcodeController::class, 'getThreadedConversations']);
     Route::post('/shortcodes/reply', [ShortcodeController::class, 'replyToThread']);
