@@ -357,12 +357,7 @@ export default function App() {
   // Threaded Conversation States
   const [activeConversationMsisdn, setActiveConversationMsisdn] = useState<string | null>(null);
   const [threadReplyText, setThreadReplyText] = useState('');
-  const [threadedConversations, setThreadedConversations] = useState<any>({
-    '254712345678': [
-      { direction: 'INCOMING', message: 'JOIN', timestamp: new Date(Date.now() - 3600000).toISOString() },
-      { direction: 'OUTGOING', message: 'Welcome! You have opted into Casamoko alerts.', timestamp: new Date(Date.now() - 3590000).toISOString() }
-    ]
-  });
+  const [threadedConversations, setThreadedConversations] = useState<any>({});
 
   // Phase 3 States
   const [isWizardOpen, setIsWizardOpen] = useState(false);
@@ -375,11 +370,8 @@ export default function App() {
   const [newTemplateContent, setNewTemplateContent] = useState('');
 
   // Phase 2 States
-  const [inboxChats, setInboxChats] = useState([
-    { id: '1', msisdn: '+254711223344', lastMessage: 'Thank you for the update', time: '10:45 AM', unread: 2, history: [{ dir: 'out', text: 'Your package is delivered.', time: '10:00 AM'}, { dir: 'in', text: 'Thank you for the update', time: '10:45 AM'}] },
-    { id: '2', msisdn: '+254799887766', lastMessage: 'STOP', time: 'Yesterday', unread: 0, history: [{ dir: 'out', text: 'Reply STOP to opt out.', time: 'Yesterday'}, { dir: 'in', text: 'STOP', time: 'Yesterday'}] }
-  ]);
-  const [selectedChatId, setSelectedChatId] = useState<string | null>('1');
+  const [inboxChats, setInboxChats] = useState<any[]>([]);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [lcrRoutes, setLcrRoutes] = useState([
     { id: 1, provider: 'Safaricom Direct', mcc: '639', mnc: '02', prefix: '2547', cost: 0.005, priority: 1, status: 'ACTIVE' },
