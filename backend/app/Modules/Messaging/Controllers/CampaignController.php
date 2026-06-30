@@ -149,8 +149,9 @@ class CampaignController extends Controller
 
         // Targets parsing
         if ($request->filled('contact_list_id')) {
-            $targets = \App\Modules\Contacts\Models\Contact::where('contact_list_id', $request->input('contact_list_id'))
-                ->pluck('msisdn')
+            $targets = \App\Modules\Contacts\Models\Contact::join('contact_list_members', 'contacts.id', '=', 'contact_list_members.contact_id')
+                ->where('contact_list_members.contact_list_id', $request->input('contact_list_id'))
+                ->pluck('contacts.msisdn')
                 ->toArray();
         } else {
             $targets = $request->input('target_contacts') ?: [];
