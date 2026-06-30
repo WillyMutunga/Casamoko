@@ -174,10 +174,12 @@ class ShortcodeController extends Controller
         $messageText = trim($messageText);
         $msisdnHash = Contact::hashMsisdn($msisdn);
 
-        $shortcode = Shortcode::where('shortcode', $shortcodeText)->first();
-        if (!$shortcode) {
+        $shortcodes = Shortcode::where('shortcode', $shortcodeText)->get();
+        if ($shortcodes->isEmpty()) {
             return response()->json(['error' => 'SHORTCODE_NOT_FOUND', 'message' => "Shortcode '{$shortcodeText}' is not registered on this system."], 404);
         }
+        $shortcodeIds = $shortcodes->pluck('id');
+        $shortcode = $shortcodes->first(); // Default fallback
 
         $words = explode(' ', $messageText);
         $firstWord = strtoupper($words[0]);
@@ -187,7 +189,7 @@ class ShortcodeController extends Controller
         $activeSession = null;
 
         if (!$isGlobalStop) {
-            $activeSession = \App\Modules\Messaging\Models\ShortcodeSession::where('shortcode_id', $shortcode->id)
+            $activeSession = \App\Modules\Messaging\Models\ShortcodeSession::whereIn('shortcode_id', $shortcodeIds)
                 ->where('msisdn_hash', $msisdnHash)
                 ->where(function($q) {
                     $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
@@ -195,7 +197,7 @@ class ShortcodeController extends Controller
                 ->first();
                 
             if (!$activeSession) {
-                $keyword = Keyword::where('shortcode_id', $shortcode->id)
+                $keyword = Keyword::whereIn('shortcode_id', $shortcodeIds)
                     ->where(function ($query) use ($firstWord) {
                         $query->whereRaw('UPPER(keyword) = ?', [$firstWord])
                               ->orWhere('keyword', '*');
@@ -211,8 +213,10 @@ class ShortcodeController extends Controller
         } else {
             if ($keyword && $keyword->client_account_id) {
                 $clientAccount = $keyword->clientAccount;
+                $shortcode = $keyword->shortcode;
             } elseif ($activeSession && $activeSession->client_account_id) {
                 $clientAccount = $activeSession->clientAccount;
+                $shortcode = $activeSession->shortcode;
             } else {
                 $clientAccount = $clientAccountFallback;
             }
