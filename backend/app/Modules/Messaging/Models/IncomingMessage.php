@@ -16,6 +16,7 @@ class IncomingMessage extends Model
     protected $fillable = [
         'shortcode_id',
         'keyword_id',
+        'client_account_id',
         'msisdn',
         'msisdn_hash',
         'message',
@@ -35,5 +36,13 @@ class IncomingMessage extends Model
     public function keyword()
     {
         return $this->belongsTo(Keyword::class, 'keyword_id');
+    }
+
+    /**
+     * Get the client account this message was attributed to.
+     */
+    public function clientAccount()
+    {
+        return $this->belongsTo(\App\Modules\Accounts\Models\ClientAccount::class, 'client_account_id');
     }
 }

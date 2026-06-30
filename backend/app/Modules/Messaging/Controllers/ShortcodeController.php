@@ -132,6 +132,7 @@ class ShortcodeController extends Controller
 
         $keyword = Keyword::create([
             'shortcode_id' => $shortcode->id,
+            'client_account_id' => $clientAccount->id,
             'keyword' => $keywordText,
             'action_type' => $request->input('action_type'),
             'callback_webhook' => $request->input('callback_webhook'),
@@ -208,7 +209,13 @@ class ShortcodeController extends Controller
         if ($shortcode->is_dedicated) {
             $clientAccount = $shortcode->clientAccount;
         } else {
-            $clientAccount = $clientAccountFallback;
+            if ($keyword && $keyword->client_account_id) {
+                $clientAccount = $keyword->clientAccount;
+            } elseif ($activeSession && $activeSession->client_account_id) {
+                $clientAccount = $activeSession->clientAccount;
+            } else {
+                $clientAccount = $clientAccountFallback;
+            }
         }
 
         if (!$clientAccount) {
@@ -218,6 +225,7 @@ class ShortcodeController extends Controller
         $incoming = IncomingMessage::create([
             'shortcode_id' => $shortcode->id,
             'keyword_id' => $keyword ? $keyword->id : null,
+            'client_account_id' => $clientAccount->id,
             'msisdn' => $msisdn,
             'msisdn_hash' => $msisdnHash,
             'message' => $messageText,
@@ -383,7 +391,7 @@ class ShortcodeController extends Controller
             ->orWhereNull('client_account_id')
             ->pluck('id');
 
-        $logs = IncomingMessage::whereIn('shortcode_id', $shortcodeIds)
+        $logs = IncomingMessage::where('client_account_id', $clientAccount->id)
             ->with(['shortcode', 'keyword'])
             ->orderBy('id', 'desc')
             ->get();
@@ -411,7 +419,7 @@ class ShortcodeController extends Controller
             ->pluck('id');
 
         // Fetch all incoming MO messages on client shortcodes
-        $incoming = IncomingMessage::whereIn('shortcode_id', $shortcodeIds)
+        $incoming = IncomingMessage::where('client_account_id', $clientAccount->id)
             ->get()
             ->map(function ($item) {
                 return [
