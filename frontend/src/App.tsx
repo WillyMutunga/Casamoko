@@ -1114,7 +1114,34 @@ export default function App() {
         const wb = read(buffer, { type: 'array' });
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
-        const json = utils.sheet_to_json(ws);
+        const aoa = utils.sheet_to_json(ws, { header: 1 }) as any[][];
+        let headerRowIdx = 0;
+        for (let i = 0; i < Math.min(10, aoa.length); i++) {
+          const row = aoa[i] || [];
+          const stringCols = row.filter(cell => typeof cell === 'string' && cell.trim().length > 0);
+          if (stringCols.length >= 2) {
+            headerRowIdx = i;
+            break;
+          }
+        }
+        
+        const headers = (aoa[headerRowIdx] || []).map((h, i) => h ? String(h).trim() : `Column_${i}`);
+        
+        const json = [];
+        for (let i = headerRowIdx + 1; i < aoa.length; i++) {
+          const rowArr = aoa[i] || [];
+          if (rowArr.length === 0) continue;
+          
+          const isEmptyRow = rowArr.every(cell => cell === undefined || cell === null || cell === '');
+          if (isEmptyRow) continue;
+
+          const rowObj: any = {};
+          headers.forEach((h, colIdx) => {
+             rowObj[h] = rowArr[colIdx] !== undefined && rowArr[colIdx] !== null ? rowArr[colIdx] : '';
+          });
+          json.push(rowObj);
+        }
+
         setRawImportData(JSON.stringify(json));
         setImportedListName(file.name.replace(/\.[^/.]+$/, ""));
       } catch (err) {
@@ -1172,8 +1199,8 @@ export default function App() {
     const existingMsisdns = new Set(contacts.filter(c => c.list_id === targetListId).map(c => c.msisdn));
 
     for (const row of parsedImportRows) {
-      let rawPhone = row[mappedPhoneCol] || '';
-      const rawName = row[mappedNameCol] || '';
+      let rawPhone = String(row[mappedPhoneCol] || '');
+      const rawName = String(row[mappedNameCol] || '');
 
       let cleanPhone = rawPhone.replace(/[^\d+]/g, '');
       if (cleanPhone.startsWith('0')) {
