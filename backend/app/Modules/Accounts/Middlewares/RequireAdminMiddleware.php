@@ -18,7 +18,7 @@ class RequireAdminMiddleware
     {
         $user = $request->user();
 
-        if (!$user || $user->role_tier !== 'SUPER_ADMIN') {
+        if (!$user || strtoupper($user->role_tier ?? '') !== 'SUPER_ADMIN') {
             return response()->json([
                 'error' => 'ROLE_UNAUTHORIZED',
                 'message' => 'This administrative endpoint is restricted to System Supervisor Accounts.'

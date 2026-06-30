@@ -1504,8 +1504,6 @@ export default function App() {
         let targets: string[] = [];
         if (wizAudienceType === 'manual') {
           targets = wizManualNumbers.split(/[\s,]+/).filter(x => x.trim().length > 0);
-        } else if (wizSelectedGroup) {
-          targets = contacts.filter(c => c.list_id === wizSelectedGroup).map(c => c.msisdn);
         }
 
         const res = await apiClient.post('/campaigns', {
@@ -1522,6 +1520,7 @@ export default function App() {
           template_b: wizIsAbTest ? wizTemplateB : null,
           ab_split_ratio: wizIsAbTest ? wizAbSplitRatio : 50,
           target_contacts: targets,
+          contact_list_id: wizAudienceType !== 'manual' && wizSelectedGroup ? wizSelectedGroup : null,
           status: wizScheduleType === 'future' ? 'SCHEDULED' : 'PROCESSING'
         }, config);
 

@@ -110,6 +110,7 @@ class CampaignController extends Controller
             'template_b' => 'nullable|string',
             'ab_split_ratio' => 'nullable|integer',
             'target_contacts' => 'nullable|array', // custom target list numbers
+            'contact_list_id' => 'nullable|integer', // group id for audience
         ]);
 
         if ($validator->fails()) {
@@ -147,7 +148,20 @@ class CampaignController extends Controller
         $unicodeType = ($encodingA === 'UCS-2' || $encodingB === 'UCS-2') ? 'UCS-2' : 'GSM-7';
 
         // Targets parsing
-        $targets = $request->input('target_contacts') ?: ['254711222333', '254722333444'];
+        if ($request->filled('contact_list_id')) {
+            $targets = \App\Modules\Contacts\Models\Contact::where('contact_list_id', $request->input('contact_list_id'))
+                ->pluck('msisdn')
+                ->toArray();
+        } else {
+            $targets = $request->input('target_contacts') ?: [];
+        }
+
+        if (empty($targets)) {
+            return response()->json([
+                'error' => 'NO_TARGETS',
+                'message' => 'No target contacts provided or the selected group is empty.'
+            ], 400);
+        }
         $totalContacts = count($targets);
 
         // Dynamic pricing calculation from Primary Route
