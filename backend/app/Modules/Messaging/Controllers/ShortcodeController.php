@@ -456,10 +456,11 @@ class ShortcodeController extends Controller
             ->orWhereNull('client_account_id')
             ->pluck('id');
 
-        // Fetch all incoming MO messages on client shortcodes
-        $incoming = IncomingMessage::where('client_account_id', $clientAccount->id)
-            ->get()
-            ->map(function ($item) {
+        $isSuperAdmin = $user->role_tier === 'SUPER_ADMIN' || $clientAccount->id === 1;
+
+        if ($isSuperAdmin) {
+            // God Mode: Fetch ALL incoming and outgoing messages across all clients
+            $incoming = IncomingMessage::orderBy('id', 'desc')->take(2000)->get()->map(function ($item) {
                 return [
                     'direction' => 'INCOMING',
                     'msisdn' => $item->msisdn,
@@ -469,25 +470,50 @@ class ShortcodeController extends Controller
                 ];
             });
 
-        // Fetch all outgoing messages (MT) to contacts of this client
-        $contacts = Contact::where('client_account_id', $clientAccount->id)->pluck('msisdn', 'msisdn_hash');
-        $hashes = $contacts->keys();
+            $outgoing = MessageRecord::with('campaign')
+                ->orderBy('id', 'desc')
+                ->take(2000)
+                ->get()
+                ->map(function ($item) {
+                    // Extract MSISDN from Contact if possible, else fallback to hash
+                    $msisdn = $item->contact ? $item->contact->msisdn : 'Unknown';
+                    return [
+                        'direction' => 'OUTGOING',
+                        'msisdn' => $msisdn,
+                        'message' => $item->campaign ? $item->campaign->template : 'Quick Send Dispatch message',
+                        'created_at' => $item->created_at->toIso8601String(),
+                    ];
+                });
+        } else {
+            // Standard Mode: Fetch only messages belonging to this client's workspace
+            $incoming = IncomingMessage::where('client_account_id', $clientAccount->id)
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'direction' => 'INCOMING',
+                        'msisdn' => $item->msisdn,
+                        'message' => $item->message,
+                        'created_at' => $item->created_at->toIso8601String(),
+                        'shortcode_id' => $item->shortcode_id,
+                    ];
+                });
 
-        // Get all matching message records
-        $outgoing = MessageRecord::whereIn('msisdn_hash', $hashes)
-            ->with('campaign')
-            ->orderBy('id', 'desc')
-            ->get()
-            ->map(function ($item) use ($contacts) {
-                // substitute actual MSISDN using saved hash map
-                $msisdn = $contacts[$item->msisdn_hash] ?? 'Unknown';
-                return [
-                    'direction' => 'OUTGOING',
-                    'msisdn' => $msisdn,
-                    'message' => $item->campaign ? $item->campaign->template : 'Quick Send Dispatch message',
-                    'created_at' => $item->created_at->toIso8601String(),
-                ];
-            });
+            $contacts = Contact::where('client_account_id', $clientAccount->id)->pluck('msisdn', 'msisdn_hash');
+            $hashes = $contacts->keys();
+
+            $outgoing = MessageRecord::whereIn('msisdn_hash', $hashes)
+                ->with('campaign')
+                ->orderBy('id', 'desc')
+                ->get()
+                ->map(function ($item) use ($contacts) {
+                    return [
+                        'direction' => 'OUTGOING',
+                        'msisdn' => $contacts[$item->msisdn_hash] ?? 'Unknown',
+                        'message' => $item->campaign ? $item->campaign->template : 'Quick Send Dispatch message',
+                        'created_at' => $item->created_at->toIso8601String(),
+                    ];
+                });
+        }
 
         // Merge and group by MSISDN
         $merged = $incoming->concat($outgoing)->sortBy('created_at');

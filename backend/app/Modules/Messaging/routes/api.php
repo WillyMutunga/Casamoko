@@ -279,6 +279,19 @@ Route::post('/inbound-webhook', [\App\Modules\Messaging\Controllers\InboundWebho
 // Public MO (Mobile Originated) webhook called by Safaricom SDP
 Route::post('/mo-webhook', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'handleSafaricomMO']);
 
+// Architecture Upgrade Route (Run once)
+Route::get('/system/setup-radio-architecture', function() {
+    $shortcode = \App\Modules\Messaging\Models\Shortcode::where('shortcode', '20606')->first();
+    if ($shortcode) {
+        $shortcode->update(['client_account_id' => null, 'is_dedicated' => false]);
+    }
+    $admin = \App\Modules\Accounts\Models\User::first();
+    if ($admin) {
+        $admin->update(['role_tier' => 'SUPER_ADMIN']);
+    }
+    return response()->json(['message' => 'System architecture upgraded to Option 2 successfully! 20606 is now Shared and you are now SUPER_ADMIN.']);
+});
+
 // Developer API Endpoints
 Route::middleware(['auth.api_key'])->prefix('v1')->group(function () {
     Route::post('/sms/send', [\App\Modules\Messaging\Controllers\ApiController::class, 'sendSms']);
