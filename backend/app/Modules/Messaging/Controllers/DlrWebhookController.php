@@ -22,15 +22,31 @@ class DlrWebhookController extends Controller
      */
     public function handle(Request $request)
     {
-        $validated = $request->validate([
-            'mno_message_id' => 'required|string',
-            'status' => 'required|string|in:DELIVERED,FAILED,PENDING',
-            'network_status_code' => 'nullable|string',
-        ]);
+        $payload = $request->all();
+        Log::info('DLR Webhook Received: ', $payload);
 
-        $mnoMessageId = $validated['mno_message_id'];
-        $newStatus = $validated['status'];
-        $networkStatusCode = $validated['network_status_code'] ?? ($newStatus === 'DELIVERED' ? 'DELIVRD' : 'UNDELIV');
+        // Extract ID - Support generic 'mno_message_id', or Safaricom 'uniqueId', 'correlator', 'messageId', 'traceUniqueID'
+        $mnoMessageId = $payload['mno_message_id'] ?? $payload['uniqueId'] ?? $payload['correlator'] ?? $payload['messageId'] ?? $payload['traceUniqueID'] ?? null;
+
+        // Extract Status - Support generic 'status', or Safaricom 'deliveryStatus', 'statusDesc'
+        $rawStatus = $payload['status'] ?? $payload['deliveryStatus'] ?? $payload['statusDesc'] ?? 'PENDING';
+        
+        $newStatus = 'PENDING';
+        $networkStatusCode = $payload['network_status_code'] ?? 'UNKNOWN';
+
+        $rawStatusUpper = strtoupper($rawStatus);
+
+        if (in_array($rawStatusUpper, ['DELIVERED', 'DELIVEREDTOTERMINAL', 'SUCCESS', '1', 1])) {
+            $newStatus = 'DELIVERED';
+            $networkStatusCode = 'DELIVRD';
+        } elseif (in_array($rawStatusUpper, ['FAILED', 'DELIVERYFAILURE', 'EXPIRED', 'REJECTED', 'UNDELIV', '2', 2])) {
+            $newStatus = 'FAILED';
+            $networkStatusCode = $rawStatusUpper;
+        }
+
+        if (!$mnoMessageId) {
+            return response()->json(['success' => false, 'message' => 'Missing message identifier'], 400);
+        }
 
         // Locate MessageRecord by MNO message ID
         $record = MessageRecord::with(['campaign.clientAccount'])->where('mno_message_id', $mnoMessageId)->first();
