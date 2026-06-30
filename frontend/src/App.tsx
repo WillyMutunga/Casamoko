@@ -641,9 +641,14 @@ export default function App() {
         time: new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }));
       
+      // Find the shortcode_id from an incoming message in this thread
+      const incomingMsg = msgs.find((m: any) => m.shortcode_id);
+      const shortcode_id = incomingMsg ? incomingMsg.shortcode_id : null;
+
       return {
         id: msisdn,
         msisdn: msisdn,
+        shortcode_id: shortcode_id,
         time: new Date(lastMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         lastMessage: lastMsg.message,
         unread: 0, // In a real app we'd track read state
@@ -6473,31 +6478,65 @@ export default function App() {
                                   value={replyText}
                                   onChange={(e) => setReplyText(e.target.value)}
                                   placeholder="Type a reply... (Enter to send)"
-                                  onKeyDown={(e) => {
+                                  onKeyDown={async (e) => {
                                     if(e.key === 'Enter' && replyText.trim()) {
+                                      const textToSend = replyText.trim();
+                                      const currentChat = inboxChats.find(c => c.id === selectedChatId);
+                                      if (!currentChat) return;
+
+                                      // Optimistically update UI
                                       const updatedChats = inboxChats.map(c => {
                                         if(c.id === selectedChatId) {
-                                          return { ...c, history: [...c.history, { dir: 'out', text: replyText, time: 'Just now' }], lastMessage: replyText, time: 'Just now' };
+                                          return { ...c, history: [...c.history, { dir: 'out', text: textToSend, time: 'Sending...' }], lastMessage: textToSend, time: 'Just now' };
                                         }
                                         return c;
                                       });
                                       setInboxChats(updatedChats);
                                       setReplyText('');
+
+                                      try {
+                                        await apiClient.post('/shortcodes/reply', {
+                                          msisdn: currentChat.msisdn,
+                                          message: textToSend,
+                                          shortcode_id: currentChat.shortcode_id
+                                        });
+                                        toast.success('Reply dispatched via Casamoko!');
+                                      } catch (err: any) {
+                                        console.error('Reply failed', err);
+                                        toast.error(err.response?.data?.error || 'Failed to dispatch reply');
+                                      }
                                     }
                                   }}
                                   className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:ring-1 focus:ring-indigo-500 outline-none"
                                 />
                                 <button 
-                                  onClick={() => {
+                                  onClick={async () => {
                                     if(!replyText.trim()) return;
+                                    const textToSend = replyText.trim();
+                                    const currentChat = inboxChats.find(c => c.id === selectedChatId);
+                                    if (!currentChat) return;
+
+                                    // Optimistically update UI
                                     const updatedChats = inboxChats.map(c => {
                                       if(c.id === selectedChatId) {
-                                        return { ...c, history: [...c.history, { dir: 'out', text: replyText, time: 'Just now' }], lastMessage: replyText, time: 'Just now' };
+                                        return { ...c, history: [...c.history, { dir: 'out', text: textToSend, time: 'Sending...' }], lastMessage: textToSend, time: 'Just now' };
                                       }
                                       return c;
                                     });
                                     setInboxChats(updatedChats);
                                     setReplyText('');
+
+                                    try {
+                                      await apiClient.post('/shortcodes/reply', {
+                                        msisdn: currentChat.msisdn,
+                                        message: textToSend,
+                                        shortcode_id: currentChat.shortcode_id
+                                      });
+                                      toast.success('Reply dispatched via Casamoko!');
+                                    } catch (err: any) {
+                                      console.error('Reply failed', err);
+                                      toast.error(err.response?.data?.error || 'Failed to dispatch reply');
+                                    }
                                   }}
                                   className="px-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold flex items-center justify-center transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)]">
                                   <Send className="w-4 h-4" />

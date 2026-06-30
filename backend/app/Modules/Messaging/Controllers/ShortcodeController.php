@@ -431,6 +431,7 @@ class ShortcodeController extends Controller
                     'msisdn' => $item->msisdn,
                     'message' => $item->message,
                     'created_at' => $item->created_at->toIso8601String(),
+                    'shortcode_id' => $item->shortcode_id,
                 ];
             });
 
@@ -468,6 +469,7 @@ class ShortcodeController extends Controller
                 'direction' => $msg['direction'],
                 'message' => $msg['message'],
                 'timestamp' => $msg['created_at'],
+                'shortcode_id' => $msg['shortcode_id'] ?? null,
             ];
         }
 
