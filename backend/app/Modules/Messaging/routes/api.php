@@ -231,7 +231,7 @@ Route::get('/migrate-now', function () {
 });
 
 Route::get('/debug-keywords', function () {
-    return response()->json(\App\Modules\Messaging\Models\Keyword::all());
+    return response()->json(\App\Modules\Messaging\Models\Shortcode::all());
 });
 
 Route::get('/fix-keyword', function () {
