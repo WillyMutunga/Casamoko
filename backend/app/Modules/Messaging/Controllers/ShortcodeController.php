@@ -180,9 +180,14 @@ class ShortcodeController extends Controller
         // Safaricom SDP pushes JSON like: { "smsServiceActivationNumber": "22344", "senderAddress": "254712345678", "message": "JOIN" }
         $payload = $request->all();
         
+        Log::info('Safaricom MO Webhook Received: ', $payload);
+        
         $shortcodeText = $payload['smsServiceActivationNumber'] ?? $payload['shortcode'] ?? null;
         $msisdn = $payload['senderAddress'] ?? $payload['msisdn'] ?? null;
-        $messageText = $payload['message'] ?? null;
+        
+        $messageRaw = $payload['message'] ?? null;
+        $messageText = is_array($messageRaw) ? ($messageRaw['message'] ?? json_encode($messageRaw)) : (string) $messageRaw;
+        
         $linkId = $payload['linkId'] ?? null;
 
         if (!$shortcodeText || !$msisdn || !$messageText) {
@@ -524,16 +529,30 @@ class ShortcodeController extends Controller
         $validator = Validator::make($request->all(), [
             'msisdn' => 'required|string',
             'message' => 'required|string',
-            'shortcode_id' => 'required|integer',
+            'shortcode_id' => 'nullable|integer',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $shortcode = Shortcode::find($request->input('shortcode_id'));
-        if (!$shortcode || ($shortcode->is_dedicated && $shortcode->client_account_id !== $clientAccount->id)) {
-            return response()->json(['error' => 'UNAUTHORIZED_SHORTCODE'], 403);
+        $shortcodeId = $request->input('shortcode_id');
+        
+        if ($shortcodeId) {
+            $shortcode = Shortcode::find($shortcodeId);
+            if (!$shortcode || ($shortcode->is_dedicated && $shortcode->client_account_id !== $clientAccount->id)) {
+                return response()->json(['error' => 'UNAUTHORIZED_SHORTCODE'], 403);
+            }
+        } else {
+            // Fallback to the client's dedicated shortcode, or any global shared shortcode (e.g. 20606)
+            $shortcode = Shortcode::where('client_account_id', $clientAccount->id)
+                ->orWhereNull('client_account_id')
+                ->orderBy('is_dedicated', 'desc') // Prefer dedicated over shared
+                ->first();
+                
+            if (!$shortcode) {
+                return response()->json(['error' => 'NO_SHORTCODE_AVAILABLE'], 403);
+            }
         }
 
         // 1. Resolve Contact
