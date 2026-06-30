@@ -1114,8 +1114,8 @@ export default function App() {
         const wb = read(buffer, { type: 'array' });
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
-        const csv = utils.sheet_to_csv(ws);
-        setRawImportData(csv);
+        const json = utils.sheet_to_json(ws);
+        setRawImportData(JSON.stringify(json));
         setImportedListName(file.name.replace(/\.[^/.]+$/, ""));
       } catch (err) {
         setImportWizardStatus("Failed to parse file. Ensure it's a valid Excel or CSV file.");
