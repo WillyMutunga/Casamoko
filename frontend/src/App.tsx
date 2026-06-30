@@ -604,8 +604,9 @@ export default function App() {
   // Live polling for Shortcode Inbox (Radio Station Live Feed)
   useEffect(() => {
     let interval: any;
-    if (currentPage === 'shortcodes' && token) {
-      interval = setInterval(async () => {
+    if (currentPage === 'inbox' && token) { // Changed 'shortcodes' to 'inbox' so it polls on the correct page!
+      // Initial fetch immediately
+      const fetchInbox = async () => {
         try {
           const res = await apiClient.get('/shortcodes/threads', {
             headers: { Authorization: `Bearer ${token}` }
@@ -616,12 +617,50 @@ export default function App() {
         } catch (e) {
           console.error("Live Inbox Polling Failed", e);
         }
-      }, 3000);
+      };
+      fetchInbox();
+      
+      interval = setInterval(fetchInbox, 3000);
     }
     return () => {
       if (interval) clearInterval(interval);
     };
   }, [currentPage, token]);
+
+  // Sync threadedConversations to inboxChats UI state
+  useEffect(() => {
+    if (!threadedConversations || Object.keys(threadedConversations).length === 0) return;
+    
+    const mappedChats = Object.keys(threadedConversations).map(msisdn => {
+      const msgs = threadedConversations[msisdn];
+      const lastMsg = msgs[msgs.length - 1];
+      
+      const history = msgs.map((m: any) => ({
+        dir: m.direction === 'INCOMING' ? 'in' : 'out',
+        text: m.message,
+        time: new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }));
+      
+      return {
+        id: msisdn,
+        msisdn: msisdn,
+        time: new Date(lastMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        lastMessage: lastMsg.message,
+        unread: 0, // In a real app we'd track read state
+        history: history
+      };
+    });
+    
+    // Sort by most recent message
+    mappedChats.sort((a, b) => {
+      const aTime = threadedConversations[a.msisdn][threadedConversations[a.msisdn].length - 1].timestamp;
+      const bTime = threadedConversations[b.msisdn][threadedConversations[b.msisdn].length - 1].timestamp;
+      return new Date(bTime).getTime() - new Date(aTime).getTime();
+    });
+    
+    setInboxChats(mappedChats);
+    
+  }, [threadedConversations]);
 
   // Calculate campaign total cost estimates
   useEffect(() => {
