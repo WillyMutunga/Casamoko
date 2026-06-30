@@ -177,22 +177,21 @@ class ShortcodeController extends Controller
 
     public function handleSafaricomMO(Request $request)
     {
-        // Safaricom SDP pushes JSON like: { "smsServiceActivationNumber": "22344", "senderAddress": "254712345678", "message": "JOIN" }
         $payload = $request->all();
+        Log::info('MO Webhook Received: ', $payload);
         
-        Log::info('Safaricom MO Webhook Received: ', $payload);
+        // Extremely greedy extraction to support Safaricom SDP, Africa's Talking, Celcom, and Custom Aggregators
+        $shortcodeText = $payload['smsServiceActivationNumber'] ?? $payload['shortcode'] ?? $payload['to'] ?? $payload['destination'] ?? $payload['receiver'] ?? null;
+        $msisdn = $payload['senderAddress'] ?? $payload['msisdn'] ?? $payload['from'] ?? $payload['sender'] ?? $payload['source'] ?? null;
         
-        $shortcodeText = $payload['smsServiceActivationNumber'] ?? $payload['shortcode'] ?? null;
-        $msisdn = $payload['senderAddress'] ?? $payload['msisdn'] ?? null;
+        $messageRaw = $payload['message'] ?? $payload['text'] ?? $payload['content'] ?? $payload['body'] ?? null;
+        $messageText = is_array($messageRaw) ? ($messageRaw['message'] ?? $messageRaw['text'] ?? json_encode($messageRaw)) : (string) $messageRaw;
         
-        $messageRaw = $payload['message'] ?? null;
-        $messageText = is_array($messageRaw) ? ($messageRaw['message'] ?? json_encode($messageRaw)) : (string) $messageRaw;
-        
-        $linkId = $payload['linkId'] ?? null;
+        $linkId = $payload['linkId'] ?? $payload['link_id'] ?? $payload['correlator'] ?? null;
 
         if (!$shortcodeText || !$msisdn || !$messageText) {
-            Log::warning('Safaricom MO Webhook missing fields', $payload);
-            return response()->json(['error' => 'Invalid payload structure'], 400);
+            Log::warning('MO Webhook missing critical fields', $payload);
+            return response()->json(['error' => 'Invalid payload structure', 'received_payload' => $payload], 400);
         }
 
         return $this->processMO($shortcodeText, $msisdn, $messageText, $request->ip(), null, $linkId);
