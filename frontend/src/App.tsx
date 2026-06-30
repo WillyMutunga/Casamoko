@@ -6417,7 +6417,7 @@ export default function App() {
                             </div>
 
                             <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                              {inboxChats.find(c => c.id === selectedChatId)?.history.map((msg, idx) => (
+                              {inboxChats.find(c => c.id === selectedChatId)?.history?.map((msg: any, idx: number) => (
                                 <div key={idx} className={`flex flex-col ${msg.dir === 'out' ? 'items-end' : 'items-start'}`}>
                                   <div className={`max-w-[70%] rounded-2xl px-5 py-3 ${msg.dir === 'out' ? 'bg-indigo-600 text-white rounded-br-sm' : 'bg-slate-800 text-gray-200 rounded-bl-sm border border-slate-700'}`}>
                                     <p className="text-sm">{msg.text}</p>
