@@ -28,7 +28,7 @@ class TenantSuspensionMiddleware
             }
 
             // 2. Verify tenant-level status
-            if ($user->client_account_id) {
+            if ($user->client_account_id && $user->role_tier !== 'SUPER_ADMIN') {
                 $clientAccount = $user->clientAccount;
 
                 if (!$clientAccount) {

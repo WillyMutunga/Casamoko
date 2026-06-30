@@ -68,7 +68,7 @@ class AuthController extends Controller
         }
 
         // 3. Audit check: Tenant level suspension
-        if ($user->client_account_id) {
+        if ($user->client_account_id && $user->role_tier !== 'SUPER_ADMIN') {
             $clientAccount = $user->clientAccount;
             if (!$clientAccount || $clientAccount->status !== 'APPROVED') {
                 LoginAttempt::create([
