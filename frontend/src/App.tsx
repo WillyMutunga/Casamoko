@@ -2400,8 +2400,8 @@ export default function App() {
                     </div>
                     <div className="bg-indigo-600/10 border border-indigo-500/20 px-5 py-1.5 rounded-full hidden sm:flex items-center gap-2 text-indigo-300 font-mono text-sm">
                       <Wallet className="w-4 h-4" />
-                      <span>Pool:</span>
-                      <span className="font-extrabold">Ksh {Number(resellerAccount.wallet_pool || 0).toFixed(2)}</span>
+                      <span>API Credits:</span>
+                      <span className="font-extrabold">Ksh {Number(resellerAccount.api_credits || 0).toFixed(2)}</span>
                     </div>
                   </>
                 )}
