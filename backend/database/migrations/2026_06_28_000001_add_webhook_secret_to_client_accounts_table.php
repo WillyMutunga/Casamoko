@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('client_accounts', function (Blueprint $table) {
-            $table->string('webhook_secret')->nullable()->after('api_key');
+            $table->string('webhook_secret')->nullable();
         });
     }
 
