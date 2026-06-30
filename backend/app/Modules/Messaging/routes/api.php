@@ -230,6 +230,16 @@ Route::get('/migrate-now', function () {
     }
 });
 
+Route::get('/debug-keywords', function () {
+    return response()->json(\App\Modules\Messaging\Models\Keyword::all());
+});
+
+Route::get('/fix-keyword', function () {
+    $client = \App\Modules\Accounts\Models\ClientAccount::first();
+    \App\Modules\Messaging\Models\Keyword::whereNull('client_account_id')->update(['client_account_id' => $client->id]);
+    return response()->json(['status' => 'fixed', 'client_id' => $client->id]);
+});
+
 use Illuminate\Support\Facades\Route;
 use App\Modules\Messaging\Controllers\QuickSendController;
 use App\Modules\Messaging\Controllers\CampaignController;
