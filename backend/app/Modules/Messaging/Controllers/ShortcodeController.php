@@ -260,6 +260,26 @@ class ShortcodeController extends Controller
             return response()->json(['error' => 'CLIENT_CONTEXT_NOT_FOUND'], 400);
         }
 
+        if (!$isGlobalStop) {
+            // Create or Extend Sticky Session for 24 hours
+            \App\Modules\Messaging\Models\ShortcodeSession::updateOrCreate(
+                [
+                    'shortcode_id' => $shortcode->id,
+                    'msisdn_hash' => $msisdnHash
+                ],
+                [
+                    'client_account_id' => $clientAccount->id,
+                    'msisdn' => $msisdn,
+                    'expires_at' => now()->addHours(24)
+                ]
+            );
+        } else {
+            // End sticky session on STOP
+            \App\Modules\Messaging\Models\ShortcodeSession::where('shortcode_id', $shortcode->id)
+                ->where('msisdn_hash', $msisdnHash)
+                ->delete();
+        }
+
         $incoming = IncomingMessage::create([
             'shortcode_id' => $shortcode->id,
             'keyword_id' => $keyword ? $keyword->id : null,
@@ -632,6 +652,19 @@ class ShortcodeController extends Controller
             'status' => 'QUEUED',
             'link_id' => null, // MT Replies don't strictly need a link_id unless it's PRSP on-demand
         ]);
+
+        // Automatically extend sticky session so the user can reply without a keyword
+        \App\Modules\Messaging\Models\ShortcodeSession::updateOrCreate(
+            [
+                'shortcode_id' => $shortcode->id,
+                'msisdn_hash' => $msisdnHash
+            ],
+            [
+                'client_account_id' => $clientAccount->id,
+                'msisdn' => $msisdn,
+                'expires_at' => now()->addHours(24)
+            ]
+        );
 
         // 6. Charge Ledger & Dispatch
         try {
