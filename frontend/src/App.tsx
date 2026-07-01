@@ -2524,7 +2524,7 @@ export default function App() {
                     <div className="space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <div 
-                          onClick={() => setCurrentPage('audit')}
+                          onClick={() => setCurrentPage('dashboard')}
                           className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between cursor-pointer hover:border-emerald-500/40 hover:bg-slate-800/50 transition-all duration-300 hover:scale-[1.02]"
                         >
                           <div>
