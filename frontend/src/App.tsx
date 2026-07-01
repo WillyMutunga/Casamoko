@@ -2523,7 +2523,10 @@ export default function App() {
                   {currentPage === 'dashboard' && (
                     <div className="space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
+                        <div 
+                          onClick={() => setCurrentPage('audit')}
+                          className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between cursor-pointer hover:border-emerald-500/40 hover:bg-slate-800/50 transition-all duration-300 hover:scale-[1.02]"
+                        >
                           <div>
                             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Global Revenue</p>
                             <h3 className="text-3xl font-black text-white font-mono">Ksh {adminAnalytics.global_revenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
@@ -2534,7 +2537,10 @@ export default function App() {
                           </div>
                         </div>
 
-                        <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
+                        <div 
+                          onClick={() => setCurrentPage('resellers')}
+                          className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between cursor-pointer hover:border-indigo-500/40 hover:bg-slate-800/50 transition-all duration-300 hover:scale-[1.02]"
+                        >
                           <div>
                             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Onboarded Channels</p>
                             <h3 className="text-3xl font-black text-white font-mono">{adminAnalytics.onboarded_resellers} <span className="text-xs font-normal">Resellers</span></h3>
@@ -2545,7 +2551,10 @@ export default function App() {
                           </div>
                         </div>
 
-                        <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
+                        <div 
+                          onClick={() => setCurrentPage('campaigns')}
+                          className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between cursor-pointer hover:border-blue-500/40 hover:bg-slate-800/50 transition-all duration-300 hover:scale-[1.02]"
+                        >
                           <div>
                             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Global SMS Fired</p>
                             <h3 className="text-3xl font-black text-white font-mono">{adminAnalytics.total_sms_fired.toLocaleString()}</h3>
@@ -2556,7 +2565,10 @@ export default function App() {
                           </div>
                         </div>
 
-                        <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
+                        <div 
+                          onClick={() => setCurrentPage('routing')}
+                          className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between cursor-pointer hover:border-violet-500/40 hover:bg-slate-800/50 transition-all duration-300 hover:scale-[1.02]"
+                        >
                           <div>
                             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Peak Capacity</p>
                             <h3 className="text-3xl font-black text-white font-mono">{adminAnalytics.peak_capacity_tps.toLocaleString()} <span className="text-xs font-normal">TPS</span></h3>
