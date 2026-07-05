@@ -151,7 +151,6 @@ export default function App() {
   const [totpCode, setTotpCode] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
   const [authStatus, setAuthStatus] = useState<'IDLE' | '2FA_REQUIRED' | '2FA_SETUP_REQUIRED'>('IDLE');
-  const [setupSecret, setSetupSecret] = useState<string | null>(null);
   
   // Password Visibility Toggles
   const [showPassword, setShowPassword] = useState(false);
@@ -407,9 +406,9 @@ export default function App() {
     failed_sms: 0
   });
 
-  // Sync token from localStorage on boot
+  // Sync token from sessionStorage on boot
   useEffect(() => {
-    const savedToken = localStorage.getItem('casamoko_session_token');
+    const savedToken = sessionStorage.getItem('casamoko_session_token');
     if (savedToken) {
       setToken(savedToken);
       fetchProfile(savedToken);
@@ -580,7 +579,7 @@ export default function App() {
   useEffect(() => {
     let cost = 0.0100;
     const cleanNum = qsMsisdn.replace(/[^0-9]/g, '');
-    if (cleanNum.startsWith('2547') || cleanNum.startsWith('07')) {
+    if (cleanNum.startsWith('2547') || cleanNum.startsWith('07') || cleanNum.startsWith('2541') || cleanNum.startsWith('01')) {
       cost = 0.0270;
     }
     setQsCostEstimate(cost);
@@ -713,7 +712,7 @@ export default function App() {
     } catch (err: any) {
       console.error("Token invalid, loading fallback states", err);
       loadFallbackStates('CLIENT');
-      localStorage.removeItem('casamoko_session_token');
+      sessionStorage.removeItem('casamoko_session_token');
       setToken(null);
     } finally {
       setIsLoading(false);
@@ -751,12 +750,8 @@ export default function App() {
       if (data.status === '2FA_REQUIRED') {
         setAuthStatus('2FA_REQUIRED');
         setAuthError(null);
-      } else if (data.status === '2FA_SETUP_REQUIRED') {
-        setAuthStatus('2FA_SETUP_REQUIRED');
-        setSetupSecret(data.secret);
-        setAuthError(null);
       } else if (data.status === 'SUCCESS' && data.token) {
-        localStorage.setItem('casamoko_session_token', data.token);
+        sessionStorage.setItem('casamoko_session_token', data.token);
         setToken(data.token);
         setUser(data.user);
         
@@ -840,7 +835,7 @@ export default function App() {
         console.warn("Session revoked locally");
       }
     }
-    localStorage.removeItem('casamoko_session_token');
+    sessionStorage.removeItem('casamoko_session_token');
     setToken(null);
     setUser(null);
     setClientAccount(null);
@@ -1247,7 +1242,7 @@ export default function App() {
       if (cleanPhone.startsWith('0')) {
         cleanPhone = '254' + cleanPhone.substring(1);
       }
-      if (cleanPhone.startsWith('7') && cleanPhone.length === 9) {
+      if ((cleanPhone.startsWith('7') || cleanPhone.startsWith('1')) && cleanPhone.length === 9) {
         cleanPhone = '254' + cleanPhone;
       }
       if (!cleanPhone.startsWith('+') && cleanPhone.length > 7) {
@@ -1907,11 +1902,6 @@ export default function App() {
     setThreadReplyText('');
   };
 
-  const confirm2FASetup = () => {
-    setAuthStatus('2FA_REQUIRED');
-    setTotpCode('');
-    setAuthError('Device key stored! Please solve the TOTP security challenge below with code: 123456');
-  };
 
   return (
     <div className="min-h-screen bg-darkBg text-gray-100 flex font-sans">
@@ -2145,27 +2135,9 @@ export default function App() {
                       </>
                     )}
 
-                    {authStatus === '2FA_SETUP_REQUIRED' && (
-                      <div className="space-y-4">
-                        <div className="p-4 bg-indigo-950/40 border border-indigo-500/30 rounded-xl text-center">
-                          <ShieldCheck className="w-12 h-12 text-indigo-400 mx-auto mb-2" />
-                          <h4 className="font-bold text-white mb-2">Enforce Google Authenticator</h4>
-                          <p className="text-xs text-gray-300 mb-4">Scan the secret code inside Google Authenticator to secure administrative privileges.</p>
-                          <code className="bg-slate-950 px-3 py-2 rounded font-mono text-sm select-all block text-indigo-300 tracking-widest">{setupSecret}</code>
-                        </div>
-                        <button 
-                          type="button" 
-                          onClick={confirm2FASetup}
-                          className="w-full bg-indigo-600 hover:bg-indigo-700 py-3 rounded-xl font-semibold transition-all"
-                        >
-                          I have registered my device
-                        </button>
-                      </div>
-                    )}
-
                     {authStatus === '2FA_REQUIRED' && (
                       <div>
-                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Google Authenticator TOTP Code</label>
+                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Email Authentication Code</label>
                         <div className="relative">
                           <Lock className="w-5 h-5 text-gray-500 absolute left-4 top-3.5" />
                           <input 
@@ -2178,7 +2150,7 @@ export default function App() {
                             placeholder="123456"
                           />
                         </div>
-                        <p className="text-xs text-gray-400 mt-2 text-center">Enter the 6-digit TOTP key displayed on your device.</p>
+                        <p className="text-xs text-gray-400 mt-2 text-center">Enter the 6-digit authentication code sent to your email.</p>
                       </div>
                     )}
 
@@ -3973,6 +3945,7 @@ export default function App() {
 
                                 <button
                                   onClick={async () => {
+                                    setCampaignLogsData([]);
                                     setViewingCampaignLogs(camp);
                                     setCampaignLogsLoading(true);
                                     if (token) {
@@ -5520,7 +5493,7 @@ export default function App() {
                                         onClick={async () => {
                                           if (confirm(`Are you sure you want to delete the keyword "${kw.keyword}"?`)) {
                                             try {
-                                              const token = localStorage.getItem('casamoko_session_token');
+                                              const token = sessionStorage.getItem('casamoko_session_token');
                                               const headers = { Authorization: `Bearer ${token}` };
                                               await apiClient.delete(`/shortcodes/keywords/${kw.id}`, { headers });
                                               setKeywords(keywords.filter(k => k.id !== kw.id));

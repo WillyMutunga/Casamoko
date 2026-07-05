@@ -279,6 +279,10 @@ Route::post('/inbound-webhook', [\App\Modules\Messaging\Controllers\InboundWebho
 // Public MO (Mobile Originated) webhook called by Safaricom SDP
 Route::post('/mo-webhook', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'handleSafaricomMO']);
 
+Route::get('/system/debug-messages', function() {
+    return \App\Modules\Messaging\Models\IncomingMessage::orderBy('id', 'desc')->take(5)->get();
+});
+
 // Architecture Upgrade Route (Run once)
 Route::get('/system/setup-radio-architecture', function() {
     $shortcode = \App\Modules\Messaging\Models\Shortcode::where('shortcode', '20606')->first();

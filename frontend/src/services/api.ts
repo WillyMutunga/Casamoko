@@ -9,9 +9,9 @@ const apiClient = axios.create({
   },
 });
 
-// Attach Bearer token on every outgoing request if present
+// Auto-attach token to all requests if it exists in sessionStorage
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('casamoko_session_token');
+  const token = sessionStorage.getItem('casamoko_session_token');
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }

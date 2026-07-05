@@ -107,44 +107,51 @@ class AuthController extends Controller
 
         // 5. Audit check: Multi-Factor Authentication (2FA) for admins
         if ($user->role_tier === 'SUPER_ADMIN' || $user->sub_role === 'CLIENT_ADMIN') {
-            if ($user->two_factor_secret) {
-                $totpCode = $request->input('totp_code');
+            $totpCode = $request->input('totp_code');
 
-                if (!$totpCode) {
-                    return response()->json([
-                        'status' => '2FA_REQUIRED',
-                        'message' => 'Google Authenticator Multi-Factor authentication is required to secure this administrative session.',
-                        'email' => $email
-                    ]);
+            if (!$totpCode) {
+                // Generate a random 6-digit OTP
+                $newCode = str_pad((string)rand(0, 999999), 6, '0', STR_PAD_LEFT);
+                
+                // Cache the OTP for 15 minutes
+                \Illuminate\Support\Facades\Cache::put('email_otp_' . $user->id, $newCode, now()->addMinutes(15));
+                
+                // Send the OTP via Email
+                try {
+                    \Illuminate\Support\Facades\Mail::raw("Your Casamoko authentication code is: $newCode\nThis code will expire in 15 minutes.", function ($message) use ($user) {
+                        $message->to($user->email)->subject('Casamoko Authentication Code');
+                    });
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to send OTP email: ' . $e->getMessage());
                 }
-
-                if (!$this->verifyTotp($user->two_factor_secret, $totpCode)) {
-                    LoginAttempt::create([
-                        'ip_address' => $ip,
-                        'user_agent' => $userAgent,
-                        'username' => $email,
-                        'status' => 'FAILED',
-                        'failure_reason' => 'INVALID_2FA',
-                        'created_at' => now(),
-                    ]);
-
-                    return response()->json([
-                        'error' => 'INVALID_2FA',
-                        'message' => 'Invalid Google Authenticator TOTP token.'
-                    ], 401);
-                }
-            } else {
-                // Initialize 2FA Setup
-                $newSecret = $this->generateTotpSecret();
-                $user->update(['two_factor_secret' => $newSecret]);
 
                 return response()->json([
-                    'status' => '2FA_SETUP_REQUIRED',
-                    'message' => 'Administrative policy mandates Google Authenticator MFA. Please scan this secret key to bind your device.',
-                    'secret' => $newSecret,
+                    'status' => '2FA_REQUIRED',
+                    'message' => 'An authentication code has been sent to your email. Please enter it below to secure this administrative session.',
                     'email' => $email
                 ]);
             }
+
+            // Verify the provided OTP against the cached one
+            $cachedCode = \Illuminate\Support\Facades\Cache::get('email_otp_' . $user->id);
+            if (!$cachedCode || $cachedCode !== $totpCode) {
+                LoginAttempt::create([
+                    'ip_address' => $ip,
+                    'user_agent' => $userAgent,
+                    'username' => $email,
+                    'status' => 'FAILED',
+                    'failure_reason' => 'INVALID_2FA',
+                    'created_at' => now(),
+                ]);
+
+                return response()->json([
+                    'error' => 'INVALID_2FA',
+                    'message' => 'Invalid or expired OTP code.'
+                ], 401);
+            }
+
+            // Clear the cached OTP so it cannot be reused
+            \Illuminate\Support\Facades\Cache::forget('email_otp_' . $user->id);
         }
 
         // Success log
@@ -335,10 +342,7 @@ class AuthController extends Controller
      */
     private function verifyTotp(string $secret, string $code): bool
     {
-        // Master test bypass code
-        if ($code === '123456') {
-            return true;
-        }
+        // (Test bypass code removed for security)
 
         // Lightweight deterministic time-slice algorithm (HMAC-SHA1)
         $timeSlice = floor(time() / 30);

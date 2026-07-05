@@ -157,6 +157,9 @@ class CampaignController extends Controller
             $targets = $request->input('target_contacts') ?: [];
         }
 
+        // Deduplicate targets to prevent multiple messages to the same person
+        $targets = array_unique($targets);
+
         if (empty($targets)) {
             return response()->json([
                 'error' => 'NO_TARGETS',

@@ -128,6 +128,11 @@ class DispatchBulkCampaignJob implements ShouldQueue
                 continue;
             }
 
+            // Prevent duplicate message records if the job is retried after a failure
+            if (MessageRecord::where('campaign_id', $campaign->id)->where('contact_id', $contact->id)->exists()) {
+                continue;
+            }
+
             $record = MessageRecord::create([
                 'campaign_id' => $campaign->id,
                 'contact_id' => $contact->id,
