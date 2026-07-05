@@ -3599,9 +3599,9 @@ export default function App() {
 
                             <div className="bg-slate-900/40 border border-slate-800/40 p-4 rounded-xl flex items-center justify-between">
                               <div className="text-sm">
-                                <span className="text-gray-400 font-semibold block mb-0.5 uppercase tracking-wider text-[10px]">Estimated Price Tariff</span>
+                                <span className="text-gray-400 font-semibold block mb-0.5 uppercase tracking-wider text-[10px]">Estimated Total Cost</span>
                                 <span className="text-white font-mono font-black text-lg">Ksh {qsCostEstimate.toFixed(4)}</span>
-                                <span className="text-xs text-indigo-400 block mt-0.5">Calculated by destination prefix routing costs</span>
+                                <span className="text-xs text-indigo-400 block mt-0.5">Calculated based on destination networks</span>
                               </div>
 
                               <button
@@ -4340,7 +4340,7 @@ export default function App() {
                           <span className="text-sm font-bold text-white font-mono">{wizDeduplicatedCount} contact(s)</span>
                         </div>
                         <div className="flex justify-between pb-3">
-                          <span className="text-sm text-gray-400">Double-Entry Wallet Debit Cost:</span>
+                          <span className="text-sm text-gray-400">Estimated Total Cost:</span>
                           <span className="text-base font-extrabold text-white font-mono">Ksh {wizCostEstimate.toFixed(4)}</span>
                         </div>
                       </div>
