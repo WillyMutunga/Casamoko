@@ -732,6 +732,25 @@ export default function App() {
 
 
 
+  const handleResendCode = async () => {
+    setTotpCode('');
+    setAuthError(null);
+    setIsLoading(true);
+    try {
+      const res = await apiClient.post('/accounts/login', {
+        email,
+        password
+      });
+      if (res.data.status === '2FA_REQUIRED') {
+        setAuthError('A new authentication code has been sent to your email.');
+      }
+    } catch (err: any) {
+      setAuthError(err.response?.data?.error || 'Failed to resend code. Check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Perform backend / login
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -2164,6 +2183,16 @@ export default function App() {
                           {isLoading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                           {authStatus === '2FA_REQUIRED' ? 'Confirm OTP Token' : 'Authenticate Session'}
                         </button>
+                        {authStatus === '2FA_REQUIRED' && (
+                          <button 
+                            type="button" 
+                            onClick={handleResendCode}
+                            disabled={isLoading}
+                            className="w-full text-xs text-indigo-400 hover:text-indigo-300 font-medium py-2 transition-colors disabled:opacity-50"
+                          >
+                            Didn't receive the code? Resend
+                          </button>
+                        )}
                       </div>
                     )}
 
