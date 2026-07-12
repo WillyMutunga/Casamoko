@@ -128,6 +128,13 @@ export default function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const handleNavClick = (page: string) => {
+    setCurrentPage(page);
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  };
+
   // Authentication State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [token, setToken] = useState<string | null>(null);
@@ -2240,42 +2247,42 @@ export default function App() {
               {user.role_tier === 'SUPER_ADMIN' && (
                 <>
                   <button 
-                    onClick={() => setCurrentPage('dashboard')} 
+                    onClick={() => handleNavClick('dashboard')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'dashboard' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <Activity className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>System Overview</span>
                   </button>
                   <button 
-                    onClick={() => setCurrentPage('resellers')} 
+                    onClick={() => handleNavClick('resellers')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'resellers' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <Building className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Manage Resellers</span>
                   </button>
                   <button 
-                    onClick={() => setCurrentPage('compliance')} 
+                    onClick={() => handleNavClick('compliance')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'compliance' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <ShieldCheck className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Sender Approvals</span>
                   </button>
                   <button 
-                    onClick={() => setCurrentPage('audit')} 
+                    onClick={() => handleNavClick('audit')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'audit' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <Lock className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Security Audits</span>
                   </button>
                   <button 
-                    onClick={() => setCurrentPage('routing')} 
+                    onClick={() => handleNavClick('routing')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'routing' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <Cpu className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>SMPP Routing</span>
                   </button>
                   <button 
-                    onClick={() => setCurrentPage('campaigns')} 
+                    onClick={() => handleNavClick('campaigns')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'campaigns' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <Send className="w-5 h-5 shrink-0" />
@@ -2288,21 +2295,21 @@ export default function App() {
               {user.role_tier === 'RESELLER' && (
                 <>
                   <button 
-                    onClick={() => setCurrentPage('dashboard')} 
+                    onClick={() => handleNavClick('dashboard')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'dashboard' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <Activity className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Channel Overview</span>
                   </button>
                   <button 
-                    onClick={() => setCurrentPage('clients')} 
+                    onClick={() => handleNavClick('clients')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'clients' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <Users className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Onboarded Clients</span>
                   </button>
                   <button 
-                    onClick={() => setCurrentPage('campaigns')} 
+                    onClick={() => handleNavClick('campaigns')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'campaigns' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <Send className="w-5 h-5 shrink-0" />
@@ -2315,77 +2322,77 @@ export default function App() {
               {user.role_tier === 'CLIENT' && (
                 <>
                   <button 
-                    onClick={() => setCurrentPage('dashboard')} 
+                    onClick={() => handleNavClick('dashboard')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'dashboard' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <TrendingUp className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Dashboard</span>
                   </button>
                   <button 
-                    onClick={() => setCurrentPage('campaigns')} 
+                    onClick={() => handleNavClick('campaigns')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'campaigns' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <Send className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Campaigns & Queue</span>
                   </button>
                   <button 
-                    onClick={() => setCurrentPage('inbox')} 
+                    onClick={() => handleNavClick('inbox')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'inbox' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <Inbox className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Two-Way Inbox</span>
                   </button>
                   <button 
-                    onClick={() => setCurrentPage('reports')} 
+                    onClick={() => handleNavClick('reports')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'reports' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <BarChart2 className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Delivery Analytics</span>
                   </button>
                   <button 
-                    onClick={() => setCurrentPage('contacts')} 
+                    onClick={() => handleNavClick('contacts')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'contacts' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <Users className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Contacts & Blocklist</span>
                   </button>
                   <button 
-                    onClick={() => setCurrentPage('finance')} 
+                    onClick={() => handleNavClick('finance')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'finance' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <Wallet className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Wallet Ledger</span>
                   </button>
                   <button 
-                    onClick={() => setCurrentPage('team')} 
+                    onClick={() => handleNavClick('team')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'team' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <Activity className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Team & Activity</span>
                   </button>
                   <button 
-                    onClick={() => setCurrentPage('shortcodes')} 
+                    onClick={() => handleNavClick('shortcodes')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'shortcodes' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <MessageSquare className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Shortcode Services</span>
                   </button>
                   <button 
-                    onClick={() => setCurrentPage('sender_ids')} 
+                    onClick={() => handleNavClick('sender_ids')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'sender_ids' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <Sliders className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Sender ID Config</span>
                   </button>
                   <button 
-                    onClick={() => setCurrentPage('templates')} 
+                    onClick={() => handleNavClick('templates')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'templates' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <MessageSquareDashed className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Dynamic Templates</span>
                   </button>
                   <button 
-                    onClick={() => setCurrentPage('developer')} 
+                    onClick={() => handleNavClick('developer')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'developer' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <TerminalSquare className="w-5 h-5 shrink-0" />
@@ -2525,7 +2532,7 @@ export default function App() {
                     <div className="space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <div 
-                          onClick={() => setCurrentPage('dashboard')}
+                          onClick={() => handleNavClick('dashboard')}
                           className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between cursor-pointer hover:border-emerald-500/40 hover:bg-slate-800/50 transition-all duration-300 hover:scale-[1.02]"
                         >
                           <div>
@@ -2539,7 +2546,7 @@ export default function App() {
                         </div>
 
                         <div 
-                          onClick={() => setCurrentPage('resellers')}
+                          onClick={() => handleNavClick('resellers')}
                           className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between cursor-pointer hover:border-indigo-500/40 hover:bg-slate-800/50 transition-all duration-300 hover:scale-[1.02]"
                         >
                           <div>
@@ -2553,7 +2560,7 @@ export default function App() {
                         </div>
 
                         <div 
-                          onClick={() => setCurrentPage('campaigns')}
+                          onClick={() => handleNavClick('campaigns')}
                           className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between cursor-pointer hover:border-blue-500/40 hover:bg-slate-800/50 transition-all duration-300 hover:scale-[1.02]"
                         >
                           <div>
@@ -2567,7 +2574,7 @@ export default function App() {
                         </div>
 
                         <div 
-                          onClick={() => setCurrentPage('routing')}
+                          onClick={() => handleNavClick('routing')}
                           className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between cursor-pointer hover:border-violet-500/40 hover:bg-slate-800/50 transition-all duration-300 hover:scale-[1.02]"
                         >
                           <div>
@@ -2633,7 +2640,7 @@ export default function App() {
                             </div>
                           </div>
                           <button 
-                            onClick={() => setCurrentPage('compliance')}
+                            onClick={() => handleNavClick('compliance')}
                             className="w-full bg-indigo-600 hover:bg-indigo-700 py-3 rounded-xl font-bold transition-all text-xs uppercase tracking-wider flex items-center justify-center gap-2 mt-4"
                           >
                             <Eye className="w-4 h-4" /> Open Compliance Queue
@@ -7156,3 +7163,4 @@ export default function App() {
     </div>
   );
 }
+

@@ -116,13 +116,11 @@ class AuthController extends Controller
                 // Cache the OTP for 15 minutes
                 \Illuminate\Support\Facades\Cache::put('email_otp_' . $user->id, $newCode, now()->addMinutes(15));
                 
-                // Send the OTP via Email
+                // Dispatch the OTP email via queue to prevent SMTP delays on the frontend
                 try {
-                    \Illuminate\Support\Facades\Mail::raw("Your Casamoko authentication code is: $newCode\nThis code will expire in 15 minutes.", function ($message) use ($user) {
-                        $message->to($user->email)->subject('Casamoko Authentication Code');
-                    });
+                    dispatch(new \App\Jobs\SendOtpEmailJob($user->email, $newCode));
                 } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error('Failed to send OTP email: ' . $e->getMessage());
+                    \Illuminate\Support\Facades\Log::error('Failed to dispatch OTP email job: ' . $e->getMessage());
                 }
 
                 return response()->json([
