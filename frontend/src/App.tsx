@@ -1942,23 +1942,23 @@ export default function App() {
 
           {/* Header */}
           <header className="fixed top-0 w-full z-40 border-b border-white/5 bg-slate-950/50 backdrop-blur-md">
-            <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                  <MessageSquare className="w-5 h-5 text-white" />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
+                  <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <span className="font-extrabold text-xl tracking-widest uppercase text-white">Casamoko</span>
+                <span className="font-extrabold text-lg sm:text-xl tracking-widest uppercase text-white">Casamoko</span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                 <button 
                   onClick={() => setShowAuthModal(true)}
-                  className="px-6 py-2.5 text-sm font-semibold text-slate-300 hover:text-white transition-colors"
+                  className="px-3 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition-colors"
                 >
                   Log in
                 </button>
                 <button 
                   onClick={() => { setShowAuthModal(true); setIsRegistering(true); }}
-                  className="px-6 py-2.5 text-sm font-bold bg-white text-slate-900 hover:bg-slate-100 rounded-lg shadow-lg shadow-white/10 transition-all active:scale-95"
+                  className="px-3 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold bg-white text-slate-900 hover:bg-slate-100 rounded-lg shadow-lg shadow-white/10 transition-all active:scale-95"
                 >
                   Get Started
                 </button>
@@ -1967,17 +1967,17 @@ export default function App() {
           </header>
 
           {/* Hero Section */}
-          <main className="flex-1 flex flex-col items-center justify-center pt-32 pb-20 px-6 z-10 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-medium mb-8 animate-fade-in">
+          <main className="flex-1 flex flex-col items-center justify-center pt-32 pb-20 px-4 sm:px-6 z-10 text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs sm:text-sm font-medium mb-6 sm:mb-8 animate-fade-in">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
               </span>
-              Enterprise Messaging Platform 2.0
+              <span className="truncate">Enterprise Messaging Platform 2.0</span>
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 max-w-4xl leading-tight">
-              Scale Your Communications with <br />
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight mb-6 sm:mb-8 max-w-4xl leading-[1.1] sm:leading-tight">
+              Scale Your Communications with <br className="hidden sm:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-blue-400 to-indigo-300">
                 Precision & Speed.
               </span>
