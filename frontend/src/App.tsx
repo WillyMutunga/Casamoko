@@ -2340,7 +2340,7 @@ export default function App() {
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'inbox' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
                   >
                     <Inbox className="w-5 h-5 shrink-0" />
-                    <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Two-Way Inbox</span>
+                    <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Shortcode Messenger</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('reports')} 
@@ -6457,7 +6457,7 @@ export default function App() {
                       <div className="w-80 border-r border-slate-800/80 flex flex-col bg-slate-900/40">
                         <div className="p-4 border-b border-slate-800/60 bg-slate-950/80">
                           <h3 className="text-white font-bold tracking-wider flex items-center gap-2">
-                            <Inbox className="w-5 h-5 text-indigo-400" /> Two-Way Inbox
+                            <Inbox className="w-5 h-5 text-indigo-400" /> Shortcode Messenger
                           </h3>
                         </div>
                         <div className="flex-1 overflow-y-auto overflow-x-hidden">

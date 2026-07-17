@@ -490,7 +490,10 @@ class ShortcodeController extends Controller
                 ];
             });
 
-            $outgoing = MessageRecord::with('campaign')
+            $outgoing = MessageRecord::whereHas('campaign', function ($query) {
+                    $query->where('name', 'like', 'Shortcode Reply%');
+                })
+                ->with('campaign')
                 ->orderBy('id', 'desc')
                 ->take(2000)
                 ->get()
@@ -500,7 +503,7 @@ class ShortcodeController extends Controller
                     return [
                         'direction' => 'OUTGOING',
                         'msisdn' => $msisdn,
-                        'message' => $item->campaign ? $item->campaign->template : 'Quick Send Dispatch message',
+                        'message' => $item->campaign ? $item->campaign->template : 'Shortcode Reply message',
                         'created_at' => $item->created_at->toIso8601String(),
                     ];
                 });
@@ -522,6 +525,9 @@ class ShortcodeController extends Controller
             $hashes = $contacts->keys();
 
             $outgoing = MessageRecord::whereIn('msisdn_hash', $hashes)
+                ->whereHas('campaign', function ($query) {
+                    $query->where('name', 'like', 'Shortcode Reply%');
+                })
                 ->with('campaign')
                 ->orderBy('id', 'desc')
                 ->get()
@@ -529,7 +535,7 @@ class ShortcodeController extends Controller
                     return [
                         'direction' => 'OUTGOING',
                         'msisdn' => $contacts[$item->msisdn_hash] ?? 'Unknown',
-                        'message' => $item->campaign ? $item->campaign->template : 'Quick Send Dispatch message',
+                        'message' => $item->campaign ? $item->campaign->template : 'Shortcode Reply message',
                         'created_at' => $item->created_at->toIso8601String(),
                     ];
                 });
