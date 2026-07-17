@@ -641,7 +641,7 @@ class ShortcodeController extends Controller
             'sender_id_id' => $senderID->id,
             'name' => "Shortcode Reply to " . substr($msisdn, 0, 6) . "xxxx",
             'template' => $messageText,
-            'unicode_type' => (strlen($messageText) !== utf8_decode($messageText)) ? 'UCS-2' : 'GSM-7',
+            'unicode_type' => (strlen($messageText) !== strlen(mb_convert_encoding($messageText, 'ISO-8859-1', 'UTF-8'))) ? 'UCS-2' : 'GSM-7',
             'status' => 'PROCESSING',
             'sent_count' => 0,
             'delivered_count' => 0,
