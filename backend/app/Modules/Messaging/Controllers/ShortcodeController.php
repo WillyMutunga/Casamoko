@@ -268,7 +268,7 @@ class ShortcodeController extends Controller
                     ->first();
 
                 // One-time deletion of the Admin's wildcard to prevent stealing client traffic
-                if ($keyword && $keyword->keyword === '*' && $keyword->client_account_id === 7) {
+                if ($keyword && $keyword->keyword === '*' && $keyword->client_account_id !== 3) {
                     $keyword->delete();
                     $keyword = Keyword::whereIn('shortcode_id', $shortcodeIds)
                         ->where(function ($query) use ($firstWord) {
