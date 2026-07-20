@@ -266,6 +266,18 @@ class ShortcodeController extends Controller
                     })
                     ->orderByRaw("CASE WHEN UPPER(keyword) = ? THEN 1 WHEN keyword = '*' THEN 2 ELSE 3 END", [$firstWord])
                     ->first();
+
+                // One-time deletion of the Admin's wildcard to prevent stealing client traffic
+                if ($keyword && $keyword->keyword === '*' && $keyword->client_account_id === 7) {
+                    $keyword->delete();
+                    $keyword = Keyword::whereIn('shortcode_id', $shortcodeIds)
+                        ->where(function ($query) use ($firstWord) {
+                            $query->whereRaw('UPPER(keyword) = ?', [$firstWord])
+                                  ->orWhere('keyword', '*');
+                        })
+                        ->orderByRaw("CASE WHEN UPPER(keyword) = ? THEN 1 WHEN keyword = '*' THEN 2 ELSE 3 END", [$firstWord])
+                        ->first();
+                }
             }
         }
 
