@@ -180,14 +180,42 @@ class ShortcodeController extends Controller
         $payload = $request->all();
         Log::info('MO Webhook Received: ', $payload);
         
-        // Extremely greedy extraction to support Safaricom SDP, Africa's Talking, Celcom, and Custom Aggregators
-        $shortcodeText = $payload['smsServiceActivationNumber'] ?? $payload['shortcode'] ?? $payload['to'] ?? $payload['destination'] ?? $payload['receiver'] ?? null;
-        $msisdn = $payload['senderAddress'] ?? $payload['msisdn'] ?? $payload['from'] ?? $payload['sender'] ?? $payload['source'] ?? null;
+        $shortcodeText = null;
+        $msisdn = null;
+        $messageText = null;
+        $linkId = null;
+
+        // Safaricom SDP INTERACTIVE MO payload parser
+        if (isset($payload['operation']) && $payload['operation'] === 'INTERACTIVE' && isset($payload['requestParam'])) {
+            $data = $payload['requestParam']['data'] ?? [];
+            foreach ($data as $item) {
+                if (isset($item['name']) && strtoupper($item['name']) === 'MSISDN') {
+                    $msisdn = $item['value'];
+                }
+            }
+            $additionalData = $payload['requestParam']['additionalData'] ?? [];
+            foreach ($additionalData as $item) {
+                if (isset($item['name'])) {
+                    $name = strtoupper($item['name']);
+                    if ($name === 'DA') {
+                        $shortcodeText = $item['value'];
+                    } elseif ($name === 'SMS') {
+                        $messageText = $item['value'];
+                    }
+                }
+            }
+        }
+
+        // Extremely greedy extraction to support Safaricom SDP (standard), Africa's Talking, Celcom, and Custom Aggregators
+        if (!$shortcodeText) $shortcodeText = $payload['smsServiceActivationNumber'] ?? $payload['shortcode'] ?? $payload['to'] ?? $payload['destination'] ?? $payload['receiver'] ?? null;
+        if (!$msisdn) $msisdn = $payload['senderAddress'] ?? $payload['msisdn'] ?? $payload['from'] ?? $payload['sender'] ?? $payload['source'] ?? null;
         
-        $messageRaw = $payload['message'] ?? $payload['text'] ?? $payload['content'] ?? $payload['body'] ?? null;
-        $messageText = is_array($messageRaw) ? ($messageRaw['message'] ?? $messageRaw['text'] ?? json_encode($messageRaw)) : (string) $messageRaw;
+        if (!$messageText) {
+            $messageRaw = $payload['message'] ?? $payload['text'] ?? $payload['content'] ?? $payload['body'] ?? null;
+            $messageText = is_array($messageRaw) ? ($messageRaw['message'] ?? $messageRaw['text'] ?? json_encode($messageRaw)) : (string) $messageRaw;
+        }
         
-        $linkId = $payload['linkId'] ?? $payload['link_id'] ?? $payload['correlator'] ?? null;
+        if (!$linkId) $linkId = $payload['linkId'] ?? $payload['link_id'] ?? $payload['correlator'] ?? $payload['requestId'] ?? null;
 
         if (!$shortcodeText || !$msisdn || !$messageText) {
             Log::warning('MO Webhook missing critical fields', $payload);
