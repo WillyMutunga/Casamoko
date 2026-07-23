@@ -222,7 +222,22 @@ class ShortcodeController extends Controller
             return response()->json(['error' => 'Invalid payload structure', 'received_payload' => $payload], 400);
         }
 
-        return $this->processMO($shortcodeText, $msisdn, $messageText, $request->ip(), null, $linkId);
+        $requestIp = $request->ip();
+
+        // Defer the heavy processing until AFTER the HTTP response is sent to Safaricom
+        app()->terminating(function () use ($shortcodeText, $msisdn, $messageText, $requestIp, $linkId) {
+            try {
+                $this->processMO($shortcodeText, $msisdn, $messageText, $requestIp, null, $linkId);
+            } catch (\Exception $e) {
+                Log::error("Deferred processMO Error: " . $e->getMessage());
+            }
+        });
+
+        // Immediately return 200 SUCCESS to beat Safaricom's strict 1000ms timeout
+        return response()->json([
+            'status' => 'SUCCESS',
+            'message' => 'MO accepted for processing'
+        ]);
     }
 
 
