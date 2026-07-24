@@ -676,6 +676,17 @@ export default function App() {
     
   }, [threadedConversations]);
 
+  // Listen for Escape key to close active chat panel
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedChatId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Calculate campaign total cost estimates
   useEffect(() => {
     let perSmsCost = currentBaseCost;
