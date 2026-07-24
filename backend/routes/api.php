@@ -17,9 +17,3 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-
-Route::get('/delete-admin-wildcard', function () {
-    \ = \App\Modules\Accounts\Models\Shortcode::where('client_account_id', 7)->pluck('id');
-    \ = \App\Modules\Messaging\Models\Keyword::whereIn('shortcode_id', \)->where('keyword', '*')->delete();
-    return response()->json(['status' => 'success', 'deleted' => \]);
-});

@@ -224,20 +224,35 @@ class ShortcodeController extends Controller
 
         $requestIp = $request->ip();
 
-        // Defer the heavy processing until AFTER the HTTP response is sent to Safaricom
-        app()->terminating(function () use ($shortcodeText, $msisdn, $messageText, $requestIp, $linkId) {
-            try {
-                $this->processMO($shortcodeText, $msisdn, $messageText, $requestIp, null, $linkId);
-            } catch (\Exception $e) {
-                Log::error("Deferred processMO Error: " . $e->getMessage());
-            }
-        });
-
-        // Immediately return 200 SUCCESS to beat Safaricom's strict 1000ms timeout
-        return response()->json([
+        // Create the response
+        $response = response()->json([
             'status' => 'SUCCESS',
             'message' => 'MO accepted for processing'
         ]);
+
+        // 1. Send the response headers and content to Safaricom immediately
+        $response->send();
+
+        // 2. Force the web server (LiteSpeed/Apache) to close the connection to Safaricom
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        } else {
+            // Fallback for forcing the buffer to flush to the client
+            while (ob_get_level() > 0) {
+                ob_end_flush();
+            }
+            flush();
+        }
+
+        // 3. NOW run the heavy processing! Safaricom is already gone and happy.
+        try {
+            $this->processMO($shortcodeText, $msisdn, $messageText, $requestIp, null, $linkId);
+        } catch (\Exception $e) {
+            Log::error("Deferred processMO Error: " . $e->getMessage());
+        }
+
+        // 4. Exit to prevent Laravel from trying to send the response again
+        exit;
     }
 
 
@@ -281,18 +296,6 @@ class ShortcodeController extends Controller
                     })
                     ->orderByRaw("CASE WHEN UPPER(keyword) = ? THEN 1 WHEN keyword = '*' THEN 2 ELSE 3 END", [$firstWord])
                     ->first();
-
-                // One-time deletion of the Admin's wildcard to prevent stealing client traffic
-                if ($keyword && $keyword->keyword === '*' && $keyword->client_account_id !== 3) {
-                    $keyword->delete();
-                    $keyword = Keyword::whereIn('shortcode_id', $shortcodeIds)
-                        ->where(function ($query) use ($firstWord) {
-                            $query->whereRaw('UPPER(keyword) = ?', [$firstWord])
-                                  ->orWhere('keyword', '*');
-                        })
-                        ->orderByRaw("CASE WHEN UPPER(keyword) = ? THEN 1 WHEN keyword = '*' THEN 2 ELSE 3 END", [$firstWord])
-                        ->first();
-                }
             }
         }
 
@@ -342,7 +345,6 @@ class ShortcodeController extends Controller
             'msisdn' => $msisdn,
             'msisdn_hash' => $msisdnHash,
             'message' => $messageText,
-            'link_id' => $linkId,
         ]);
 
         $actionType = 'WEBHOOK';
@@ -377,7 +379,7 @@ class ShortcodeController extends Controller
                 'action' => 'OPT_OUT',
                 'description' => "Subscriber opted out via Shortcode {$shortcodeText} with text: {$messageText}",
                 'ip_address' => $requestIp,
-                'username' => 'SUBSCRIBER',
+                'user_agent' => 'SYSTEM_SUBSCRIBER',
             ]);
         }
 
@@ -400,7 +402,7 @@ class ShortcodeController extends Controller
                 'action' => 'OPT_IN',
                 'description' => "Subscriber opted in via Shortcode {$shortcodeText} with text: {$messageText}",
                 'ip_address' => $requestIp,
-                'username' => 'SUBSCRIBER',
+                'user_agent' => 'SYSTEM_SUBSCRIBER',
             ]);
         }
 
@@ -542,6 +544,7 @@ class ShortcodeController extends Controller
                     'message' => $item->message,
                     'created_at' => $item->created_at->toIso8601String(),
                     'shortcode_id' => $item->shortcode_id,
+                    'is_read' => $item->is_read,
                 ];
             });
 
@@ -573,6 +576,7 @@ class ShortcodeController extends Controller
                         'message' => $item->message,
                         'created_at' => $item->created_at->toIso8601String(),
                         'shortcode_id' => $item->shortcode_id,
+                        'is_read' => $item->is_read,
                     ];
                 });
 
@@ -611,12 +615,49 @@ class ShortcodeController extends Controller
                 'message' => $msg['message'],
                 'timestamp' => $msg['created_at'],
                 'shortcode_id' => $msg['shortcode_id'] ?? null,
+                'is_read' => $msg['is_read'] ?? true, // Outgoing messages are inherently read
             ];
         }
 
         return response()->json([
             'status' => 'SUCCESS',
             'threads' => $threads
+        ]);
+    }
+
+    /**
+     * Mark all incoming messages in a thread as read.
+     */
+    public function markThreadAsRead(Request $request)
+    {
+        $user = $request->user();
+        $clientAccount = $user->clientAccount;
+
+        if (!$clientAccount) {
+            return response()->json(['error' => 'TENANT_NOT_FOUND'], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'msisdn' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $msisdn = preg_replace('/[^0-9]/', '', $request->input('msisdn'));
+        if (str_starts_with($msisdn, '0')) {
+            $msisdn = '254' . substr($msisdn, 1);
+        }
+
+        // Only mark messages belonging to this client account
+        IncomingMessage::where('client_account_id', $clientAccount->id)
+            ->where('msisdn', $msisdn)
+            ->update(['is_read' => true]);
+
+        return response()->json([
+            'status' => 'SUCCESS',
+            'message' => 'Thread marked as read.'
         ]);
     }
 
@@ -711,7 +752,6 @@ class ShortcodeController extends Controller
             'route_id' => null,
             'price' => $totalCost,
             'status' => 'QUEUED',
-            'link_id' => null, // MT Replies don't strictly need a link_id unless it's PRSP on-demand
         ]);
 
         // Automatically extend sticky session so the user can reply without a keyword

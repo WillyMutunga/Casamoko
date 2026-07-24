@@ -651,13 +651,16 @@ export default function App() {
       const incomingMsg = msgs.find((m: any) => m.shortcode_id);
       const shortcode_id = incomingMsg ? incomingMsg.shortcode_id : null;
 
+      // Find if there is any unread incoming message
+      const hasUnread = msgs.some((m: any) => m.direction === 'INCOMING' && m.is_read === false);
+
       return {
         id: msisdn,
         msisdn: msisdn,
         shortcode_id: shortcode_id,
         time: new Date(lastMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         lastMessage: lastMsg.message,
-        unread: 0, // In a real app we'd track read state
+        unread: hasUnread, // dynamically tracked based on database is_read
         history: history
       };
     });
@@ -6464,7 +6467,19 @@ export default function App() {
                           {inboxChats.map(chat => (
                             <button
                               key={chat.id}
-                              onClick={() => setSelectedChatId(chat.id)}
+                              onClick={async () => {
+                                setSelectedChatId(chat.id);
+                                if (chat.unread) {
+                                  // Optimistically mark as read in UI
+                                  setInboxChats(prev => prev.map(c => c.id === chat.id ? { ...c, unread: false } : c));
+                                  // Call API to mark as read in DB
+                                  try {
+                                    await apiClient.post('/shortcodes/read', { msisdn: chat.msisdn });
+                                  } catch (e) {
+                                    console.error('Failed to mark thread as read', e);
+                                  }
+                                }
+                              }}
                               className={`w-full p-4 flex items-center gap-4 border-b border-slate-800/40 transition-all text-left ${selectedChatId === chat.id ? 'bg-indigo-600/10 border-l-2 border-l-indigo-500' : 'hover:bg-slate-800/40'}`}
                             >
                               <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
@@ -6472,15 +6487,13 @@ export default function App() {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex justify-between items-center mb-1">
-                                  <h4 className="text-sm font-bold text-white truncate">{chat.msisdn}</h4>
+                                  <h4 className={`text-sm truncate ${chat.unread ? 'text-white font-extrabold' : 'text-gray-300 font-bold'}`}>{chat.msisdn}</h4>
                                   <span className="text-[10px] text-gray-500">{chat.time}</span>
                                 </div>
-                                <p className="text-xs text-gray-400 truncate">{chat.lastMessage}</p>
+                                <p className={`text-xs truncate ${chat.unread ? 'text-indigo-300 font-semibold' : 'text-gray-400'}`}>{chat.lastMessage}</p>
                               </div>
-                              {chat.unread > 0 && (
-                                <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
-                                  <span className="text-[10px] font-bold text-slate-900">{chat.unread}</span>
-                                </div>
+                              {chat.unread && (
+                                <div className="w-3 h-3 rounded-full bg-indigo-500 flex shrink-0 shadow-[0_0_8px_rgba(99,102,241,0.8)]"></div>
                               )}
                             </button>
                           ))}

@@ -20,6 +20,17 @@ class IncomingMessage extends Model
         'msisdn',
         'msisdn_hash',
         'message',
+        'is_read',
+        'link_id',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'is_read' => 'boolean',
     ];
 
     /**
