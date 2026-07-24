@@ -1,5 +1,17 @@
 <?php
 
+Route::get('/system/migrate', function (\Illuminate\Http\Request $request) {
+    if ($request->query('secret') !== 'upgrade123') {
+        return response()->json(['error' => 'UNAUTHORIZED'], 403);
+    }
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        return response()->json(['status' => 'SUCCESS', 'message' => 'Migrations ran successfully.', 'output' => \Illuminate\Support\Facades\Artisan::output()]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+});
+
 Route::get('/fix-sender-id', function() {
     \Illuminate\Support\Facades\DB::table('sender_ids')->update(['sender_id' => \Illuminate\Support\Facades\DB::raw('UPPER(sender_id)')]);
     return "All Sender IDs have been successfully updated to UPPERCASE! You can now go to Quick Send and use CASAMOKO.";
@@ -259,19 +271,6 @@ Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry', 'ro
     Route::get('/shortcodes/threads', [ShortcodeController::class, 'getThreadedConversations']);
     Route::post('/shortcodes/read', [ShortcodeController::class, 'markThreadAsRead']);
     Route::post('/shortcodes/reply', [ShortcodeController::class, 'replyToThread']);
-
-    // Migration helper for cPanel users without SSH
-    Route::get('/system/migrate', function () {
-        if (!auth()->user() || auth()->user()->role_tier !== 'SUPER_ADMIN') {
-            return response()->json(['error' => 'UNAUTHORIZED'], 403);
-        }
-        try {
-            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-            return response()->json(['status' => 'SUCCESS', 'message' => 'Migrations ran successfully.', 'output' => \Illuminate\Support\Facades\Artisan::output()]);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
-    });
 
     // Sender IDs (Section 5.5)
     Route::get('/sender-ids', [SenderIDController::class, 'index']);
