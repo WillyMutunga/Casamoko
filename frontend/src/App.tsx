@@ -32,7 +32,7 @@ import {
   User,
   X
 } from 'lucide-react';
-import { Key, Copy, Trash2, Code, Library, Webhook, TerminalSquare, FileCode2, MessageSquareDashed, GitMerge, ArrowRightLeft, Route, Inbox, CheckSquare, Archive } from 'lucide-react';
+import { Key, Copy, Trash2, Code, Library, Webhook, TerminalSquare, FileCode2, MessageSquareDashed, GitMerge, ArrowRightLeft, Route, Inbox, CheckSquare, Archive, ArrowLeft } from 'lucide-react';
 import apiClient from './services/api';
 
 // Core Interfaces
@@ -6602,7 +6602,7 @@ const getChatDateHeader = (timestampStr: string) => {
                   {currentPage === 'inbox' && (
                     <div className="h-[75vh] flex bg-slate-950 border border-slate-800/80 rounded-2xl overflow-hidden animate-fade-in-up">
                       {/* Left Pane - Chats List */}
-                      <div className="w-80 border-r border-slate-800/80 flex flex-col bg-slate-900/40">
+                      <div className={`w-full md:w-80 border-r border-slate-800/80 flex flex-col bg-slate-900/40 ${selectedChatId ? 'hidden md:flex' : 'flex'}`}>
                         <div className="p-4 border-b border-slate-800/60 bg-slate-950/80">
                           <h3 className="text-white font-bold tracking-wider flex items-center gap-2 mb-3">
                             <Inbox className="w-5 h-5 text-indigo-400" /> Shortcode Messenger
@@ -6675,7 +6675,7 @@ const getChatDateHeader = (timestampStr: string) => {
                       </div>
 
                       {/* Right Pane - Chat View */}
-                      <div className="flex-1 flex flex-col bg-slate-950 relative">
+                      <div className={`flex-1 flex flex-col bg-slate-950 relative ${selectedChatId ? 'flex' : 'hidden md:flex'}`}>
                         {selectedChatId ? (
                           (() => {
                             const currentChat = inboxChats.find(c => c.id === selectedChatId);
@@ -6687,9 +6687,22 @@ const getChatDateHeader = (timestampStr: string) => {
                             return (
                               <>
                                 {/* Chat Header with Actions */}
-                                <div className="h-16 border-b border-slate-800/80 bg-slate-900/40 flex items-center justify-between px-6 shrink-0">
-                                  <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
+                                <div className="h-16 border-b border-slate-800/80 bg-slate-900/40 flex items-center justify-between px-4 md:px-6 shrink-0">
+                                  <div className="flex items-center gap-3">
+                                    {/* Back / Close button for mobile and desktop */}
+                                    <button
+                                      onClick={() => {
+                                        setSelectedChatId(null);
+                                        setSelectedMessageKeys([]);
+                                      }}
+                                      className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-gray-400 hover:text-white transition-all flex items-center gap-1.5 font-bold text-xs shadow-sm"
+                                      title="Close active chat (or press Esc)"
+                                    >
+                                      <ArrowLeft className="w-4 h-4 text-indigo-400" />
+                                      <span className="text-xs">Close</span>
+                                    </button>
+
+                                    <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30 shrink-0">
                                       <User className="w-5 h-5 text-indigo-300" />
                                     </div>
                                     <div>
