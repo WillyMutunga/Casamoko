@@ -2178,6 +2178,16 @@ const getChatDateHeader = (timestampStr: string) => {
                 </div>
               ))}
             </div>
+
+            {/* Public Landing Footer Section */}
+            <footer className="mt-auto border-t border-slate-800/60 bg-slate-955/90 backdrop-blur-md py-6 px-8 text-center text-xs text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-3 z-10 shrink-0">
+              <p className="font-medium text-gray-400">
+                © {new Date().getFullYear()} <span className="text-white font-bold">Casamoko Contractors LTD</span>. All rights reserved.
+              </p>
+              <p className="text-xs text-gray-400">
+                Developed by <span className="text-indigo-400 font-semibold">Willy Mutunga</span>
+              </p>
+            </footer>
           </main>
 
           {/* Auth Modal Overlay */}
@@ -7045,6 +7055,16 @@ const getChatDateHeader = (timestampStr: string) => {
                   )}
 
             </div>
+
+            {/* Dashboard App Footer Section */}
+            <footer className="mt-auto border-t border-slate-800/60 bg-slate-950/80 backdrop-blur-md py-4 px-6 text-center text-xs text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-2 z-10 shrink-0">
+              <p className="font-medium text-gray-400">
+                © {new Date().getFullYear()} <span className="text-white font-bold">Casamoko Contractors LTD</span>. All rights reserved.
+              </p>
+              <p className="text-xs text-gray-400">
+                Developed by <span className="text-indigo-400 font-semibold">Willy Mutunga</span>
+              </p>
+            </footer>
           </main>
         </>
       )}
