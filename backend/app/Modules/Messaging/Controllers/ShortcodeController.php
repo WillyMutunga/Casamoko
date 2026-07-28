@@ -647,19 +647,18 @@ class ShortcodeController extends Controller
     }
 
     /**
-     * Single message deletion (soft delete).
+     * Single message deletion (soft delete) for all roles.
      */
     public function deleteMessage(Request $request)
     {
         $user = $request->user();
-        $clientAccount = $user->clientAccount;
-        if (!$clientAccount) return response()->json(['error' => 'TENANT_NOT_FOUND'], 403);
+        if (!$user) return response()->json(['error' => 'UNAUTHENTICATED'], 401);
 
         $id = $request->input('id');
         $type = $request->input('type'); // 'incoming' or 'outgoing'
 
         if ($type === 'incoming') {
-            IncomingMessage::where('id', $id)->where('client_account_id', $clientAccount->id)->update(['is_deleted' => true]);
+            IncomingMessage::where('id', $id)->update(['is_deleted' => true]);
         } else {
             MessageRecord::where('id', $id)->update(['is_deleted' => true]);
         }
@@ -668,20 +667,19 @@ class ShortcodeController extends Controller
     }
 
     /**
-     * Single message archive / unarchive.
+     * Single message archive / unarchive for all roles.
      */
     public function archiveMessage(Request $request)
     {
         $user = $request->user();
-        $clientAccount = $user->clientAccount;
-        if (!$clientAccount) return response()->json(['error' => 'TENANT_NOT_FOUND'], 403);
+        if (!$user) return response()->json(['error' => 'UNAUTHENTICATED'], 401);
 
         $id = $request->input('id');
         $type = $request->input('type');
         $archive = $request->input('is_archived', true);
 
         if ($type === 'incoming') {
-            IncomingMessage::where('id', $id)->where('client_account_id', $clientAccount->id)->update(['is_archived' => $archive]);
+            IncomingMessage::where('id', $id)->update(['is_archived' => $archive]);
         } else {
             MessageRecord::where('id', $id)->update(['is_archived' => $archive]);
         }
@@ -690,13 +688,12 @@ class ShortcodeController extends Controller
     }
 
     /**
-     * Bulk message delete or archive operations.
+     * Bulk message delete or archive operations for all roles.
      */
     public function bulkActionMessages(Request $request)
     {
         $user = $request->user();
-        $clientAccount = $user->clientAccount;
-        if (!$clientAccount) return response()->json(['error' => 'TENANT_NOT_FOUND'], 403);
+        if (!$user) return response()->json(['error' => 'UNAUTHENTICATED'], 401);
 
         $action = $request->input('action'); // 'delete', 'archive', 'unarchive'
         $items = $request->input('items', []); // Array of ['id' => X, 'type' => 'incoming'|'outgoing']
@@ -706,21 +703,21 @@ class ShortcodeController extends Controller
 
         if ($action === 'delete') {
             if (!empty($incomingIds)) {
-                IncomingMessage::whereIn('id', $incomingIds)->where('client_account_id', $clientAccount->id)->update(['is_deleted' => true]);
+                IncomingMessage::whereIn('id', $incomingIds)->update(['is_deleted' => true]);
             }
             if (!empty($outgoingIds)) {
                 MessageRecord::whereIn('id', $outgoingIds)->update(['is_deleted' => true]);
             }
         } elseif ($action === 'archive') {
             if (!empty($incomingIds)) {
-                IncomingMessage::whereIn('id', $incomingIds)->where('client_account_id', $clientAccount->id)->update(['is_archived' => true]);
+                IncomingMessage::whereIn('id', $incomingIds)->update(['is_archived' => true]);
             }
             if (!empty($outgoingIds)) {
                 MessageRecord::whereIn('id', $outgoingIds)->update(['is_archived' => true]);
             }
         } elseif ($action === 'unarchive') {
             if (!empty($incomingIds)) {
-                IncomingMessage::whereIn('id', $incomingIds)->where('client_account_id', $clientAccount->id)->update(['is_archived' => false]);
+                IncomingMessage::whereIn('id', $incomingIds)->update(['is_archived' => false]);
             }
             if (!empty($outgoingIds)) {
                 MessageRecord::whereIn('id', $outgoingIds)->update(['is_archived' => false]);
@@ -731,13 +728,12 @@ class ShortcodeController extends Controller
     }
 
     /**
-     * Thread level operations (Delete or Archive entire conversation).
+     * Thread level operations (Delete or Archive entire conversation) for all roles.
      */
     public function manageThread(Request $request)
     {
         $user = $request->user();
-        $clientAccount = $user->clientAccount;
-        if (!$clientAccount) return response()->json(['error' => 'TENANT_NOT_FOUND'], 403);
+        if (!$user) return response()->json(['error' => 'UNAUTHENTICATED'], 401);
 
         $msisdn = preg_replace('/[^0-9]/', '', $request->input('msisdn'));
         if (str_starts_with($msisdn, '0')) {
@@ -747,13 +743,13 @@ class ShortcodeController extends Controller
         $msisdnHash = Contact::hashMsisdn($msisdn);
 
         if ($action === 'delete') {
-            IncomingMessage::where('client_account_id', $clientAccount->id)->where('msisdn', $msisdn)->update(['is_deleted' => true]);
+            IncomingMessage::where('msisdn', $msisdn)->update(['is_deleted' => true]);
             MessageRecord::where('msisdn_hash', $msisdnHash)->update(['is_deleted' => true]);
         } elseif ($action === 'archive') {
-            IncomingMessage::where('client_account_id', $clientAccount->id)->where('msisdn', $msisdn)->update(['is_archived' => true]);
+            IncomingMessage::where('msisdn', $msisdn)->update(['is_archived' => true]);
             MessageRecord::where('msisdn_hash', $msisdnHash)->update(['is_archived' => true]);
         } elseif ($action === 'unarchive') {
-            IncomingMessage::where('client_account_id', $clientAccount->id)->where('msisdn', $msisdn)->update(['is_archived' => false]);
+            IncomingMessage::where('msisdn', $msisdn)->update(['is_archived' => false]);
             MessageRecord::where('msisdn_hash', $msisdnHash)->update(['is_archived' => false]);
         }
 

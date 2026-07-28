@@ -683,6 +683,9 @@ const getChatDateHeader = (timestampStr: string) => {
         is_archived: !!m.is_archived,
       }));
       
+      // Sort history strictly chronologically (oldest first, newest last)
+      history.sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      
       // Find the shortcode_id from an incoming message in this thread
       const incomingMsg = msgs.find((m: any) => m.shortcode_id);
       const shortcode_id = incomingMsg ? incomingMsg.shortcode_id : null;
