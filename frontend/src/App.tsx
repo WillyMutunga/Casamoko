@@ -651,21 +651,30 @@ const parseSafeDate = (timestampStr: string) => {
   return isNaN(d.getTime()) ? new Date() : d;
 };
 
-// Helper to group message timestamps by human-readable date headers (e.g. "Tuesday, July 28")
+// Helper to group message timestamps by human-readable date headers (e.g. "Today - Tuesday, July 28")
 const getChatDateHeader = (timestampStr: string) => {
   if (!timestampStr) return '';
   const d = parseSafeDate(timestampStr);
   const now = new Date();
   
-  const options: Intl.DateTimeFormatOptions = { 
-    weekday: 'long', 
-    month: 'long', 
-    day: 'numeric' 
-  };
-  if (d.getFullYear() !== now.getFullYear()) {
-    options.year = 'numeric';
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfYesterday = startOfToday - 86400000;
+  const msgDay = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  
+  const weekday = d.toLocaleDateString('en-US', { weekday: 'long' });
+  const month = d.toLocaleDateString('en-US', { month: 'long' });
+  const day = d.getDate();
+  const yearSuffix = d.getFullYear() !== now.getFullYear() ? `, ${d.getFullYear()}` : '';
+  
+  const dateFormatted = `${weekday}, ${month} ${day}${yearSuffix}`;
+  
+  if (msgDay === startOfToday) {
+    return `Today - ${dateFormatted}`;
+  } else if (msgDay === startOfYesterday) {
+    return `Yesterday - ${dateFormatted}`;
+  } else {
+    return dateFormatted;
   }
-  return d.toLocaleDateString('en-US', options);
 };
 
   // Sync threadedConversations to inboxChats UI state
