@@ -640,11 +640,21 @@ export default function App() {
     };
   }, [currentPage, token]);
 
+// Helper to parse dates safely across all browsers (including Safari / iOS WebKit)
+const parseSafeDate = (timestampStr: string) => {
+  if (!timestampStr) return new Date();
+  let normalized = String(timestampStr);
+  if (normalized.includes(' ') && !normalized.includes('T')) {
+    normalized = normalized.replace(' ', 'T');
+  }
+  const d = new Date(normalized);
+  return isNaN(d.getTime()) ? new Date() : d;
+};
+
 // Helper to group message timestamps by human-readable date headers
 const getChatDateHeader = (timestampStr: string) => {
   if (!timestampStr) return 'Today';
-  const d = new Date(timestampStr);
-  if (isNaN(d.getTime())) return 'Today';
+  const d = parseSafeDate(timestampStr);
   
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
@@ -672,19 +682,22 @@ const getChatDateHeader = (timestampStr: string) => {
       const msgs = threadedConversations[msisdn];
       const lastMsg = msgs[msgs.length - 1];
       
-      const history = msgs.map((m: any) => ({
-        id: m.id,
-        type: m.type,
-        dir: m.direction === 'INCOMING' ? 'in' : 'out',
-        text: m.message,
-        timestamp: m.timestamp,
-        time: new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        dateHeader: getChatDateHeader(m.timestamp),
-        is_archived: !!m.is_archived,
-      }));
+      const history = msgs.map((m: any) => {
+        const safeD = parseSafeDate(m.timestamp);
+        return {
+          id: m.id,
+          type: m.type,
+          dir: m.direction === 'INCOMING' ? 'in' : 'out',
+          text: m.message,
+          timestamp: m.timestamp,
+          time: safeD.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          dateHeader: getChatDateHeader(m.timestamp),
+          is_archived: !!m.is_archived,
+        };
+      });
       
       // Sort history strictly chronologically (oldest first, newest last)
-      history.sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      history.sort((a: any, b: any) => parseSafeDate(a.timestamp).getTime() - parseSafeDate(b.timestamp).getTime());
       
       // Find the shortcode_id from an incoming message in this thread
       const incomingMsg = msgs.find((m: any) => m.shortcode_id);
