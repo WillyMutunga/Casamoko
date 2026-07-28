@@ -651,27 +651,21 @@ const parseSafeDate = (timestampStr: string) => {
   return isNaN(d.getTime()) ? new Date() : d;
 };
 
-// Helper to group message timestamps by human-readable date headers
+// Helper to group message timestamps by human-readable date headers (e.g. "Tuesday, July 28")
 const getChatDateHeader = (timestampStr: string) => {
-  if (!timestampStr) return 'Today';
+  if (!timestampStr) return '';
   const d = parseSafeDate(timestampStr);
-  
   const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const startOfYesterday = startOfToday - 86400000;
-  const startOfWeek = startOfToday - (6 * 86400000);
   
-  const msgDay = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-  
-  if (msgDay === startOfToday) {
-    return 'Today';
-  } else if (msgDay === startOfYesterday) {
-    return 'Yesterday';
-  } else if (msgDay >= startOfWeek) {
-    return d.toLocaleDateString([], { weekday: 'long' });
-  } else {
-    return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+  const options: Intl.DateTimeFormatOptions = { 
+    weekday: 'long', 
+    month: 'long', 
+    day: 'numeric' 
+  };
+  if (d.getFullYear() !== now.getFullYear()) {
+    options.year = 'numeric';
   }
+  return d.toLocaleDateString('en-US', options);
 };
 
   // Sync threadedConversations to inboxChats UI state
