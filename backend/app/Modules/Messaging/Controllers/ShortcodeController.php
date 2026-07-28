@@ -522,6 +522,8 @@ class ShortcodeController extends Controller
      */
     public function getThreadedConversations(Request $request)
     {
+        $this->ensureMessagingColumnsExist();
+
         $user = $request->user();
         $clientAccount = $user->clientAccount;
 
@@ -533,7 +535,7 @@ class ShortcodeController extends Controller
             ->orWhereNull('client_account_id')
             ->pluck('id');
 
-        $isSuperAdmin = $user->role_tier === 'SUPER_ADMIN' || $clientAccount->id === 1;
+        $isSuperAdmin = $user->role_tier === 'SUPER_ADMIN' || ($clientAccount && $clientAccount->id === 1);
 
         if ($isSuperAdmin) {
             // God Mode: Fetch ALL incoming and outgoing messages across all clients
@@ -548,7 +550,7 @@ class ShortcodeController extends Controller
                         'direction' => 'INCOMING',
                         'msisdn' => $item->msisdn,
                         'message' => $item->message,
-                        'created_at' => $item->created_at->toIso8601String(),
+                        'created_at' => $item->created_at ? \Carbon\Carbon::parse($item->created_at)->toIso8601String() : now()->toIso8601String(),
                         'shortcode_id' => $item->shortcode_id,
                         'is_read' => $item->is_read,
                         'is_archived' => (bool)$item->is_archived,
@@ -571,13 +573,13 @@ class ShortcodeController extends Controller
                         'direction' => 'OUTGOING',
                         'msisdn' => $msisdn,
                         'message' => $item->campaign ? $item->campaign->template : 'Shortcode Reply message',
-                        'created_at' => $item->created_at->toIso8601String(),
+                        'created_at' => $item->created_at ? \Carbon\Carbon::parse($item->created_at)->toIso8601String() : now()->toIso8601String(),
                         'is_archived' => (bool)$item->is_archived,
                     ];
                 });
         } else {
             // Standard Mode: Fetch only messages belonging to this client's workspace
-            $incoming = IncomingMessage::where('client_account_id', $clientAccount->id)
+            $incoming = IncomingMessage::where('client_account_id', $clientAccount ? $clientAccount->id : 0)
                 ->where('is_deleted', false)
                 ->get()
                 ->map(function ($item) {
@@ -587,14 +589,14 @@ class ShortcodeController extends Controller
                         'direction' => 'INCOMING',
                         'msisdn' => $item->msisdn,
                         'message' => $item->message,
-                        'created_at' => $item->created_at->toIso8601String(),
+                        'created_at' => $item->created_at ? \Carbon\Carbon::parse($item->created_at)->toIso8601String() : now()->toIso8601String(),
                         'shortcode_id' => $item->shortcode_id,
                         'is_read' => $item->is_read,
                         'is_archived' => (bool)$item->is_archived,
                     ];
                 });
 
-            $contacts = Contact::where('client_account_id', $clientAccount->id)->pluck('msisdn', 'msisdn_hash');
+            $contacts = $clientAccount ? Contact::where('client_account_id', $clientAccount->id)->pluck('msisdn', 'msisdn_hash') : collect();
             $hashes = $contacts->keys();
 
             $outgoing = MessageRecord::whereIn('msisdn_hash', $hashes)
@@ -612,7 +614,7 @@ class ShortcodeController extends Controller
                         'direction' => 'OUTGOING',
                         'msisdn' => $contacts[$item->msisdn_hash] ?? 'Unknown',
                         'message' => $item->campaign ? $item->campaign->template : 'Shortcode Reply message',
-                        'created_at' => $item->created_at->toIso8601String(),
+                        'created_at' => $item->created_at ? \Carbon\Carbon::parse($item->created_at)->toIso8601String() : now()->toIso8601String(),
                         'is_archived' => (bool)$item->is_archived,
                     ];
                 });
@@ -651,6 +653,7 @@ class ShortcodeController extends Controller
      */
     public function deleteMessage(Request $request)
     {
+        $this->ensureMessagingColumnsExist();
         $user = $request->user();
         if (!$user) return response()->json(['error' => 'UNAUTHENTICATED'], 401);
 
@@ -671,6 +674,7 @@ class ShortcodeController extends Controller
      */
     public function archiveMessage(Request $request)
     {
+        $this->ensureMessagingColumnsExist();
         $user = $request->user();
         if (!$user) return response()->json(['error' => 'UNAUTHENTICATED'], 401);
 
@@ -692,6 +696,7 @@ class ShortcodeController extends Controller
      */
     public function bulkActionMessages(Request $request)
     {
+        $this->ensureMessagingColumnsExist();
         $user = $request->user();
         if (!$user) return response()->json(['error' => 'UNAUTHENTICATED'], 401);
 
@@ -732,6 +737,7 @@ class ShortcodeController extends Controller
      */
     public function manageThread(Request $request)
     {
+        $this->ensureMessagingColumnsExist();
         $user = $request->user();
         if (!$user) return response()->json(['error' => 'UNAUTHENTICATED'], 401);
 
