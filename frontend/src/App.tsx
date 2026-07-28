@@ -681,19 +681,20 @@ const getChatDateHeader = (timestampStr: string) => {
     const mappedChats = Object.keys(threadedConversations).map(msisdn => {
       const msgs = threadedConversations[msisdn];
       const lastMsg = msgs[msgs.length - 1];
-      const lastTimestamp = lastMsg?.timestamp || '';
+      const lastTimestamp = lastMsg?.created_at || lastMsg?.timestamp || '';
       const dateHeader = getChatDateHeader(lastTimestamp);
       
       const history = msgs.map((m: any) => {
-        const safeD = parseSafeDate(m.timestamp);
+        const rawTs = m.created_at || m.timestamp || '';
+        const safeD = parseSafeDate(rawTs);
         return {
           id: m.id,
           type: m.type,
           dir: m.direction === 'INCOMING' ? 'in' : 'out',
           text: m.message,
-          timestamp: m.timestamp,
+          timestamp: rawTs,
           time: safeD.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          dateHeader: getChatDateHeader(m.timestamp),
+          dateHeader: getChatDateHeader(rawTs),
           is_archived: !!m.is_archived,
         };
       });

@@ -546,13 +546,15 @@ class ShortcodeController extends Controller
                 ->take(2000)
                 ->get()
                 ->map(function ($item) {
+                    $isoDate = $item->created_at ? \Carbon\Carbon::parse($item->created_at)->toIso8601String() : now()->toIso8601String();
                     return [
                         'id' => $item->id,
                         'type' => 'incoming',
                         'direction' => 'INCOMING',
                         'msisdn' => $item->msisdn,
                         'message' => $item->message,
-                        'created_at' => $item->created_at ? \Carbon\Carbon::parse($item->created_at)->toIso8601String() : now()->toIso8601String(),
+                        'created_at' => $isoDate,
+                        'timestamp' => $isoDate,
                         'shortcode_id' => $item->shortcode_id,
                         'is_read' => $item->is_read,
                         'is_archived' => !empty($item->is_archived),
@@ -571,13 +573,15 @@ class ShortcodeController extends Controller
                 ->get()
                 ->map(function ($item) {
                     $msisdn = $item->contact ? $item->contact->msisdn : 'Unknown';
+                    $isoDate = $item->created_at ? \Carbon\Carbon::parse($item->created_at)->toIso8601String() : now()->toIso8601String();
                     return [
                         'id' => $item->id,
                         'type' => 'outgoing',
                         'direction' => 'OUTGOING',
                         'msisdn' => $msisdn,
                         'message' => $item->campaign ? $item->campaign->template : 'Shortcode Reply message',
-                        'created_at' => $item->created_at ? \Carbon\Carbon::parse($item->created_at)->toIso8601String() : now()->toIso8601String(),
+                        'created_at' => $isoDate,
+                        'timestamp' => $isoDate,
                         'is_archived' => !empty($item->is_archived),
                     ];
                 });
@@ -589,13 +593,15 @@ class ShortcodeController extends Controller
                 })
                 ->get()
                 ->map(function ($item) {
+                    $isoDate = $item->created_at ? \Carbon\Carbon::parse($item->created_at)->toIso8601String() : now()->toIso8601String();
                     return [
                         'id' => $item->id,
                         'type' => 'incoming',
                         'direction' => 'INCOMING',
                         'msisdn' => $item->msisdn,
                         'message' => $item->message,
-                        'created_at' => $item->created_at ? \Carbon\Carbon::parse($item->created_at)->toIso8601String() : now()->toIso8601String(),
+                        'created_at' => $isoDate,
+                        'timestamp' => $isoDate,
                         'shortcode_id' => $item->shortcode_id,
                         'is_read' => $item->is_read,
                         'is_archived' => !empty($item->is_archived),
@@ -616,13 +622,15 @@ class ShortcodeController extends Controller
                 ->orderBy('id', 'desc')
                 ->get()
                 ->map(function ($item) use ($contacts) {
+                    $isoDate = $item->created_at ? \Carbon\Carbon::parse($item->created_at)->toIso8601String() : now()->toIso8601String();
                     return [
                         'id' => $item->id,
                         'type' => 'outgoing',
                         'direction' => 'OUTGOING',
                         'msisdn' => $contacts[$item->msisdn_hash] ?? 'Unknown',
                         'message' => $item->campaign ? $item->campaign->template : 'Shortcode Reply message',
-                        'created_at' => $item->created_at ? \Carbon\Carbon::parse($item->created_at)->toIso8601String() : now()->toIso8601String(),
+                        'created_at' => $isoDate,
+                        'timestamp' => $isoDate,
                         'is_archived' => !empty($item->is_archived),
                     ];
                 });
