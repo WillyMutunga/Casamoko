@@ -681,6 +681,8 @@ const getChatDateHeader = (timestampStr: string) => {
     const mappedChats = Object.keys(threadedConversations).map(msisdn => {
       const msgs = threadedConversations[msisdn];
       const lastMsg = msgs[msgs.length - 1];
+      const lastTimestamp = lastMsg?.timestamp || '';
+      const dateHeader = getChatDateHeader(lastTimestamp);
       
       const history = msgs.map((m: any) => {
         const safeD = parseSafeDate(m.timestamp);
@@ -712,8 +714,10 @@ const getChatDateHeader = (timestampStr: string) => {
         id: msisdn,
         msisdn: msisdn,
         shortcode_id: shortcode_id,
-        time: new Date(lastMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        lastMessage: lastMsg.message,
+        lastTimestamp: lastTimestamp,
+        dateHeader: dateHeader,
+        time: parseSafeDate(lastTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        lastMessage: lastMsg?.message || '',
         unread: hasUnread,
         hasActive: hasActive,
         hasArchived: hasArchived,
@@ -721,11 +725,9 @@ const getChatDateHeader = (timestampStr: string) => {
       };
     });
     
-    // Sort by most recent message
+    // Sort conversations by most recent message timestamp descending
     mappedChats.sort((a, b) => {
-      const aTime = threadedConversations[a.msisdn][threadedConversations[a.msisdn].length - 1].timestamp;
-      const bTime = threadedConversations[b.msisdn][threadedConversations[b.msisdn].length - 1].timestamp;
-      return new Date(bTime).getTime() - new Date(aTime).getTime();
+      return parseSafeDate(b.lastTimestamp).getTime() - parseSafeDate(a.lastTimestamp).getTime();
     });
     
     setInboxChats(mappedChats);
@@ -6644,75 +6646,101 @@ const getChatDateHeader = (timestampStr: string) => {
                         </div>
 
                         <div className="flex-1 overflow-y-auto overflow-x-hidden">
-                          {inboxChats
-                            .filter(chat => inboxTab === 'archived' ? chat.hasArchived : chat.hasActive)
-                            .map(chat => (
-                              <div
-                                key={chat.id}
-                                className={`w-full p-3.5 flex items-center gap-3 border-b border-slate-800/40 transition-all text-left group relative ${selectedChatId === chat.id ? 'bg-indigo-600/10 border-l-2 border-l-indigo-500' : 'hover:bg-slate-800/40'}`}
-                              >
-                                {/* Main Card Body Clickable */}
-                                <div
-                                  onClick={async () => {
-                                    setSelectedChatId(chat.id);
-                                    setSelectedMessageKeys([]);
-                                    if (chat.unread) {
-                                      setInboxChats(prev => prev.map(c => c.id === chat.id ? { ...c, unread: false } : c));
-                                      try {
-                                        await apiClient.post('/shortcodes/read', { msisdn: chat.msisdn });
-                                      } catch (e) {
-                                        console.error('Failed to mark thread as read', e);
-                                      }
-                                    }
-                                  }}
-                                  className="flex-1 flex items-center gap-3 min-w-0 cursor-pointer"
-                                >
-                                  <div className="w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0 border border-indigo-500/30">
-                                    <User className="w-4 h-4 text-indigo-300" />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex justify-between items-center mb-0.5">
-                                      <h4 className={`text-xs truncate ${chat.unread ? 'text-white font-extrabold' : 'text-gray-300 font-bold'}`}>{chat.msisdn}</h4>
-                                      <span className="text-[9px] text-gray-500">{chat.time}</span>
+                          {(() => {
+                            const filteredChats = inboxChats.filter(chat => inboxTab === 'archived' ? chat.hasArchived : chat.hasActive);
+                            
+                            // Group sidebar chats into date sections
+                            const chatsByDate: { dateHeader: string; chats: any[] }[] = [];
+                            filteredChats.forEach(chat => {
+                              const header = chat.dateHeader || 'Today';
+                              const lastGroup = chatsByDate[chatsByDate.length - 1];
+                              if (lastGroup && lastGroup.dateHeader === header) {
+                                lastGroup.chats.push(chat);
+                              } else {
+                                chatsByDate.push({ dateHeader: header, chats: [chat] });
+                              }
+                            });
+
+                            if (filteredChats.length === 0) {
+                              return (
+                                <div className="p-8 text-center text-gray-500 text-xs font-medium">
+                                  No {inboxTab} conversations found.
+                                </div>
+                              );
+                            }
+
+                            return chatsByDate.map((group, gIdx) => (
+                              <div key={gIdx}>
+                                {/* Date Section Header Badge in Conversation List */}
+                                <div className="sticky top-0 bg-slate-950/90 backdrop-blur-md px-4 py-1.5 text-[10px] font-extrabold text-indigo-300 border-y border-slate-800/60 uppercase tracking-wider flex items-center gap-1.5 z-10 shadow-sm">
+                                  <Calendar className="w-3 h-3 text-indigo-400" />
+                                  <span>{group.dateHeader}</span>
+                                </div>
+
+                                {group.chats.map(chat => (
+                                  <div
+                                    key={chat.id}
+                                    className={`w-full p-3.5 flex items-center gap-3 border-b border-slate-800/40 transition-all text-left group relative ${selectedChatId === chat.id ? 'bg-indigo-600/10 border-l-2 border-l-indigo-500' : 'hover:bg-slate-800/40'}`}
+                                  >
+                                    {/* Main Card Body Clickable */}
+                                    <div
+                                      onClick={async () => {
+                                        setSelectedChatId(chat.id);
+                                        setSelectedMessageKeys([]);
+                                        if (chat.unread) {
+                                          setInboxChats(prev => prev.map(c => c.id === chat.id ? { ...c, unread: false } : c));
+                                          try {
+                                            await apiClient.post('/shortcodes/read', { msisdn: chat.msisdn });
+                                          } catch (e) {
+                                            console.error('Failed to mark thread as read', e);
+                                          }
+                                        }
+                                      }}
+                                      className="flex-1 flex items-center gap-3 min-w-0 cursor-pointer"
+                                    >
+                                      <div className="w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0 border border-indigo-500/30">
+                                        <User className="w-4 h-4 text-indigo-300" />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-center mb-0.5">
+                                          <h4 className={`text-xs truncate ${chat.unread ? 'text-white font-extrabold' : 'text-gray-300 font-bold'}`}>{chat.msisdn}</h4>
+                                          <span className="text-[9px] text-gray-500">{chat.time}</span>
+                                        </div>
+                                        <p className={`text-[11px] truncate ${chat.unread ? 'text-indigo-300 font-semibold' : 'text-gray-400'}`}>{chat.lastMessage}</p>
+                                      </div>
+                                      {chat.unread && (
+                                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 flex shrink-0 shadow-[0_0_8px_rgba(99,102,241,0.8)]"></div>
+                                      )}
                                     </div>
-                                    <p className={`text-[11px] truncate ${chat.unread ? 'text-indigo-300 font-semibold' : 'text-gray-400'}`}>{chat.lastMessage}</p>
+
+                                    {/* Direct Thread Actions on Hover/Touch */}
+                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleManageThread(chat.msisdn, inboxTab === 'archived' ? 'unarchive' : 'archive');
+                                        }}
+                                        className="p-1.5 rounded-lg bg-slate-900 hover:bg-indigo-950/80 text-gray-400 hover:text-indigo-300 border border-slate-800 transition-all"
+                                        title={inboxTab === 'archived' ? 'Unarchive thread' : 'Archive thread'}
+                                      >
+                                        <Archive className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleManageThread(chat.msisdn, 'delete');
+                                        }}
+                                        className="p-1.5 rounded-lg bg-slate-900 hover:bg-rose-950/80 text-gray-400 hover:text-rose-400 border border-slate-800 transition-all"
+                                        title="Delete thread"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
                                   </div>
-                                  {chat.unread && (
-                                    <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 flex shrink-0 shadow-[0_0_8px_rgba(99,102,241,0.8)]"></div>
-                                  )}
-                                </div>
-
-                                {/* Direct Thread Actions on Hover/Touch */}
-                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleManageThread(chat.msisdn, inboxTab === 'archived' ? 'unarchive' : 'archive');
-                                    }}
-                                    className="p-1.5 rounded-lg bg-slate-900 hover:bg-indigo-950/80 text-gray-400 hover:text-indigo-300 border border-slate-800 transition-all"
-                                    title={inboxTab === 'archived' ? 'Unarchive thread' : 'Archive thread'}
-                                  >
-                                    <Archive className="w-3.5 h-3.5" />
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleManageThread(chat.msisdn, 'delete');
-                                    }}
-                                    className="p-1.5 rounded-lg bg-slate-900 hover:bg-rose-950/80 text-gray-400 hover:text-rose-400 border border-slate-800 transition-all"
-                                    title="Delete thread"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
+                                ))}
                               </div>
-                            ))}
-
-                          {inboxChats.filter(chat => inboxTab === 'archived' ? chat.hasArchived : chat.hasActive).length === 0 && (
-                            <div className="p-8 text-center text-gray-500 text-xs font-medium">
-                              No {inboxTab} conversations found.
-                            </div>
-                          )}
+                            ));
+                          })()}
                         </div>
                       </div>
 
