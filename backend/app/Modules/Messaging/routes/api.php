@@ -271,6 +271,10 @@ Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry', 'ro
     Route::get('/shortcodes/threads', [ShortcodeController::class, 'getThreadedConversations']);
     Route::post('/shortcodes/read', [ShortcodeController::class, 'markThreadAsRead']);
     Route::post('/shortcodes/reply', [ShortcodeController::class, 'replyToThread']);
+    Route::delete('/shortcodes/messages', [ShortcodeController::class, 'deleteMessage']);
+    Route::post('/shortcodes/messages/archive', [ShortcodeController::class, 'archiveMessage']);
+    Route::post('/shortcodes/messages/bulk-action', [ShortcodeController::class, 'bulkActionMessages']);
+    Route::post('/shortcodes/threads/manage', [ShortcodeController::class, 'manageThread']);
 
     // Sender IDs (Section 5.5)
     Route::get('/sender-ids', [SenderIDController::class, 'index']);

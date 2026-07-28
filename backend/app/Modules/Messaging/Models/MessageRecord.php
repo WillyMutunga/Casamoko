@@ -23,6 +23,8 @@ class MessageRecord extends Model
         'status', // QUEUED, SENT, DELIVERED, FAILED
         'mno_message_id',
         'network_status_code',
+        'is_archived',
+        'is_deleted',
     ];
 
     /**
@@ -32,6 +34,8 @@ class MessageRecord extends Model
      */
     protected $casts = [
         'price' => 'decimal:4',
+        'is_archived' => 'boolean',
+        'is_deleted' => 'boolean',
     ];
 
     /**

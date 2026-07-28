@@ -21,6 +21,8 @@ class IncomingMessage extends Model
         'msisdn_hash',
         'message',
         'is_read',
+        'is_archived',
+        'is_deleted',
         'link_id',
     ];
 
@@ -31,6 +33,8 @@ class IncomingMessage extends Model
      */
     protected $casts = [
         'is_read' => 'boolean',
+        'is_archived' => 'boolean',
+        'is_deleted' => 'boolean',
     ];
 
     /**

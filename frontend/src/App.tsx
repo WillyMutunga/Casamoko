@@ -32,7 +32,7 @@ import {
   User,
   X
 } from 'lucide-react';
-import { Key, Copy, Trash2, Code, Library, Webhook, TerminalSquare, FileCode2, MessageSquareDashed, GitMerge, ArrowRightLeft, Route, Inbox } from 'lucide-react';
+import { Key, Copy, Trash2, Code, Library, Webhook, TerminalSquare, FileCode2, MessageSquareDashed, GitMerge, ArrowRightLeft, Route, Inbox, CheckSquare, Archive } from 'lucide-react';
 import apiClient from './services/api';
 
 // Core Interfaces
@@ -148,8 +148,15 @@ export default function App() {
   // Profile Modal State
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [editProfileName, setEditProfileName] = useState('');
+  const [editProfileEmail, setEditProfileEmail] = useState('');
+  const [editProfileCurrentPassword, setEditProfileCurrentPassword] = useState('');
   const [editProfilePassword, setEditProfilePassword] = useState('');
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+
+  // Inbox & Message Management State
+  const [inboxTab, setInboxTab] = useState<'active' | 'archived'>('active');
+  const [isBulkSelectMode, setIsBulkSelectMode] = useState(false);
+  const [selectedMessageKeys, setSelectedMessageKeys] = useState<string[]>([]);
   
   // Auth Form State
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -633,6 +640,30 @@ export default function App() {
     };
   }, [currentPage, token]);
 
+// Helper to group message timestamps by human-readable date headers
+const getChatDateHeader = (timestampStr: string) => {
+  if (!timestampStr) return 'Today';
+  const d = new Date(timestampStr);
+  if (isNaN(d.getTime())) return 'Today';
+  
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfYesterday = startOfToday - 86400000;
+  const startOfWeek = startOfToday - (6 * 86400000);
+  
+  const msgDay = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  
+  if (msgDay === startOfToday) {
+    return 'Today';
+  } else if (msgDay === startOfYesterday) {
+    return 'Yesterday';
+  } else if (msgDay >= startOfWeek) {
+    return d.toLocaleDateString([], { weekday: 'long' });
+  } else {
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+};
+
   // Sync threadedConversations to inboxChats UI state
   useEffect(() => {
     if (!threadedConversations || Object.keys(threadedConversations).length === 0) return;
@@ -642,9 +673,14 @@ export default function App() {
       const lastMsg = msgs[msgs.length - 1];
       
       const history = msgs.map((m: any) => ({
+        id: m.id,
+        type: m.type,
         dir: m.direction === 'INCOMING' ? 'in' : 'out',
         text: m.message,
-        time: new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        timestamp: m.timestamp,
+        time: new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        dateHeader: getChatDateHeader(m.timestamp),
+        is_archived: !!m.is_archived,
       }));
       
       // Find the shortcode_id from an incoming message in this thread
@@ -653,6 +689,8 @@ export default function App() {
 
       // Find if there is any unread incoming message
       const hasUnread = msgs.some((m: any) => m.direction === 'INCOMING' && m.is_read === false);
+      const hasActive = history.some((h: any) => !h.is_archived);
+      const hasArchived = history.some((h: any) => h.is_archived);
 
       return {
         id: msisdn,
@@ -660,7 +698,9 @@ export default function App() {
         shortcode_id: shortcode_id,
         time: new Date(lastMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         lastMessage: lastMsg.message,
-        unread: hasUnread, // dynamically tracked based on database is_read
+        unread: hasUnread,
+        hasActive: hasActive,
+        hasArchived: hasArchived,
         history: history
       };
     });
@@ -686,6 +726,81 @@ export default function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Message Deletion & Archival Action Handlers
+  const handleDeleteSingleMessage = async (id: number, type: string) => {
+    try {
+      await apiClient.delete('/shortcodes/messages', { data: { id, type } });
+      toast.success('Message deleted');
+      setInboxChats(prev => prev.map(chat => ({
+        ...chat,
+        history: chat.history.filter((m: any) => !(m.id === id && m.type === type))
+      })).filter(chat => chat.history.length > 0));
+    } catch (err: any) {
+      toast.error('Failed to delete message: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleArchiveSingleMessage = async (id: number, type: string, currentArchivedStatus: boolean) => {
+    try {
+      const newStatus = !currentArchivedStatus;
+      await apiClient.post('/shortcodes/messages/archive', { id, type, is_archived: newStatus });
+      toast.success(newStatus ? 'Message archived' : 'Message restored from archive');
+      setInboxChats(prev => prev.map(chat => ({
+        ...chat,
+        history: chat.history.map((m: any) => (m.id === id && m.type === type) ? { ...m, is_archived: newStatus } : m)
+      })));
+    } catch (err: any) {
+      toast.error('Failed to archive message: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleBulkActionMessages = async (action: 'delete' | 'archive' | 'unarchive') => {
+    if (selectedMessageKeys.length === 0) return;
+    const items = selectedMessageKeys.map(key => {
+      const [type, idStr] = key.split('_');
+      return { id: parseInt(idStr), type };
+    });
+
+    try {
+      await apiClient.post('/shortcodes/messages/bulk-action', { action, items });
+      toast.success(`Bulk ${action} completed`);
+      setSelectedMessageKeys([]);
+      setIsBulkSelectMode(false);
+      
+      setInboxChats(prev => prev.map(chat => {
+        let updatedHistory = chat.history;
+        if (action === 'delete') {
+          updatedHistory = updatedHistory.filter((m: any) => !selectedMessageKeys.includes(`${m.type}_${m.id}`));
+        } else {
+          const isArchived = action === 'archive';
+          updatedHistory = updatedHistory.map((m: any) => selectedMessageKeys.includes(`${m.type}_${m.id}`) ? { ...m, is_archived: isArchived } : m);
+        }
+        return { ...chat, history: updatedHistory };
+      }));
+    } catch (err: any) {
+      toast.error(`Bulk ${action} failed: ` + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleManageThread = async (msisdn: string, action: 'delete' | 'archive' | 'unarchive') => {
+    try {
+      await apiClient.post('/shortcodes/threads/manage', { msisdn, action });
+      toast.success(`Thread ${action}d successfully`);
+      if (action === 'delete') {
+        setInboxChats(prev => prev.filter(c => c.msisdn !== msisdn));
+        if (selectedChatId === msisdn) setSelectedChatId(null);
+      } else {
+        const isArchived = action === 'archive';
+        setInboxChats(prev => prev.map(c => c.msisdn === msisdn ? {
+          ...c,
+          history: c.history.map((m: any) => ({ ...m, is_archived: isArchived }))
+        } : c));
+      }
+    } catch (err: any) {
+      toast.error(`Failed to ${action} thread: ` + (err.response?.data?.message || err.message));
+    }
+  };
 
   // Calculate campaign total cost estimates
   useEffect(() => {
@@ -849,10 +964,20 @@ export default function App() {
   // Perform logout
   const handleUpdateProfile = async () => {
     if (!editProfileName.trim() || !user) return;
+    if (editProfilePassword && !editProfileCurrentPassword) {
+      toast.error('Please enter your current password to set a new password.');
+      return;
+    }
     setIsUpdatingProfile(true);
     try {
       const payload: any = { name: editProfileName };
-      if (editProfilePassword) payload.password = editProfilePassword;
+      if (editProfileEmail && editProfileEmail !== user.email) {
+        payload.email = editProfileEmail;
+      }
+      if (editProfilePassword) {
+        payload.current_password = editProfileCurrentPassword;
+        payload.password = editProfilePassword;
+      }
 
       const res = await apiClient.put('/accounts/profile', payload, {
         headers: { Authorization: `Bearer ${token}` }
@@ -860,6 +985,8 @@ export default function App() {
       setUser(res.data.user);
       setIsProfileModalOpen(false);
       setEditProfilePassword('');
+      setEditProfileCurrentPassword('');
+      toast.success('Profile updated successfully!');
     } catch (err: any) {
       toast.error('Failed to update profile: ' + (err.response?.data?.message || err.message));
     } finally {
@@ -2517,9 +2644,13 @@ export default function App() {
 
                 <button 
                   onClick={() => {
-                    setEditProfileName(user.name);
-                    setEditProfilePassword('');
-                    setIsProfileModalOpen(true);
+                    if (user) {
+                      setEditProfileName(user.name);
+                      setEditProfileEmail(user.email);
+                      setEditProfileCurrentPassword('');
+                      setEditProfilePassword('');
+                      setIsProfileModalOpen(true);
+                    }
                   }}
                   className="flex items-center gap-3 bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800/80 hover:border-indigo-500/50 pl-1 pr-4 py-1 rounded-full transition-all group ml-2"
                 >
@@ -6470,151 +6601,343 @@ export default function App() {
                       {/* Left Pane - Chats List */}
                       <div className="w-80 border-r border-slate-800/80 flex flex-col bg-slate-900/40">
                         <div className="p-4 border-b border-slate-800/60 bg-slate-950/80">
-                          <h3 className="text-white font-bold tracking-wider flex items-center gap-2">
+                          <h3 className="text-white font-bold tracking-wider flex items-center gap-2 mb-3">
                             <Inbox className="w-5 h-5 text-indigo-400" /> Shortcode Messenger
                           </h3>
-                        </div>
-                        <div className="flex-1 overflow-y-auto overflow-x-hidden">
-                          {inboxChats.map(chat => (
+                          {/* Inbox Tabs: Active vs Archived */}
+                          <div className="flex bg-slate-900 rounded-lg p-1 border border-slate-800">
                             <button
-                              key={chat.id}
-                              onClick={async () => {
-                                setSelectedChatId(chat.id);
-                                if (chat.unread) {
-                                  // Optimistically mark as read in UI
-                                  setInboxChats(prev => prev.map(c => c.id === chat.id ? { ...c, unread: false } : c));
-                                  // Call API to mark as read in DB
-                                  try {
-                                    await apiClient.post('/shortcodes/read', { msisdn: chat.msisdn });
-                                  } catch (e) {
-                                    console.error('Failed to mark thread as read', e);
-                                  }
-                                }
+                              onClick={() => {
+                                setInboxTab('active');
+                                setSelectedMessageKeys([]);
                               }}
-                              className={`w-full p-4 flex items-center gap-4 border-b border-slate-800/40 transition-all text-left ${selectedChatId === chat.id ? 'bg-indigo-600/10 border-l-2 border-l-indigo-500' : 'hover:bg-slate-800/40'}`}
+                              className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${inboxTab === 'active' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-white'}`}
                             >
-                              <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
-                                <User className="w-5 h-5 text-indigo-300" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex justify-between items-center mb-1">
-                                  <h4 className={`text-sm truncate ${chat.unread ? 'text-white font-extrabold' : 'text-gray-300 font-bold'}`}>{chat.msisdn}</h4>
-                                  <span className="text-[10px] text-gray-500">{chat.time}</span>
-                                </div>
-                                <p className={`text-xs truncate ${chat.unread ? 'text-indigo-300 font-semibold' : 'text-gray-400'}`}>{chat.lastMessage}</p>
-                              </div>
-                              {chat.unread && (
-                                <div className="w-3 h-3 rounded-full bg-indigo-500 flex shrink-0 shadow-[0_0_8px_rgba(99,102,241,0.8)]"></div>
-                              )}
+                              Active
                             </button>
-                          ))}
+                            <button
+                              onClick={() => {
+                                setInboxTab('archived');
+                                setSelectedMessageKeys([]);
+                              }}
+                              className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${inboxTab === 'archived' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-white'}`}
+                            >
+                              Archived
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+                          {inboxChats
+                            .filter(chat => inboxTab === 'archived' ? chat.hasArchived : chat.hasActive)
+                            .map(chat => (
+                              <button
+                                key={chat.id}
+                                onClick={async () => {
+                                  setSelectedChatId(chat.id);
+                                  setSelectedMessageKeys([]);
+                                  if (chat.unread) {
+                                    setInboxChats(prev => prev.map(c => c.id === chat.id ? { ...c, unread: false } : c));
+                                    try {
+                                      await apiClient.post('/shortcodes/read', { msisdn: chat.msisdn });
+                                    } catch (e) {
+                                      console.error('Failed to mark thread as read', e);
+                                    }
+                                  }
+                                }}
+                                className={`w-full p-4 flex items-center gap-4 border-b border-slate-800/40 transition-all text-left ${selectedChatId === chat.id ? 'bg-indigo-600/10 border-l-2 border-l-indigo-500' : 'hover:bg-slate-800/40'}`}
+                              >
+                                <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0 border border-indigo-500/30">
+                                  <User className="w-5 h-5 text-indigo-300" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex justify-between items-center mb-1">
+                                    <h4 className={`text-sm truncate ${chat.unread ? 'text-white font-extrabold' : 'text-gray-300 font-bold'}`}>{chat.msisdn}</h4>
+                                    <span className="text-[10px] text-gray-500">{chat.time}</span>
+                                  </div>
+                                  <p className={`text-xs truncate ${chat.unread ? 'text-indigo-300 font-semibold' : 'text-gray-400'}`}>{chat.lastMessage}</p>
+                                </div>
+                                {chat.unread && (
+                                  <div className="w-3 h-3 rounded-full bg-indigo-500 flex shrink-0 shadow-[0_0_8px_rgba(99,102,241,0.8)]"></div>
+                                )}
+                              </button>
+                            ))}
+
+                          {inboxChats.filter(chat => inboxTab === 'archived' ? chat.hasArchived : chat.hasActive).length === 0 && (
+                            <div className="p-8 text-center text-gray-500 text-xs font-medium">
+                              No {inboxTab} conversations found.
+                            </div>
+                          )}
                         </div>
                       </div>
 
                       {/* Right Pane - Chat View */}
-                      <div className="flex-1 flex flex-col bg-slate-950">
+                      <div className="flex-1 flex flex-col bg-slate-950 relative">
                         {selectedChatId ? (
-                          <>
-                            <div className="h-16 border-b border-slate-800/80 bg-slate-900/40 flex items-center px-6 gap-4 shrink-0">
-                              <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                                <User className="w-5 h-5 text-indigo-300" />
-                              </div>
-                              <div>
-                                <h3 className="text-white font-bold">{inboxChats.find(c => c.id === selectedChatId)?.msisdn}</h3>
-                                <span className="text-[10px] text-emerald-400 flex items-center gap-1">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div> Active
-                                </span>
-                              </div>
-                            </div>
+                          (() => {
+                            const currentChat = inboxChats.find(c => c.id === selectedChatId);
+                            const visibleHistory = currentChat?.history?.filter((m: any) => inboxTab === 'archived' ? m.is_archived : !m.is_archived) || [];
+                            
+                            // Group message history by date header
+                            let lastHeader = '';
 
-                            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                              {inboxChats.find(c => c.id === selectedChatId)?.history?.map((msg: any, idx: number) => (
-                                <div key={idx} className={`flex flex-col ${msg.dir === 'out' ? 'items-end' : 'items-start'}`}>
-                                  <div className={`max-w-[70%] rounded-2xl px-5 py-3 ${msg.dir === 'out' ? 'bg-indigo-600 text-white rounded-br-sm' : 'bg-slate-800 text-gray-200 rounded-bl-sm border border-slate-700'}`}>
-                                    <p className="text-sm">{msg.text}</p>
+                            return (
+                              <>
+                                {/* Chat Header with Actions */}
+                                <div className="h-16 border-b border-slate-800/80 bg-slate-900/40 flex items-center justify-between px-6 shrink-0">
+                                  <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
+                                      <User className="w-5 h-5 text-indigo-300" />
+                                    </div>
+                                    <div>
+                                      <h3 className="text-white font-bold">{currentChat?.msisdn}</h3>
+                                      <span className="text-[10px] text-emerald-400 flex items-center gap-1">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div> Active Session
+                                      </span>
+                                    </div>
                                   </div>
-                                  <span className="text-[10px] text-gray-500 mt-1">{msg.time}</span>
+
+                                  <div className="flex items-center gap-2">
+                                    {/* Bulk Selection Toggle */}
+                                    <button
+                                      onClick={() => {
+                                        setIsBulkSelectMode(!isBulkSelectMode);
+                                        setSelectedMessageKeys([]);
+                                      }}
+                                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${isBulkSelectMode ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-900/80 text-gray-400 border-slate-800 hover:text-white'}`}
+                                      title="Toggle Bulk Select Mode"
+                                    >
+                                      <CheckSquare className="w-3.5 h-3.5" />
+                                      <span>{isBulkSelectMode ? 'Cancel Select' : 'Select'}</span>
+                                    </button>
+
+                                    {/* Thread Archive */}
+                                    <button
+                                      onClick={() => currentChat && handleManageThread(currentChat.msisdn, inboxTab === 'archived' ? 'unarchive' : 'archive')}
+                                      className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-gray-400 hover:text-indigo-300 border border-slate-800 transition-all"
+                                      title={inboxTab === 'archived' ? "Unarchive Thread" : "Archive Thread"}
+                                    >
+                                      <Archive className="w-4 h-4" />
+                                    </button>
+
+                                    {/* Thread Delete */}
+                                    <button
+                                      onClick={() => currentChat && handleManageThread(currentChat.msisdn, 'delete')}
+                                      className="p-2 rounded-xl bg-slate-900/80 hover:bg-rose-950/60 text-gray-400 hover:text-rose-400 border border-slate-800 transition-all"
+                                      title="Delete Thread"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
                                 </div>
-                              ))}
-                            </div>
 
-                            <div className="p-4 border-t border-slate-800/80 bg-slate-900/20 shrink-0">
-                              <div className="flex gap-4">
-                                <input
-                                  type="text"
-                                  value={replyText}
-                                  onChange={(e) => setReplyText(e.target.value)}
-                                  placeholder="Type a reply... (Enter to send)"
-                                  onKeyDown={async (e) => {
-                                    if(e.key === 'Enter' && replyText.trim()) {
-                                      const textToSend = replyText.trim();
-                                      const currentChat = inboxChats.find(c => c.id === selectedChatId);
-                                      if (!currentChat) return;
+                                {/* Floating Bulk Action Bar */}
+                                {selectedMessageKeys.length > 0 && (
+                                  <div className="bg-indigo-950/90 border border-indigo-500/40 rounded-xl px-5 py-2.5 flex items-center justify-between mx-6 my-3 animate-fade-in shadow-xl z-20">
+                                    <span className="text-xs text-indigo-200 font-bold">
+                                      {selectedMessageKeys.length} message(s) selected
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        onClick={() => handleBulkActionMessages(inboxTab === 'archived' ? 'unarchive' : 'archive')}
+                                        className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md"
+                                      >
+                                        <Archive className="w-3.5 h-3.5" />
+                                        <span>{inboxTab === 'archived' ? 'Unarchive' : 'Archive'}</span>
+                                      </button>
+                                      <button
+                                        onClick={() => handleBulkActionMessages('delete')}
+                                        className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                        <span>Delete</span>
+                                      </button>
+                                      <button
+                                        onClick={() => setSelectedMessageKeys([])}
+                                        className="px-2.5 py-1.5 text-gray-400 hover:text-white text-xs font-bold transition-colors"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
 
-                                      // Optimistically update UI
-                                      const updatedChats = inboxChats.map(c => {
-                                        if(c.id === selectedChatId) {
-                                          return { ...c, history: [...c.history, { dir: 'out', text: textToSend, time: 'Sending...' }], lastMessage: textToSend, time: 'Just now' };
+                                {/* Chat Messages with Date Headers */}
+                                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                                  {visibleHistory.map((msg: any, idx: number) => {
+                                    const showHeader = msg.dateHeader !== lastHeader;
+                                    if (showHeader) lastHeader = msg.dateHeader;
+
+                                    const itemKey = `${msg.type}_${msg.id}`;
+                                    const isSelected = selectedMessageKeys.includes(itemKey);
+
+                                    return (
+                                      <React.Fragment key={idx}>
+                                        {/* Date Group Header Divider */}
+                                        {showHeader && (
+                                          <div className="flex items-center justify-center my-6">
+                                            <div className="bg-slate-900/90 text-gray-400 text-[11px] font-bold px-4 py-1 rounded-full border border-slate-800 shadow-sm tracking-wide">
+                                              {msg.dateHeader}
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {/* Message Bubble Item */}
+                                        <div className={`flex items-center gap-3 ${msg.dir === 'out' ? 'justify-end' : 'justify-start'} group relative`}>
+                                          {/* Bulk Select Checkbox */}
+                                          {isBulkSelectMode && (
+                                            <button
+                                              onClick={() => {
+                                                setSelectedMessageKeys(prev => 
+                                                  prev.includes(itemKey) ? prev.filter(k => k !== itemKey) : [...prev, itemKey]
+                                                );
+                                              }}
+                                              className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${isSelected ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-slate-700 bg-slate-900/60 hover:border-slate-500'}`}
+                                            >
+                                              {isSelected && <CheckSquare className="w-3.5 h-3.5" />}
+                                            </button>
+                                          )}
+
+                                          <div className={`flex flex-col ${msg.dir === 'out' ? 'items-end' : 'items-start'} relative max-w-[70%]`}>
+                                            {/* Hover Action Bar (Single Message Delete / Archive) */}
+                                            {!isBulkSelectMode && msg.id && (
+                                              <div className={`absolute -top-3 ${msg.dir === 'out' ? 'left-0 -translate-x-full pr-2' : 'right-0 translate-x-full pl-2'} opacity-0 group-hover:opacity-100 transition-opacity z-10 flex items-center gap-1`}>
+                                                <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1 shadow-xl">
+                                                  <button
+                                                    onClick={() => handleArchiveSingleMessage(msg.id, msg.type, msg.is_archived)}
+                                                    className="p-1 hover:bg-slate-800 text-gray-400 hover:text-indigo-400 rounded transition-colors"
+                                                    title={msg.is_archived ? "Unarchive message" : "Archive message"}
+                                                  >
+                                                    <Archive className="w-3.5 h-3.5" />
+                                                  </button>
+                                                  <button
+                                                    onClick={() => handleDeleteSingleMessage(msg.id, msg.type)}
+                                                    className="p-1 hover:bg-slate-800 text-gray-400 hover:text-rose-400 rounded transition-colors"
+                                                    title="Delete message"
+                                                  >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            )}
+
+                                            <div className={`rounded-2xl px-5 py-3 ${msg.dir === 'out' ? 'bg-indigo-600 text-white rounded-br-sm shadow-md' : 'bg-slate-800 text-gray-200 rounded-bl-sm border border-slate-700/80 shadow-md'}`}>
+                                              <p className="text-sm leading-relaxed">{msg.text}</p>
+                                            </div>
+                                            <span className="text-[10px] text-gray-500 mt-1 font-mono">{msg.time}</span>
+                                          </div>
+                                        </div>
+                                      </React.Fragment>
+                                    );
+                                  })}
+
+                                  {visibleHistory.length === 0 && (
+                                    <div className="p-12 text-center text-gray-500 text-xs font-medium">
+                                      No messages in this conversation.
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Reply Input Area */}
+                                <div className="p-4 border-t border-slate-800/80 bg-slate-900/20 shrink-0">
+                                  <div className="flex gap-4">
+                                    <input
+                                      type="text"
+                                      value={replyText}
+                                      onChange={(e) => setReplyText(e.target.value)}
+                                      placeholder="Type a reply... (Enter to send)"
+                                      onKeyDown={async (e) => {
+                                        if (e.key === 'Enter' && replyText.trim() && currentChat) {
+                                          const textToSend = replyText.trim();
+                                          const updatedChats = inboxChats.map(c => {
+                                            if (c.id === selectedChatId) {
+                                              return {
+                                                ...c,
+                                                history: [...c.history, {
+                                                  id: Date.now(),
+                                                  type: 'outgoing',
+                                                  dir: 'out',
+                                                  text: textToSend,
+                                                  time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                                  dateHeader: 'Today',
+                                                  is_archived: false
+                                                }],
+                                                lastMessage: textToSend,
+                                                time: 'Just now'
+                                              };
+                                            }
+                                            return c;
+                                          });
+                                          setInboxChats(updatedChats);
+                                          setReplyText('');
+
+                                          try {
+                                            await apiClient.post('/shortcodes/reply', {
+                                              msisdn: currentChat.msisdn,
+                                              message: textToSend,
+                                              shortcode_id: currentChat.shortcode_id
+                                            });
+                                            toast.success('Reply dispatched via Casamoko!');
+                                          } catch (err: any) {
+                                            console.error('Reply failed', err);
+                                            toast.error(err.response?.data?.error || 'Failed to dispatch reply');
+                                          }
                                         }
-                                        return c;
-                                      });
-                                      setInboxChats(updatedChats);
-                                      setReplyText('');
-
-                                      try {
-                                        await apiClient.post('/shortcodes/reply', {
-                                          msisdn: currentChat.msisdn,
-                                          message: textToSend,
-                                          shortcode_id: currentChat.shortcode_id
+                                      }}
+                                      className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:ring-1 focus:ring-indigo-500 outline-none"
+                                    />
+                                    <button 
+                                      onClick={async () => {
+                                        if (!replyText.trim() || !currentChat) return;
+                                        const textToSend = replyText.trim();
+                                        const updatedChats = inboxChats.map(c => {
+                                          if (c.id === selectedChatId) {
+                                            return {
+                                              ...c,
+                                              history: [...c.history, {
+                                                id: Date.now(),
+                                                type: 'outgoing',
+                                                dir: 'out',
+                                                text: textToSend,
+                                                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                                dateHeader: 'Today',
+                                                is_archived: false
+                                              }],
+                                              lastMessage: textToSend,
+                                              time: 'Just now'
+                                            };
+                                          }
+                                          return c;
                                         });
-                                        toast.success('Reply dispatched via Casamoko!');
-                                      } catch (err: any) {
-                                        console.error('Reply failed', err);
-                                        toast.error(err.response?.data?.error || 'Failed to dispatch reply');
-                                      }
-                                    }
-                                  }}
-                                  className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:ring-1 focus:ring-indigo-500 outline-none"
-                                />
-                                <button 
-                                  onClick={async () => {
-                                    if(!replyText.trim()) return;
-                                    const textToSend = replyText.trim();
-                                    const currentChat = inboxChats.find(c => c.id === selectedChatId);
-                                    if (!currentChat) return;
+                                        setInboxChats(updatedChats);
+                                        setReplyText('');
 
-                                    // Optimistically update UI
-                                    const updatedChats = inboxChats.map(c => {
-                                      if(c.id === selectedChatId) {
-                                        return { ...c, history: [...c.history, { dir: 'out', text: textToSend, time: 'Sending...' }], lastMessage: textToSend, time: 'Just now' };
-                                      }
-                                      return c;
-                                    });
-                                    setInboxChats(updatedChats);
-                                    setReplyText('');
-
-                                    try {
-                                      await apiClient.post('/shortcodes/reply', {
-                                        msisdn: currentChat.msisdn,
-                                        message: textToSend,
-                                        shortcode_id: currentChat.shortcode_id
-                                      });
-                                      toast.success('Reply dispatched via Casamoko!');
-                                    } catch (err: any) {
-                                      console.error('Reply failed', err);
-                                      toast.error(err.response?.data?.error || 'Failed to dispatch reply');
-                                    }
-                                  }}
-                                  className="px-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold flex items-center justify-center transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)]">
-                                  <Send className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
-                          </>
+                                        try {
+                                          await apiClient.post('/shortcodes/reply', {
+                                            msisdn: currentChat.msisdn,
+                                            message: textToSend,
+                                            shortcode_id: currentChat.shortcode_id
+                                          });
+                                          toast.success('Reply dispatched via Casamoko!');
+                                        } catch (err: any) {
+                                          console.error('Reply failed', err);
+                                          toast.error(err.response?.data?.error || 'Failed to dispatch reply');
+                                        }
+                                      }}
+                                      className="px-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold flex items-center justify-center transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)]"
+                                    >
+                                      <Send className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          })()
                         ) : (
                           <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
-                            <MessageSquare className="w-16 h-16 mb-4 opacity-20" />
-                            <p>Select a conversation to start messaging</p>
+                            <MessageSquare className="w-16 h-16 mb-4 opacity-20 text-indigo-400" />
+                            <p className="font-medium">Select a conversation to start messaging</p>
+                            <span className="text-xs text-gray-600 mt-1">Press <kbd className="px-2 py-0.5 bg-slate-900 rounded border border-slate-800 font-mono text-[10px]">Esc</kbd> anytime to close active chat</span>
                           </div>
                         )}
                       </div>
@@ -6804,54 +7127,110 @@ export default function App() {
       )}
 
       {isProfileModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-lg">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-8 relative overflow-hidden shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-lg animate-fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg p-8 relative overflow-hidden shadow-2xl space-y-6">
             <button 
               onClick={() => setIsProfileModalOpen(false)}
               className="absolute top-6 right-6 p-2 rounded-full bg-slate-800/50 hover:bg-slate-700 text-gray-400 hover:text-white transition-all"
             >
               <X className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-4 mb-8">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">
-                <User className="w-6 h-6 text-indigo-400" />
+
+            <div className="flex items-center gap-4 border-b border-slate-800/80 pb-6">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0">
+                <User className="w-7 h-7 text-indigo-400" />
               </div>
-              <div>
-                <h2 className="text-2xl font-black text-white tracking-tight">Edit Profile</h2>
-                <p className="text-sm text-indigo-400 font-medium">{user?.email}</p>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-2xl font-black text-white tracking-tight truncate">{user?.name}</h2>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-black px-2.5 py-0.5 rounded-md border border-indigo-500/30 uppercase tracking-wider">
+                    {user?.role_tier}
+                  </span>
+                  {user?.sub_role && (
+                    <span className="bg-slate-800 text-gray-300 text-[10px] font-bold px-2.5 py-0.5 rounded-md border border-slate-700">
+                      {user?.sub_role}
+                    </span>
+                  )}
+                  {clientAccount?.name && (
+                    <span className="text-xs text-gray-400 flex items-center gap-1 font-medium">
+                      <Building className="w-3 h-3 text-gray-500" /> {clientAccount.name}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
-            <div className="space-y-5">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Full Name</label>
-                <input 
-                  type="text" 
-                  value={editProfileName}
-                  onChange={(e) => setEditProfileName(e.target.value)}
-                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium"
-                  placeholder="Jane Doe"
-                />
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Full Name</label>
+                  <input 
+                    type="text" 
+                    value={editProfileName}
+                    onChange={(e) => setEditProfileName(e.target.value)}
+                    className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium"
+                    placeholder="Jane Doe"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Email Address</label>
+                  <input 
+                    type="email" 
+                    value={editProfileEmail}
+                    onChange={(e) => setEditProfileEmail(e.target.value)}
+                    className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium"
+                    placeholder="name@domain.com"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">New Password (Optional)</label>
-                <input 
-                  type="password" 
-                  value={editProfilePassword}
-                  onChange={(e) => setEditProfilePassword(e.target.value)}
-                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium"
-                  placeholder="Leave blank to keep current"
-                />
+              <div className="border-t border-slate-800/60 pt-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider">Security & Password</h4>
+                  <span className="text-[10px] text-gray-500">Leave blank if unchanged</span>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-gray-400 ml-1">Current Password (Required for Password Change)</label>
+                    <input 
+                      type="password" 
+                      value={editProfileCurrentPassword}
+                      onChange={(e) => setEditProfileCurrentPassword(e.target.value)}
+                      className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium"
+                      placeholder="Enter current password"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-gray-400 ml-1">New Password</label>
+                    <input 
+                      type="password" 
+                      value={editProfilePassword}
+                      onChange={(e) => setEditProfilePassword(e.target.value)}
+                      className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium"
+                      placeholder="Minimum 6 characters"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <button 
-                onClick={handleUpdateProfile}
-                disabled={isUpdatingProfile || !editProfileName.trim()}
-                className="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50"
-              >
-                {isUpdatingProfile ? 'Saving...' : 'Save Profile Changes'}
-              </button>
+              <div className="pt-2 flex gap-3">
+                <button 
+                  onClick={() => setIsProfileModalOpen(false)}
+                  className="flex-1 bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold py-3.5 rounded-xl transition-all text-sm"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleUpdateProfile}
+                  disabled={isUpdatingProfile || !editProfileName.trim()}
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl transition-all disabled:opacity-50 text-sm shadow-lg shadow-indigo-500/20"
+                >
+                  {isUpdatingProfile ? 'Saving...' : 'Save Profile'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

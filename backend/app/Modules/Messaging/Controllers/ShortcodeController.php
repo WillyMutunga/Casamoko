@@ -537,18 +537,26 @@ class ShortcodeController extends Controller
 
         if ($isSuperAdmin) {
             // God Mode: Fetch ALL incoming and outgoing messages across all clients
-            $incoming = IncomingMessage::orderBy('id', 'desc')->take(2000)->get()->map(function ($item) {
-                return [
-                    'direction' => 'INCOMING',
-                    'msisdn' => $item->msisdn,
-                    'message' => $item->message,
-                    'created_at' => $item->created_at->toIso8601String(),
-                    'shortcode_id' => $item->shortcode_id,
-                    'is_read' => $item->is_read,
-                ];
-            });
+            $incoming = IncomingMessage::where('is_deleted', false)
+                ->orderBy('id', 'desc')
+                ->take(2000)
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'type' => 'incoming',
+                        'direction' => 'INCOMING',
+                        'msisdn' => $item->msisdn,
+                        'message' => $item->message,
+                        'created_at' => $item->created_at->toIso8601String(),
+                        'shortcode_id' => $item->shortcode_id,
+                        'is_read' => $item->is_read,
+                        'is_archived' => (bool)$item->is_archived,
+                    ];
+                });
 
-            $outgoing = MessageRecord::whereHas('campaign', function ($query) {
+            $outgoing = MessageRecord::where('is_deleted', false)
+                ->whereHas('campaign', function ($query) {
                     $query->where('name', 'like', 'Shortcode Reply%');
                 })
                 ->with('campaign')
@@ -556,27 +564,33 @@ class ShortcodeController extends Controller
                 ->take(2000)
                 ->get()
                 ->map(function ($item) {
-                    // Extract MSISDN from Contact if possible, else fallback to hash
                     $msisdn = $item->contact ? $item->contact->msisdn : 'Unknown';
                     return [
+                        'id' => $item->id,
+                        'type' => 'outgoing',
                         'direction' => 'OUTGOING',
                         'msisdn' => $msisdn,
                         'message' => $item->campaign ? $item->campaign->template : 'Shortcode Reply message',
                         'created_at' => $item->created_at->toIso8601String(),
+                        'is_archived' => (bool)$item->is_archived,
                     ];
                 });
         } else {
             // Standard Mode: Fetch only messages belonging to this client's workspace
             $incoming = IncomingMessage::where('client_account_id', $clientAccount->id)
+                ->where('is_deleted', false)
                 ->get()
                 ->map(function ($item) {
                     return [
+                        'id' => $item->id,
+                        'type' => 'incoming',
                         'direction' => 'INCOMING',
                         'msisdn' => $item->msisdn,
                         'message' => $item->message,
                         'created_at' => $item->created_at->toIso8601String(),
                         'shortcode_id' => $item->shortcode_id,
                         'is_read' => $item->is_read,
+                        'is_archived' => (bool)$item->is_archived,
                     ];
                 });
 
@@ -584,6 +598,7 @@ class ShortcodeController extends Controller
             $hashes = $contacts->keys();
 
             $outgoing = MessageRecord::whereIn('msisdn_hash', $hashes)
+                ->where('is_deleted', false)
                 ->whereHas('campaign', function ($query) {
                     $query->where('name', 'like', 'Shortcode Reply%');
                 })
@@ -592,10 +607,13 @@ class ShortcodeController extends Controller
                 ->get()
                 ->map(function ($item) use ($contacts) {
                     return [
+                        'id' => $item->id,
+                        'type' => 'outgoing',
                         'direction' => 'OUTGOING',
                         'msisdn' => $contacts[$item->msisdn_hash] ?? 'Unknown',
                         'message' => $item->campaign ? $item->campaign->template : 'Shortcode Reply message',
                         'created_at' => $item->created_at->toIso8601String(),
+                        'is_archived' => (bool)$item->is_archived,
                     ];
                 });
         }
@@ -611,11 +629,14 @@ class ShortcodeController extends Controller
                 $threads[$msisdn] = [];
             }
             $threads[$msisdn][] = [
+                'id' => $msg['id'],
+                'type' => $msg['type'],
                 'direction' => $msg['direction'],
                 'message' => $msg['message'],
                 'timestamp' => $msg['created_at'],
                 'shortcode_id' => $msg['shortcode_id'] ?? null,
-                'is_read' => $msg['is_read'] ?? true, // Outgoing messages are inherently read
+                'is_read' => $msg['is_read'] ?? true,
+                'is_archived' => $msg['is_archived'] ?? false,
             ];
         }
 
@@ -623,6 +644,120 @@ class ShortcodeController extends Controller
             'status' => 'SUCCESS',
             'threads' => $threads
         ]);
+    }
+
+    /**
+     * Single message deletion (soft delete).
+     */
+    public function deleteMessage(Request $request)
+    {
+        $user = $request->user();
+        $clientAccount = $user->clientAccount;
+        if (!$clientAccount) return response()->json(['error' => 'TENANT_NOT_FOUND'], 403);
+
+        $id = $request->input('id');
+        $type = $request->input('type'); // 'incoming' or 'outgoing'
+
+        if ($type === 'incoming') {
+            IncomingMessage::where('id', $id)->where('client_account_id', $clientAccount->id)->update(['is_deleted' => true]);
+        } else {
+            MessageRecord::where('id', $id)->update(['is_deleted' => true]);
+        }
+
+        return response()->json(['status' => 'SUCCESS', 'message' => 'Message deleted.']);
+    }
+
+    /**
+     * Single message archive / unarchive.
+     */
+    public function archiveMessage(Request $request)
+    {
+        $user = $request->user();
+        $clientAccount = $user->clientAccount;
+        if (!$clientAccount) return response()->json(['error' => 'TENANT_NOT_FOUND'], 403);
+
+        $id = $request->input('id');
+        $type = $request->input('type');
+        $archive = $request->input('is_archived', true);
+
+        if ($type === 'incoming') {
+            IncomingMessage::where('id', $id)->where('client_account_id', $clientAccount->id)->update(['is_archived' => $archive]);
+        } else {
+            MessageRecord::where('id', $id)->update(['is_archived' => $archive]);
+        }
+
+        return response()->json(['status' => 'SUCCESS', 'message' => $archive ? 'Message archived.' : 'Message unarchived.']);
+    }
+
+    /**
+     * Bulk message delete or archive operations.
+     */
+    public function bulkActionMessages(Request $request)
+    {
+        $user = $request->user();
+        $clientAccount = $user->clientAccount;
+        if (!$clientAccount) return response()->json(['error' => 'TENANT_NOT_FOUND'], 403);
+
+        $action = $request->input('action'); // 'delete', 'archive', 'unarchive'
+        $items = $request->input('items', []); // Array of ['id' => X, 'type' => 'incoming'|'outgoing']
+
+        $incomingIds = array_column(array_filter($items, fn($i) => ($i['type'] ?? '') === 'incoming'), 'id');
+        $outgoingIds = array_column(array_filter($items, fn($i) => ($i['type'] ?? '') === 'outgoing'), 'id');
+
+        if ($action === 'delete') {
+            if (!empty($incomingIds)) {
+                IncomingMessage::whereIn('id', $incomingIds)->where('client_account_id', $clientAccount->id)->update(['is_deleted' => true]);
+            }
+            if (!empty($outgoingIds)) {
+                MessageRecord::whereIn('id', $outgoingIds)->update(['is_deleted' => true]);
+            }
+        } elseif ($action === 'archive') {
+            if (!empty($incomingIds)) {
+                IncomingMessage::whereIn('id', $incomingIds)->where('client_account_id', $clientAccount->id)->update(['is_archived' => true]);
+            }
+            if (!empty($outgoingIds)) {
+                MessageRecord::whereIn('id', $outgoingIds)->update(['is_archived' => true]);
+            }
+        } elseif ($action === 'unarchive') {
+            if (!empty($incomingIds)) {
+                IncomingMessage::whereIn('id', $incomingIds)->where('client_account_id', $clientAccount->id)->update(['is_archived' => false]);
+            }
+            if (!empty($outgoingIds)) {
+                MessageRecord::whereIn('id', $outgoingIds)->update(['is_archived' => false]);
+            }
+        }
+
+        return response()->json(['status' => 'SUCCESS', 'message' => "Bulk {$action} action completed successfully."]);
+    }
+
+    /**
+     * Thread level operations (Delete or Archive entire conversation).
+     */
+    public function manageThread(Request $request)
+    {
+        $user = $request->user();
+        $clientAccount = $user->clientAccount;
+        if (!$clientAccount) return response()->json(['error' => 'TENANT_NOT_FOUND'], 403);
+
+        $msisdn = preg_replace('/[^0-9]/', '', $request->input('msisdn'));
+        if (str_starts_with($msisdn, '0')) {
+            $msisdn = '254' . substr($msisdn, 1);
+        }
+        $action = $request->input('action'); // 'delete', 'archive', 'unarchive'
+        $msisdnHash = Contact::hashMsisdn($msisdn);
+
+        if ($action === 'delete') {
+            IncomingMessage::where('client_account_id', $clientAccount->id)->where('msisdn', $msisdn)->update(['is_deleted' => true]);
+            MessageRecord::where('msisdn_hash', $msisdnHash)->update(['is_deleted' => true]);
+        } elseif ($action === 'archive') {
+            IncomingMessage::where('client_account_id', $clientAccount->id)->where('msisdn', $msisdn)->update(['is_archived' => true]);
+            MessageRecord::where('msisdn_hash', $msisdnHash)->update(['is_archived' => true]);
+        } elseif ($action === 'unarchive') {
+            IncomingMessage::where('client_account_id', $clientAccount->id)->where('msisdn', $msisdn)->update(['is_archived' => false]);
+            MessageRecord::where('msisdn_hash', $msisdnHash)->update(['is_archived' => false]);
+        }
+
+        return response()->json(['status' => 'SUCCESS', 'message' => "Thread {$action}d successfully."]);
     }
 
     /**

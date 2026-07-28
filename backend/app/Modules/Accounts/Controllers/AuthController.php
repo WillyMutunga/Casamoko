@@ -292,6 +292,8 @@ class AuthController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
+            'current_password' => 'nullable|string',
             'password' => 'nullable|string|min:6',
         ]);
 
@@ -299,11 +301,17 @@ class AuthController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $user->name = $request->input('name');
-
         if ($request->filled('password')) {
+            if (!$request->filled('current_password') || !Hash::check($request->input('current_password'), $user->password)) {
+                return response()->json(['error' => 'INVALID_CURRENT_PASSWORD', 'message' => 'The current password provided is incorrect.'], 422);
+            }
             $user->password = Hash::make($request->input('password'));
             $user->password_changed_at = now();
+        }
+
+        $user->name = $request->input('name');
+        if ($request->filled('email')) {
+            $user->email = $request->input('email');
         }
 
         $user->save();
