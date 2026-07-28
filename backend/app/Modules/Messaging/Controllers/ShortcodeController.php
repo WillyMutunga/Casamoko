@@ -539,7 +539,9 @@ class ShortcodeController extends Controller
 
         if ($isSuperAdmin) {
             // God Mode: Fetch ALL incoming and outgoing messages across all clients
-            $incoming = IncomingMessage::where('is_deleted', false)
+            $incoming = IncomingMessage::where(function($q) {
+                    $q->where('is_deleted', false)->orWhereNull('is_deleted');
+                })
                 ->orderBy('id', 'desc')
                 ->take(2000)
                 ->get()
@@ -553,11 +555,13 @@ class ShortcodeController extends Controller
                         'created_at' => $item->created_at ? \Carbon\Carbon::parse($item->created_at)->toIso8601String() : now()->toIso8601String(),
                         'shortcode_id' => $item->shortcode_id,
                         'is_read' => $item->is_read,
-                        'is_archived' => (bool)$item->is_archived,
+                        'is_archived' => !empty($item->is_archived),
                     ];
                 });
 
-            $outgoing = MessageRecord::where('is_deleted', false)
+            $outgoing = MessageRecord::where(function($q) {
+                    $q->where('is_deleted', false)->orWhereNull('is_deleted');
+                })
                 ->whereHas('campaign', function ($query) {
                     $query->where('name', 'like', 'Shortcode Reply%');
                 })
@@ -574,13 +578,15 @@ class ShortcodeController extends Controller
                         'msisdn' => $msisdn,
                         'message' => $item->campaign ? $item->campaign->template : 'Shortcode Reply message',
                         'created_at' => $item->created_at ? \Carbon\Carbon::parse($item->created_at)->toIso8601String() : now()->toIso8601String(),
-                        'is_archived' => (bool)$item->is_archived,
+                        'is_archived' => !empty($item->is_archived),
                     ];
                 });
         } else {
             // Standard Mode: Fetch only messages belonging to this client's workspace
             $incoming = IncomingMessage::where('client_account_id', $clientAccount ? $clientAccount->id : 0)
-                ->where('is_deleted', false)
+                ->where(function($q) {
+                    $q->where('is_deleted', false)->orWhereNull('is_deleted');
+                })
                 ->get()
                 ->map(function ($item) {
                     return [
@@ -592,7 +598,7 @@ class ShortcodeController extends Controller
                         'created_at' => $item->created_at ? \Carbon\Carbon::parse($item->created_at)->toIso8601String() : now()->toIso8601String(),
                         'shortcode_id' => $item->shortcode_id,
                         'is_read' => $item->is_read,
-                        'is_archived' => (bool)$item->is_archived,
+                        'is_archived' => !empty($item->is_archived),
                     ];
                 });
 
@@ -600,7 +606,9 @@ class ShortcodeController extends Controller
             $hashes = $contacts->keys();
 
             $outgoing = MessageRecord::whereIn('msisdn_hash', $hashes)
-                ->where('is_deleted', false)
+                ->where(function($q) {
+                    $q->where('is_deleted', false)->orWhereNull('is_deleted');
+                })
                 ->whereHas('campaign', function ($query) {
                     $query->where('name', 'like', 'Shortcode Reply%');
                 })
@@ -615,7 +623,7 @@ class ShortcodeController extends Controller
                         'msisdn' => $contacts[$item->msisdn_hash] ?? 'Unknown',
                         'message' => $item->campaign ? $item->campaign->template : 'Shortcode Reply message',
                         'created_at' => $item->created_at ? \Carbon\Carbon::parse($item->created_at)->toIso8601String() : now()->toIso8601String(),
-                        'is_archived' => (bool)$item->is_archived,
+                        'is_archived' => !empty($item->is_archived),
                     ];
                 });
         }
@@ -917,7 +925,38 @@ class ShortcodeController extends Controller
         } catch (\App\Modules\Finance\Exceptions\InsufficientFundsException $e) {
             $record->update(['status' => 'FAILED', 'network_status_code' => 'INSUFFICIENT_FUNDS']);
             $campaign->update(['status' => 'FAILED', 'failed_count' => 1]);
-            return response()->json(['error' => 'INSUFFICIENT_FUNDS', 'message' => $e->getMessage()], 402);
+        }
+    }
+
+    /**
+     * Helper to auto-create missing database columns and fill NULL values.
+     */
+    private function ensureMessagingColumnsExist()
+    {
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('incoming_messages', 'is_deleted')) {
+                \Illuminate\Support\Facades\Schema::table('incoming_messages', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    if (!\Illuminate\Support\Facades\Schema::hasColumn('incoming_messages', 'is_archived')) {
+                        $table->boolean('is_archived')->default(false);
+                    }
+                    $table->boolean('is_deleted')->default(false);
+                });
+            }
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('message_records', 'is_deleted')) {
+                \Illuminate\Support\Facades\Schema::table('message_records', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    if (!\Illuminate\Support\Facades\Schema::hasColumn('message_records', 'is_archived')) {
+                        $table->boolean('is_archived')->default(false);
+                    }
+                    $table->boolean('is_deleted')->default(false);
+                });
+            }
+            // Ensure existing rows with NULL values are set to 0 (false) so SQL queries match them
+            \Illuminate\Support\Facades\DB::statement("UPDATE incoming_messages SET is_deleted = 0 WHERE is_deleted IS NULL");
+            \Illuminate\Support\Facades\DB::statement("UPDATE incoming_messages SET is_archived = 0 WHERE is_archived IS NULL");
+            \Illuminate\Support\Facades\DB::statement("UPDATE message_records SET is_deleted = 0 WHERE is_deleted IS NULL");
+            \Illuminate\Support\Facades\DB::statement("UPDATE message_records SET is_archived = 0 WHERE is_archived IS NULL");
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Auto-migration error: ' . $e->getMessage());
         }
     }
 }

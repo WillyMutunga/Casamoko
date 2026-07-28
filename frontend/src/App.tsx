@@ -692,8 +692,8 @@ const getChatDateHeader = (timestampStr: string) => {
 
       // Find if there is any unread incoming message
       const hasUnread = msgs.some((m: any) => m.direction === 'INCOMING' && m.is_read === false);
-      const hasActive = history.some((h: any) => !h.is_archived);
-      const hasArchived = history.some((h: any) => h.is_archived);
+      const hasActive = history.length === 0 || history.some((h: any) => !h.is_archived);
+      const hasArchived = history.some((h: any) => h.is_archived === true);
 
       return {
         id: msisdn,
