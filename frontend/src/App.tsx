@@ -6710,8 +6710,17 @@ const getChatDateHeader = (timestampStr: string) => {
                             const currentChat = inboxChats.find(c => c.id === selectedChatId);
                             const visibleHistory = currentChat?.history?.filter((m: any) => inboxTab === 'archived' ? m.is_archived : !m.is_archived) || [];
                             
-                            // Group message history by date header
-                            let lastHeader = '';
+                            // Group message history into clean date sections
+                            const historyByDate: { dateHeader: string; messages: any[] }[] = [];
+                            visibleHistory.forEach((msg: any) => {
+                              const header = msg.dateHeader || 'Today';
+                              const lastGroup = historyByDate[historyByDate.length - 1];
+                              if (lastGroup && lastGroup.dateHeader === header) {
+                                lastGroup.messages.push(msg);
+                              } else {
+                                historyByDate.push({ dateHeader: header, messages: [msg] });
+                              }
+                            });
 
                             return (
                               <>
@@ -6807,74 +6816,71 @@ const getChatDateHeader = (timestampStr: string) => {
                                   </div>
                                 )}
 
-                                {/* Chat Messages with Date Headers */}
-                                <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                                  {visibleHistory.map((msg: any, idx: number) => {
-                                    const showHeader = msg.dateHeader !== lastHeader;
-                                    if (showHeader) lastHeader = msg.dateHeader;
+                                {/* Chat Messages Grouped by Date Section */}
+                                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                                  {historyByDate.map((group, groupIdx) => (
+                                    <div key={groupIdx} className="space-y-4">
+                                      {/* Date Section Chip */}
+                                      <div className="flex items-center justify-center my-4">
+                                        <div className="bg-slate-900/90 text-indigo-300 text-[11px] font-extrabold px-4 py-1.5 rounded-full border border-indigo-500/30 shadow-md tracking-wider uppercase">
+                                          {group.dateHeader}
+                                        </div>
+                                      </div>
 
-                                    const itemKey = `${msg.type}_${msg.id}`;
-                                    const isSelected = selectedMessageKeys.includes(itemKey);
+                                      {/* Messages under this Date Header */}
+                                      {group.messages.map((msg: any, idx: number) => {
+                                        const itemKey = `${msg.type}_${msg.id}`;
+                                        const isSelected = selectedMessageKeys.includes(itemKey);
 
-                                    return (
-                                      <React.Fragment key={idx}>
-                                        {/* Date Group Header Divider */}
-                                        {showHeader && (
-                                          <div className="flex items-center justify-center my-6">
-                                            <div className="bg-slate-900/90 text-gray-400 text-[11px] font-bold px-4 py-1 rounded-full border border-slate-800 shadow-sm tracking-wide">
-                                              {msg.dateHeader}
-                                            </div>
-                                          </div>
-                                        )}
-
-                                        {/* Message Bubble Item */}
-                                        <div className={`flex items-center gap-3 ${msg.dir === 'out' ? 'justify-end' : 'justify-start'} group relative`}>
-                                          {/* Bulk Select Checkbox */}
-                                          {isBulkSelectMode && (
-                                            <button
-                                              onClick={() => {
-                                                setSelectedMessageKeys(prev => 
-                                                  prev.includes(itemKey) ? prev.filter(k => k !== itemKey) : [...prev, itemKey]
-                                                );
-                                              }}
-                                              className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${isSelected ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-slate-700 bg-slate-900/60 hover:border-slate-500'}`}
-                                            >
-                                              {isSelected && <CheckSquare className="w-3.5 h-3.5" />}
-                                            </button>
-                                          )}
-
-                                          <div className={`flex flex-col ${msg.dir === 'out' ? 'items-end' : 'items-start'} relative max-w-[70%]`}>
-                                            {/* Hover Action Bar (Single Message Delete / Archive) */}
-                                            {!isBulkSelectMode && msg.id && (
-                                              <div className={`absolute -top-3 ${msg.dir === 'out' ? 'left-0 -translate-x-full pr-2' : 'right-0 translate-x-full pl-2'} opacity-0 group-hover:opacity-100 transition-opacity z-10 flex items-center gap-1`}>
-                                                <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1 shadow-xl">
-                                                  <button
-                                                    onClick={() => handleArchiveSingleMessage(msg.id, msg.type, msg.is_archived)}
-                                                    className="p-1 hover:bg-slate-800 text-gray-400 hover:text-indigo-400 rounded transition-colors"
-                                                    title={msg.is_archived ? "Unarchive message" : "Archive message"}
-                                                  >
-                                                    <Archive className="w-3.5 h-3.5" />
-                                                  </button>
-                                                  <button
-                                                    onClick={() => handleDeleteSingleMessage(msg.id, msg.type)}
-                                                    className="p-1 hover:bg-slate-800 text-gray-400 hover:text-rose-400 rounded transition-colors"
-                                                    title="Delete message"
-                                                  >
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                  </button>
-                                                </div>
-                                              </div>
+                                        return (
+                                          <div key={idx} className={`flex items-center gap-3 ${msg.dir === 'out' ? 'justify-end' : 'justify-start'} group relative`}>
+                                            {/* Bulk Select Checkbox */}
+                                            {isBulkSelectMode && (
+                                              <button
+                                                onClick={() => {
+                                                  setSelectedMessageKeys(prev => 
+                                                    prev.includes(itemKey) ? prev.filter(k => k !== itemKey) : [...prev, itemKey]
+                                                  );
+                                                }}
+                                                className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${isSelected ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-slate-700 bg-slate-900/60 hover:border-slate-500'}`}
+                                              >
+                                                {isSelected && <CheckSquare className="w-3.5 h-3.5" />}
+                                              </button>
                                             )}
 
-                                            <div className={`rounded-2xl px-5 py-3 ${msg.dir === 'out' ? 'bg-indigo-600 text-white rounded-br-sm shadow-md' : 'bg-slate-800 text-gray-200 rounded-bl-sm border border-slate-700/80 shadow-md'}`}>
-                                              <p className="text-sm leading-relaxed">{msg.text}</p>
+                                            <div className={`flex flex-col ${msg.dir === 'out' ? 'items-end' : 'items-start'} relative max-w-[70%]`}>
+                                              {/* Hover Action Bar (Single Message Delete / Archive) */}
+                                              {!isBulkSelectMode && msg.id && (
+                                                <div className={`absolute -top-3 ${msg.dir === 'out' ? 'left-0 -translate-x-full pr-2' : 'right-0 translate-x-full pl-2'} opacity-0 group-hover:opacity-100 transition-opacity z-10 flex items-center gap-1`}>
+                                                  <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1 shadow-xl">
+                                                    <button
+                                                      onClick={() => handleArchiveSingleMessage(msg.id, msg.type, msg.is_archived)}
+                                                      className="p-1 hover:bg-slate-800 text-gray-400 hover:text-indigo-400 rounded transition-colors"
+                                                      title={msg.is_archived ? "Unarchive message" : "Archive message"}
+                                                    >
+                                                      <Archive className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <button
+                                                      onClick={() => handleDeleteSingleMessage(msg.id, msg.type)}
+                                                      className="p-1 hover:bg-slate-800 text-gray-400 hover:text-rose-400 rounded transition-colors"
+                                                      title="Delete message"
+                                                    >
+                                                      <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                  </div>
+                                                </div>
+                                              )}
+
+                                              <div className={`rounded-2xl px-5 py-3 ${msg.dir === 'out' ? 'bg-indigo-600 text-white rounded-br-sm shadow-md' : 'bg-slate-800 text-gray-200 rounded-bl-sm border border-slate-700/80 shadow-md'}`}>
+                                                <p className="text-sm leading-relaxed">{msg.text}</p>
+                                              </div>
+                                              <span className="text-[10px] text-gray-500 mt-1 font-mono">{msg.time}</span>
                                             </div>
-                                            <span className="text-[10px] text-gray-500 mt-1 font-mono">{msg.time}</span>
                                           </div>
-                                        </div>
-                                      </React.Fragment>
-                                    );
-                                  })}
+                                        );
+                                      })}
+                                    </div>
+                                  ))}
 
                                   {visibleHistory.length === 0 && (
                                     <div className="p-12 text-center text-gray-500 text-xs font-medium">
@@ -6894,6 +6900,7 @@ const getChatDateHeader = (timestampStr: string) => {
                                       onKeyDown={async (e) => {
                                         if (e.key === 'Enter' && replyText.trim() && currentChat) {
                                           const textToSend = replyText.trim();
+                                          const nowIso = new Date().toISOString();
                                           const updatedChats = inboxChats.map(c => {
                                             if (c.id === selectedChatId) {
                                               return {
@@ -6903,6 +6910,7 @@ const getChatDateHeader = (timestampStr: string) => {
                                                   type: 'outgoing',
                                                   dir: 'out',
                                                   text: textToSend,
+                                                  timestamp: nowIso,
                                                   time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                                                   dateHeader: 'Today',
                                                   is_archived: false
@@ -6935,6 +6943,7 @@ const getChatDateHeader = (timestampStr: string) => {
                                       onClick={async () => {
                                         if (!replyText.trim() || !currentChat) return;
                                         const textToSend = replyText.trim();
+                                        const nowIso = new Date().toISOString();
                                         const updatedChats = inboxChats.map(c => {
                                           if (c.id === selectedChatId) {
                                             return {
@@ -6944,6 +6953,7 @@ const getChatDateHeader = (timestampStr: string) => {
                                                 type: 'outgoing',
                                                 dir: 'out',
                                                 text: textToSend,
+                                                timestamp: nowIso,
                                                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                                                 dateHeader: 'Today',
                                                 is_archived: false
