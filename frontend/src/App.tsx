@@ -2179,9 +2179,9 @@ const getChatDateHeader = (timestampStr: string) => {
               ))}
             </div>
 
-            {/* Public Landing Footer Section */}
-            <footer className="mt-auto border-t border-slate-800/60 bg-slate-955/90 backdrop-blur-md py-6 px-8 text-center text-xs text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-3 z-10 shrink-0">
-              <p className="font-medium text-gray-400">
+            {/* Public Landing Sticky Footer Section */}
+            <footer className="sticky bottom-0 left-0 right-0 w-full border-t border-slate-800/80 bg-slate-955/95 backdrop-blur-md py-3.5 px-6 text-center text-xs text-gray-400 flex flex-col sm:flex-row items-center justify-between gap-2 z-40 shrink-0 shadow-2xl mt-auto">
+              <p className="font-medium text-gray-300">
                 © {new Date().getFullYear()} <span className="text-white font-bold">Casamoko Contractors LTD</span>. All rights reserved.
               </p>
               <p className="text-xs text-gray-400">
@@ -7056,9 +7056,9 @@ const getChatDateHeader = (timestampStr: string) => {
 
             </div>
 
-            {/* Dashboard App Footer Section */}
-            <footer className="mt-auto border-t border-slate-800/60 bg-slate-950/80 backdrop-blur-md py-4 px-6 text-center text-xs text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-2 z-10 shrink-0">
-              <p className="font-medium text-gray-400">
+            {/* Dashboard App Sticky Footer Section */}
+            <footer className="sticky bottom-0 left-0 right-0 w-full border-t border-slate-800/80 bg-slate-950/95 backdrop-blur-md py-3.5 px-6 text-center text-xs text-gray-400 flex flex-col sm:flex-row items-center justify-between gap-2 z-40 shrink-0 shadow-2xl mt-auto">
+              <p className="font-medium text-gray-300">
                 © {new Date().getFullYear()} <span className="text-white font-bold">Casamoko Contractors LTD</span>. All rights reserved.
               </p>
               <p className="text-xs text-gray-400">
