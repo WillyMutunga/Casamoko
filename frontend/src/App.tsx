@@ -6526,7 +6526,7 @@ const getChatDateHeader = (timestampStr: string) => {
                           <FileCode2 className="w-5 h-5 text-indigo-400" /> Send SMS API Snippet (cURL)
                         </h3>
                         <div className="bg-slate-950 p-6 rounded-xl border border-slate-800 font-mono text-xs overflow-x-auto text-gray-300">
-                          <pre>{'curl -X POST https://api.casamoko.com/v1/sms/send \\'}
+                          <pre>{'curl -X POST https://casamoko.co.ke/api/v1/sms/send \\'}
 {'\n  -H \'Authorization: Bearer ' + devApiKey + '\' \\'}
 {'\n  -H \'Content-Type: application/json\' \\'}
 {'\n  -d \'{'}

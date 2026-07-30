@@ -16,17 +16,32 @@ class ApiController extends Controller
      */
     public function sendSms(Request $request, LedgerService $ledgerService)
     {
-        $request->validate([
-            'phone' => 'required|string',
-            'message' => 'required|string',
-            'sender_id' => 'nullable|string'
-        ]);
+        // Support both "to" (array or string) and "phone" (string or array)
+        $rawPhone = $request->input('phone') ?? $request->input('to');
+        if (is_array($rawPhone)) {
+            $rawPhone = $rawPhone[0] ?? '';
+        }
+
+        $messageText = (string) $request->input('message', '');
+
+        if (empty($rawPhone) || empty($messageText)) {
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'Validation error: Both phone/to and message fields are required.'
+            ], 422);
+        }
 
         $clientAccount = $request->attributes->get('clientAccount');
 
+        // Format phone
+        $phone = preg_replace('/[^0-9]/', '', (string)$rawPhone);
+        if (str_starts_with($phone, '0')) {
+            $phone = '254' . substr($phone, 1);
+        }
+
         // Estimate cost based on segment length
-        $encoding = CampaignController::getUnicodeType($request->message);
-        $segments = CampaignController::getSegmentCount($request->message, $encoding);
+        $encoding = CampaignController::getUnicodeType($messageText);
+        $segments = CampaignController::getSegmentCount($messageText, $encoding);
         
         $primaryRoute = \App\Modules\Messaging\Models\Route::where('is_active', true)->orderBy('priority', 'asc')->first();
         $baseRate = $primaryRoute ? (float) $primaryRoute->cost_per_sms : 0.5000;
@@ -54,12 +69,6 @@ class ApiController extends Controller
         } catch (\Exception $e) {
             Log::error("API SendSMS: Ledger debit failed - " . $e->getMessage());
             return response()->json(['status' => 'ERROR', 'message' => 'Transaction failed'], 500);
-        }
-
-        // Format phone
-        $phone = preg_replace('/[^0-9]/', '', $request->phone);
-        if (str_starts_with($phone, '0')) {
-            $phone = '254' . substr($phone, 1);
         }
 
         // Create a contact silently (or just hash it)
