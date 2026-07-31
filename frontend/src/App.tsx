@@ -642,13 +642,19 @@ export default function App() {
 
   useEffect(() => {
     if (currentPage === 'developer' && token) {
-      apiClient.get('/api-keys').then(res => {
+      apiClient.get('/accounts/api-keys').then(res => {
         if (res.data && res.data.active_key) {
           setDevApiKey(res.data.active_key);
         } else if (res.data && res.data.api_keys && res.data.api_keys.length > 0) {
           setDevApiKey(res.data.api_keys[0].api_key);
         }
-      }).catch(err => console.error("Failed to load API keys", err));
+      }).catch((_err) => {
+        apiClient.get('/accounts/client/api-keys').then(res => {
+          if (res.data && res.data.active_key) {
+            setDevApiKey(res.data.active_key);
+          }
+        }).catch(e => console.error("Failed to load API keys", e));
+      });
     }
   }, [currentPage, token]);
 
@@ -6515,9 +6521,9 @@ const getChatDateHeader = (timestampStr: string) => {
                               try {
                                 let res;
                                 try {
-                                  res = await apiClient.post('/api-keys', { name: 'Live Production Key' });
+                                  res = await apiClient.post('/accounts/api-keys', { name: 'Live Production Key' });
                                 } catch (e1) {
-                                  res = await apiClient.post('/client/api-keys', { name: 'Live Production Key' });
+                                  res = await apiClient.post('/accounts/client/api-keys', { name: 'Live Production Key' });
                                 }
                                 if (res.data && (res.data.raw_key || res.data.active_key)) {
                                   const newKey = res.data.raw_key || res.data.active_key;
