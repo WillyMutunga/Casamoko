@@ -6513,15 +6513,22 @@ const getChatDateHeader = (timestampStr: string) => {
                           <button 
                             onClick={async () => {
                               try {
-                                const res = await apiClient.post('/api-keys', { name: 'Live Production Key' });
+                                let res;
+                                try {
+                                  res = await apiClient.post('/api-keys', { name: 'Live Production Key' });
+                                } catch (e1) {
+                                  res = await apiClient.post('/client/api-keys', { name: 'Live Production Key' });
+                                }
                                 if (res.data && (res.data.raw_key || res.data.active_key)) {
                                   const newKey = res.data.raw_key || res.data.active_key;
                                   setDevApiKey(newKey);
                                   toast.success('Regenerated API Key! Active in production.');
+                                } else {
+                                  toast.error(res.data?.message || 'Failed to regenerate API key');
                                 }
-                              } catch (e) {
+                              } catch (e: any) {
                                 console.error('Failed to regenerate API key', e);
-                                toast.error('Failed to regenerate API key');
+                                toast.error(e.response?.data?.message || 'Failed to regenerate API key');
                               }
                             }} 
                             className="mt-6 w-full py-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
