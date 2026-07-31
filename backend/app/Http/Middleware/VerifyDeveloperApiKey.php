@@ -20,10 +20,13 @@ class VerifyDeveloperApiKey
             ], 401);
         }
 
-        // Validate the hashed token
+        // Validate the raw token OR hashed token
         $hashedToken = hash('sha256', $token);
         
-        $apiKey = ApiKey::where('api_key', $hashedToken)
+        $apiKey = ApiKey::where(function($q) use ($token, $hashedToken) {
+                            $q->where('api_key', $token)
+                              ->orWhere('api_key', $hashedToken);
+                        })
                         ->where(function($q) {
                             $q->whereNull('expires_at')
                               ->orWhere('expires_at', '>', now());
@@ -32,7 +35,7 @@ class VerifyDeveloperApiKey
                         ->first();
 
         if (!$apiKey || !$apiKey->clientAccount) {
-            Log::warning("Unauthorized API attempt with invalid key");
+            Log::warning("Unauthorized API attempt with invalid key: " . substr($token, 0, 12) . "...");
             return response()->json([
                 'status' => 'ERROR',
                 'message' => 'Invalid or expired API Key'

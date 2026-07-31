@@ -11,29 +11,48 @@ class ApiKeyController extends Controller
 {
     public function index(Request $request)
     {
-        $keys = ApiKey::where('client_account_id', $request->user()->client_account_id)->get();
-        return response()->json(['api_keys' => $keys]);
+        $user = $request->user();
+        $keys = ApiKey::where('client_account_id', $user->client_account_id)->get();
+
+        if ($keys->isEmpty()) {
+            // Auto-generate initial active production API key for client
+            $rawKey = 'live_csmk_' . Str::random(24);
+            $key = ApiKey::create([
+                'client_account_id' => $user->client_account_id,
+                'name' => 'Live Production Key',
+                'api_key' => $rawKey,
+            ]);
+            $keys = collect([$key]);
+        }
+
+        return response()->json([
+            'status' => 'SUCCESS',
+            'api_keys' => $keys,
+            'active_key' => $keys->first()->api_key
+        ]);
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255'
-        ]);
+        $user = $request->user();
 
-        // Generate a cryptographically secure random key
-        $rawKey = 'csmk_live_' . Str::random(40);
+        // Generate a fresh live API key
+        $rawKey = 'live_csmk_' . Str::random(24);
+
+        // Delete old keys for simplicity so the client has 1 active live key
+        ApiKey::where('client_account_id', $user->client_account_id)->delete();
 
         $key = ApiKey::create([
-            'client_account_id' => $request->user()->client_account_id,
-            'name' => $request->name,
-            'api_key' => hash('sha256', $rawKey), // In DB we store the hash
+            'client_account_id' => $user->client_account_id,
+            'name' => $request->name ?? 'Live Production Key',
+            'api_key' => $rawKey,
         ]);
 
         return response()->json([
             'status' => 'SUCCESS',
             'api_key' => $key,
-            'raw_key' => $rawKey // Only show the raw key once!
+            'raw_key' => $rawKey,
+            'active_key' => $rawKey
         ]);
     }
 

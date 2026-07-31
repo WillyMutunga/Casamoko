@@ -640,6 +640,18 @@ export default function App() {
     };
   }, [currentPage, token]);
 
+  useEffect(() => {
+    if (currentPage === 'developer' && token) {
+      apiClient.get('/api-keys').then(res => {
+        if (res.data && res.data.active_key) {
+          setDevApiKey(res.data.active_key);
+        } else if (res.data && res.data.api_keys && res.data.api_keys.length > 0) {
+          setDevApiKey(res.data.api_keys[0].api_key);
+        }
+      }).catch(err => console.error("Failed to load API keys", err));
+    }
+  }, [currentPage, token]);
+
 // Helper to parse dates safely across all browsers (including Safari / iOS WebKit)
 const parseSafeDate = (timestampStr: string) => {
   if (!timestampStr) return new Date();
@@ -6488,14 +6500,32 @@ const getChatDateHeader = (timestampStr: string) => {
                           <p className="text-sm text-gray-400 mb-6">Use this Bearer Token to authenticate against the Casamoko REST API.</p>
                           <div className="bg-slate-950 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
                             <code className="text-emerald-400 font-mono text-xs">{devApiKey}</code>
-                            <button onClick={() => toast.success('API Key copied to clipboard')} className="text-gray-400 hover:text-white">
+                            <button 
+                              onClick={() => {
+                                navigator.clipboard.writeText(devApiKey);
+                                toast.success('API Key copied to clipboard');
+                              }} 
+                              className="text-gray-400 hover:text-white"
+                            >
                               <Copy className="w-4 h-4" />
                             </button>
                           </div>
-                          <button onClick={() => {
-                            setDevApiKey('live_csmk_' + Math.random().toString(36).substring(2, 26));
-                            toast.success('Regenerated API Key! Update your servers immediately.');
-                          }} className="mt-6 w-full py-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all">
+                          <button 
+                            onClick={async () => {
+                              try {
+                                const res = await apiClient.post('/api-keys', { name: 'Live Production Key' });
+                                if (res.data && (res.data.raw_key || res.data.active_key)) {
+                                  const newKey = res.data.raw_key || res.data.active_key;
+                                  setDevApiKey(newKey);
+                                  toast.success('Regenerated API Key! Active in production.');
+                                }
+                              } catch (e) {
+                                console.error('Failed to regenerate API key', e);
+                                toast.error('Failed to regenerate API key');
+                              }
+                            }} 
+                            className="mt-6 w-full py-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+                          >
                             Regenerate Key
                           </button>
                         </div>
