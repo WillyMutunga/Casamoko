@@ -45,11 +45,16 @@ Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry'])->g
         Route::post('/clients', [ResellerController::class, 'onboardClient']);
     });
 
+    // --- API Keys (accessible directly and via client prefix) ---
+    Route::get('/api-keys', [\App\Modules\Accounts\Controllers\ApiKeyController::class, 'index']);
+    Route::post('/api-keys', [\App\Modules\Accounts\Controllers\ApiKeyController::class, 'store']);
+    Route::delete('/api-keys/{id}', [\App\Modules\Accounts\Controllers\ApiKeyController::class, 'revoke']);
+
     // --- Client Corporate endpoints ---
     Route::middleware(['role.client'])->prefix('client')->group(function () {
         Route::get('/analytics', [AnalyticsController::class, 'getClientMetrics']);
 
-        // API Keys
+        // API Keys (alias)
         Route::get('/api-keys', [\App\Modules\Accounts\Controllers\ApiKeyController::class, 'index']);
         Route::post('/api-keys', [\App\Modules\Accounts\Controllers\ApiKeyController::class, 'store']);
         Route::delete('/api-keys/{id}', [\App\Modules\Accounts\Controllers\ApiKeyController::class, 'revoke']);

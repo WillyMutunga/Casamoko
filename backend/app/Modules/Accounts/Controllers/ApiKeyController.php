@@ -12,13 +12,14 @@ class ApiKeyController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $keys = ApiKey::where('client_account_id', $user->client_account_id)->get();
+        $clientAccountId = $user->client_account_id ?: ($user->clientAccount ? $user->clientAccount->id : 1);
+        $keys = ApiKey::where('client_account_id', $clientAccountId)->get();
 
         if ($keys->isEmpty()) {
             // Auto-generate initial active production API key for client
             $rawKey = 'live_csmk_' . Str::random(24);
             $key = ApiKey::create([
-                'client_account_id' => $user->client_account_id,
+                'client_account_id' => $clientAccountId,
                 'name' => 'Live Production Key',
                 'api_key' => $rawKey,
             ]);
@@ -35,15 +36,16 @@ class ApiKeyController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
+        $clientAccountId = $user->client_account_id ?: ($user->clientAccount ? $user->clientAccount->id : 1);
 
         // Generate a fresh live API key
         $rawKey = 'live_csmk_' . Str::random(24);
 
         // Delete old keys for simplicity so the client has 1 active live key
-        ApiKey::where('client_account_id', $user->client_account_id)->delete();
+        ApiKey::where('client_account_id', $clientAccountId)->delete();
 
         $key = ApiKey::create([
-            'client_account_id' => $user->client_account_id,
+            'client_account_id' => $clientAccountId,
             'name' => $request->name ?? 'Live Production Key',
             'api_key' => $rawKey,
         ]);
