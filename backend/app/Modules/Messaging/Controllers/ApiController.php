@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Modules\Messaging\Models\MessageRecord;
 use App\Modules\Finance\Services\LedgerService;
 use App\Modules\Messaging\Jobs\SendSMSJob;
+use App\Modules\Messaging\Jobs\ApiSendSMSJob;
 use Illuminate\Support\Facades\Log;
 
 class ApiController extends Controller
