@@ -108,12 +108,15 @@ class ApiController extends Controller
         // Actually, for this demonstration, we can just use the Gateway directly if it's an API call, 
         // OR we can enqueue an ApiSendSMSJob. Let's create an ApiSendSMSJob.
 
-        ApiSendSMSJob::dispatch($record->id, $request->message, $request->sender_id ?: 'CASAMOKO');
+        ApiSendSMSJob::dispatchSync($record->id, $messageText, $request->sender_id ?: 'CASAMOKO');
+
+        $record->refresh();
 
         return response()->json([
             'status' => 'SUCCESS',
-            'message' => 'Message queued for delivery.',
+            'message' => 'Message dispatched for delivery.',
             'message_id' => $record->id,
+            'delivery_status' => $record->status,
             'cost' => $totalCost
         ]);
     }
