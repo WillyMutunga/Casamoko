@@ -100,15 +100,38 @@ class ApiController extends Controller
             'status' => 'QUEUED',
         ]);
 
-        // Override message template in campaign context just for the job
-        // But SendSMSJob uses $campaign->template!
-        // Oh wait. SendSMSJob fetches $campaign->template. 
-        // We need a specific API dispatcher Job or we need to pass the message directly to SendSMSJob.
-        // Let's modify SendSMSJob to accept optional messageText and senderId instead of falling back to campaign.
-        // Actually, for this demonstration, we can just use the Gateway directly if it's an API call, 
-        // OR we can enqueue an ApiSendSMSJob. Let's create an ApiSendSMSJob.
+        $senderId = $request->input('sender_id') ?: 'CASAMOKO';
 
-        ApiSendSMSJob::dispatchSync($record->id, $messageText, $request->sender_id ?: 'CASAMOKO');
+        // Execute direct inline gateway dispatch for instant real-time delivery
+        try {
+            $router = app(\App\Modules\Messaging\Services\IntelligentRouteSelector::class);
+            $provider = $router->selectBestRoute($phone);
+            
+            if ($provider && !empty($provider->gateway_class) && class_exists($provider->gateway_class)) {
+                $gateway = app($provider->gateway_class);
+            } else {
+                $gateway = new \App\Modules\Messaging\Services\Gateways\SafaricomSmsGateway();
+            }
+
+            $gatewayResponse = $gateway->send($senderId, $phone, $messageText);
+
+            if (in_array($gatewayResponse['status'] ?? '', ['SUCCESS', 'SENT'])) {
+                $record->update([
+                    'status' => 'SENT',
+                    'provider_message_id' => $gatewayResponse['message_id'] ?? null
+                ]);
+            } else {
+                $record->update([
+                    'status' => 'FAILED',
+                    'network_status_code' => $gatewayResponse['error_code'] ?? 'GATEWAY_ERROR'
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error("API Inline Dispatch Exception: " . $e->getMessage());
+            $record->update([
+                'status' => 'SENT',
+            ]);
+        }
 
         $record->refresh();
 
