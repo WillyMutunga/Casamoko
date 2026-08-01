@@ -45,20 +45,21 @@ class ApiSendSMSJob implements ShouldQueue
             $provider = $router->selectBestRoute($record->contact->msisdn);
             $gatewayClass = app($provider->gateway_class);
 
-            // Execute dispatch
+            // Execute dispatch (senderId, msisdn, messageText)
             $response = $gatewayClass->send(
+                $this->senderId ?: 'CASAMOKO',
                 $record->contact->msisdn,
-                $this->messageText,
-                $this->senderId
+                $this->messageText
             );
 
-            if ($response['status'] === 'SUCCESS') {
+            if (in_array($response['status'] ?? '', ['SUCCESS', 'SENT'])) {
                 $record->update([
                     'status' => 'SENT',
                     'provider_message_id' => $response['message_id'] ?? null
                 ]);
             } else {
-                throw new \Exception($response['message'] ?? 'Unknown gateway error');
+                $err = $response['message'] ?? $response['error_code'] ?? 'Unknown gateway error';
+                throw new \Exception(is_array($err) ? json_encode($err) : $err);
             }
 
         } catch (\Exception $e) {
