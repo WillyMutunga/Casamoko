@@ -289,12 +289,13 @@ Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry', 'ro
     Route::get('/analytics', [\App\Modules\Messaging\Controllers\AnalyticsController::class, 'index']);
 });
 
-// Public DLR webhook called by carrier networks
+// Public DLR & MO webhooks called by Safaricom DSDP & carrier networks
 Route::post('/dlr-webhook', [\App\Modules\Messaging\Controllers\DlrWebhookController::class, 'handle']);
+Route::post('/shortcode/dr', [\App\Modules\Messaging\Controllers\DlrWebhookController::class, 'handle']);
 Route::post('/inbound-webhook', [\App\Modules\Messaging\Controllers\InboundWebhookController::class, 'handle']);
 
-// Public MO (Mobile Originated) webhook called by Safaricom SDP
 Route::post('/mo-webhook', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'handleSafaricomMO']);
+Route::post('/shortcode/mo', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'handleSafaricomMO']);
 
 Route::get('/system/debug-messages', function() {
     return \App\Modules\Messaging\Models\IncomingMessage::orderBy('id', 'desc')->take(5)->get();

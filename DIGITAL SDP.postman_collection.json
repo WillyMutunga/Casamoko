@@ -1,0 +1,360 @@
+{
+  "info": {
+    "_postman_id": "1cd5ad29-b0d7-497a-bd1d-5e9df9f05da0",
+    "name": "DIGITAL SDP",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "47859256",
+    "_collection_link": "https://go.postman.co/collection/47859256-1cd5ad29-b0d7-497a-bd1d-5e9df9f05da0?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "TOKEN",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "accept",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Requested-With",
+            "value": "XMLHttpRequest"
+          },
+          {
+            "key": "X-Country",
+            "value": "KEN"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"username\": \"Test\",\r\n    \"password\": \"Test@123\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://dsdpstg-apinb.safaricom.com/api/auth/login",
+          "protocol": "https",
+          "host": [
+            "dsdpstg-apinb",
+            "safaricom",
+            "com"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "ACTIVATE",
+      "protocolProfileBehavior": {
+        "strictSSL": true
+      },
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Cookie",
+            "value": "2bb463e8eec5f23845cc904a97fe082e=51c57f1396c933c843c3c8d2e2d9a363"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Country",
+            "value": "KEN"
+          },
+          {
+            "key": "X-Authorization",
+            "value": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJJZ0JxLTJvZnpMakRpeXliV2VnWS1OOXYwZ0V2RDdJMVdJbl80V1YxWnZJIn0.eyJleHAiOjE3NzQwMDM4NTcsImlhdCI6MTc3NDAwMDI1NywianRpIjoiMTA0ZjYyODAtNzgyZi00NzYxLTk5MGEtMjEzOTQxMjZlYjk5IiwiaXNzIjoiaHR0cHM6Ly9kc2Rwc3RnLWlhbS5zYWZhcmljb20uY29tL3JlYWxtcy9waC1jb3JlIiwiYXVkIjpbInBoLXBvcnRhbCIsImFjY291bnQiXSwic3ViIjoiYjUzNmJmYzktYmVlOS00NzA5LWI3MTEtOTk1MmE2YzEzODI1IiwidHlwIjoiQmVhcmVyIiwiYXpwIjoicGFydG5lci1hcGkiLCJzZXNzaW9uX3N0YXRlIjoiNzVhODhmMGItY2JjYi00NzRkLWEyYzQtMDhhZmFhZTQ1ZjNlIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIvKiJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsiZGVmYXVsdC1yb2xlcy1waC1jb3JlIiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7InBoLXBvcnRhbCI6eyJyb2xlcyI6WyJlZGl0X3Byb19vZmYiLCJzbXNiLXYiLCJwcm9kX2MiLCJwcm9kX2UiLCJzdXNwZW5kX3Byb19vZmZlcnMiLCJ2aWV3X3IiLCJkZWxldGVfcHJvX29mZiIsInVzZXJfYWN0aXZpdHkiLCJidW5kX2UiLCJ2aWV3X3Byb19vZmYiLCJhZGRfcHJvX29mZiIsImNhbmRfdiIsImJ1bmRfYyIsIm1lc3NhZ2VfcCIsImFwcHJvdmVfcHJvX29mZiIsImJ1bmRfYSIsImNyZV9hZGQiLCJvZmZfZSIsIm9mZl9jIiwiYnVuZF92Il19LCJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6Im9wZXJhdG9yc19pZHMgb3BlcmF0b3JfaWQgZW1haWwgcGFydG5lcl9pZCBwcm9maWxlIiwic2lkIjoiNzVhODhmMGItY2JjYi00NzRkLWEyYzQtMDhhZmFhZTQ1ZjNlIiwib3BlcmF0b3JzX2lkcyI6WzYwNl0sImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoicGVkcm8gbWFsdGV6IiwiZ3JvdXBzIjpbIlBPUlRBTF9PUEVSQVRPUl9PRkZFUl9BRE1JTiJdLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJwZWRyby5tYWx0ZXoiLCJnaXZlbl9uYW1lIjoicGVkcm8iLCJmYW1pbHlfbmFtZSI6Im1hbHRleiIsImVtYWlsIjoicGVkcm8ubWFsdGV6KzEyOEB0aW13ZXRlY2guY29tIn0.WNMWPJcoMpLzbX3SkKJ0V_MT-2lQpnOg-wHaecXRt0PIOgZc064PNP5euiF-jvks1O041I0DXMcFX3GBXz2J94VOJkirA1wZFH84dFAKIn5y4pjr0Rcfz03UNZunAmKQ_R_vSJnvb9IPMtYJbPEjDG9OCSm-LZpS7D7CcdhPlANDM5QZxnL2Nqn6Hy4O0kGr2K-mqjShKkZVY8NySWgSSedGWo_5gxhqDOeR342THhqw3qr8IWS6cZGSO0RGATNxSjSz2lMvKBsjuXT9i24YmdvHFMQKSG7hU9rOnkk88etZ2WMUGoQg1B_gVtxebhVShqmPPpoXQWOAaI57sGowDg"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"requestId\": \"123456\",\n    \"operation\": \"ACTIVATE\",\n    \"channel\": \"APIGW\",\n    \"requestParam\": {\n        \"data\": [\n           {\n        \"name\": \"Msisdn\",\n        \"value\": \"254722000000\"\n      },\n      {\n        \"name\": \"OfferCode\",\n        \"value\": \"300000000\"\n      },\n      {\n        \"name\": \"Language\",\n        \"value\": \"1\"\n      },\n      {\n        \"name\": \"CpId\",\n        \"value\": \"EXT_ID_1000\"\n      }\n        ]\n    }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://dsdpstg-apinb.safaricom.com/api/public/SDP/activate",
+          "protocol": "https",
+          "host": [
+            "dsdpstg-apinb",
+            "safaricom",
+            "com"
+          ],
+          "path": [
+            "api",
+            "public",
+            "SDP",
+            "activate"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "BULKSMS",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "accept",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Requested-With",
+            "value": "XMLHttpRequest"
+          },
+          {
+            "key": "X-Authorization",
+            "value": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJJZ0JxLTJvZnpMakRpeXliV2VnWS1OOXYwZ0V2RDdJMVdJbl80V1YxWnZJIn0.eyJleHAiOjE3NzI2MjEyMTQsImlhdCI6MTc3MjYxNzYxNCwianRpIjoiYjVkNWQ0MzktMDBhZi00YTNiLWI0YTItNTBhNjMzMDcyODFkIiwiaXNzIjoiaHR0cHM6Ly9kc2RwLWlhbS5zYWZhcmljb20uY29tL3JlYWxtcy9waC1jb3JlIiwiYXVkIjpbInBoLXBvcnRhbCIsImFjY291bnQiXSwic3ViIjoiYjUzNmJmYzktYmVlOS00NzA5LWI3MTEtOTk1MmE2YzEzODI1IiwidHlwIjoiQmVhcmVyIiwiYXpwIjoicGFydG5lci1hcGkiLCJzZXNzaW9uX3N0YXRlIjoiMGViMzVlOGItZmY2NC00MzZjLWEyNTMtZTIzNzZlZTdiMjM5IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIvKiJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsiZGVmYXVsdC1yb2xlcy1waC1jb3JlIiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7InBoLXBvcnRhbCI6eyJyb2xlcyI6WyJlZGl0X3Byb19vZmYiLCJzbXNiLXYiLCJwcm9kX2MiLCJwcm9kX2UiLCJzdXNwZW5kX3Byb19vZmZlcnMiLCJ2aWV3X3IiLCJkZWxldGVfcHJvX29mZiIsInVzZXJfYWN0aXZpdHkiLCJidW5kX2UiLCJ2aWV3X3Byb19vZmYiLCJhZGRfcHJvX29mZiIsImNhbmRfdiIsImJ1bmRfYyIsIm1lc3NhZ2VfcCIsImFwcHJvdmVfcHJvX29mZiIsImJ1bmRfYSIsImNyZV9hZGQiLCJvZmZfZSIsIm9mZl9jIiwiYnVuZF92Il19LCJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6Im9wZXJhdG9yc19pZHMgb3BlcmF0b3JfaWQgZW1haWwgcGFydG5lcl9pZCBwcm9maWxlIiwic2lkIjoiMGViMzVlOGItZmY2NC00MzZjLWEyNTMtZTIzNzZlZTdiMjM5Iiwib3BlcmF0b3JzX2lkcyI6WzYwNl0sImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoicGVkcm8gbWFsdGV6IiwiZ3JvdXBzIjpbIlBPUlRBTF9PUEVSQVRPUl9PRkZFUl9BRE1JTiJdLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJwZWRyby5tYWx0ZXoiLCJnaXZlbl9uYW1lIjoicGVkcm8iLCJmYW1pbHlfbmFtZSI6Im1hbHRleiIsImVtYWlsIjoicGVkcm8ubWFsdGV6KzEyOEB0aW13ZXRlY2guY29tIn0.M7oB5J5oMa57JAJHqYK3smm1iP3u6AnTIsCmNiFWNS3MhKmhBpgSVcOzGrFvvPeQAhTPx79SkJWO9Mi8iCB9TAntLW5PU-C-5CmJwglp11_JVezeUUeWGSWGlhh4-DiUECrse4Dmww7pNCv7oMQEXXED9nE-Tq8eMcBWrz4G8kP4JWQH1x6iKabNR9VjJyZgt5_XEqNZnQ9K_oyWVYDwUe20W58gfESTL_JB9l_n52vqzKEx6xSPoJ3XGxrj-_-vByDe7NMW4WLmlAWoCBC8Mx5qtAM7fRAOSKSc0VtemRJUpkm0_gG9jZhGqT2KZ_aGhgwzEwdjUcc0hR8PIqT-IA"
+          },
+          {
+            "key": "X-Country",
+            "value": "KEN"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"timeStamp\": 15567981561235,\n    \"dataSet\": [\n        {\n            \"userName\": \"EXT_ID_0000\",\n            \"channel\": \"sms\",\n            \"packageId\": 4391,\n            \"oa\": \"SDPTest\",\n            \"msisdn\": \"254722000000\",\n            \"message\": \"Bulk Test\",\n            \"uniqueId\": \"2500688298721\",\n            \"actionResponseURL\": \"https://example.com/callbackprocessor\",\n            \"hashed\": \"no\"\n        }\n    ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://dsdpstg-apinb.safaricom.com/api/public/CMS/bulksms",
+          "protocol": "https",
+          "host": [
+            "dsdpstg-apinb",
+            "safaricom",
+            "com"
+          ],
+          "path": [
+            "api",
+            "public",
+            "CMS",
+            "bulksms"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "DEACTIVATE",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Cookie",
+            "value": "2bb463e8eec5f23845cc904a97fe082e=51c57f1396c933c843c3c8d2e2d9a363"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Country",
+            "value": "KEN"
+          },
+          {
+            "key": "X-Authorization",
+            "value": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJJZ0JxLTJvZnpMakRpeXliV2VnWS1OOXYwZ0V2RDdJMVdJbl80V1YxWnZJIn0.eyJleHAiOjE3NzE5NjMwMDgsImlhdCI6MTc3MTk1OTQwOCwianRpIjoiNDA4ZDBhZjgtZmZhOC00OWI5LWFjN2MtZjIxMTRiYmZlYzJlIiwiaXNzIjoiaHR0cHM6Ly9kc2RwLWlhbS5zYWZhcmljb20uY29tL3JlYWxtcy9waC1jb3JlIiwiYXVkIjpbInBoLXBvcnRhbCIsImFjY291bnQiXSwic3ViIjoiYjUzNmJmYzktYmVlOS00NzA5LWI3MTEtOTk1MmE2YzEzODI1IiwidHlwIjoiQmVhcmVyIiwiYXpwIjoicGFydG5lci1hcGkiLCJzZXNzaW9uX3N0YXRlIjoiNjgwNjg0ZjctOGM3NS00ZGY1LWFkM2UtYzA0OGFlOWY3ZTY2IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIvKiJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsiZGVmYXVsdC1yb2xlcy1waC1jb3JlIiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7InBoLXBvcnRhbCI6eyJyb2xlcyI6WyJlZGl0X3Byb19vZmYiLCJzbXNiLXYiLCJwcm9kX2MiLCJwcm9kX2UiLCJzdXNwZW5kX3Byb19vZmZlcnMiLCJ2aWV3X3IiLCJkZWxldGVfcHJvX29mZiIsInVzZXJfYWN0aXZpdHkiLCJidW5kX2UiLCJ2aWV3X3Byb19vZmYiLCJhZGRfcHJvX29mZiIsImNhbmRfdiIsImJ1bmRfYyIsIm1lc3NhZ2VfcCIsImFwcHJvdmVfcHJvX29mZiIsImJ1bmRfYSIsImNyZV9hZGQiLCJvZmZfZSIsIm9mZl9jIiwiYnVuZF92Il19LCJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6Im9wZXJhdG9yc19pZHMgb3BlcmF0b3JfaWQgZW1haWwgcGFydG5lcl9pZCBwcm9maWxlIiwic2lkIjoiNjgwNjg0ZjctOGM3NS00ZGY1LWFkM2UtYzA0OGFlOWY3ZTY2Iiwib3BlcmF0b3JzX2lkcyI6WzYwNl0sImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoicGVkcm8gbWFsdGV6IiwiZ3JvdXBzIjpbIlBPUlRBTF9PUEVSQVRPUl9PRkZFUl9BRE1JTiJdLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJwZWRyby5tYWx0ZXoiLCJnaXZlbl9uYW1lIjoicGVkcm8iLCJmYW1pbHlfbmFtZSI6Im1hbHRleiIsImVtYWlsIjoicGVkcm8ubWFsdGV6KzEyOEB0aW13ZXRlY2guY29tIn0.za1rA0VANUIHAkWjWWVU0iNfRunCiELyAkiDTFlU2H4_rcX_9as7H4AVoXWwJg8F1PGxwL1ffjsj4sSNHUfj-ch5-7Mo5RDDxB5TS5G8a38_VH-QncUakD6MzhmkxCAMqR39Iowmz5jLptPCu8NWwJP-sZBqzX-VpDgbAtpHF_XYRRQsS2_3xK2RSGf1b0BhPaj69sx-XpQ7ZPS7JRHibplwbvFEbvxdPppaGAoFKFtJf9M0Ex-vUs_7bfkvZC7Z8jEFog-ewJEJ1JoPBrba6JK6caBwKlF4LpFzHmpLj-vRKN9EronFz7y1ZF7jDBZnobeKhidq5wgjYVUDBIkZlw"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"requestId\": \"60141234567890567894232\",\n    \"channel\": \"APIGW\",\n    \"operation\": \"DEACTIVATE\",\n    \"requestParam\": {\n        \"data\": [\n          {\n        \"name\": \"Msisdn\",\n        \"value\": \"254722000000\"\n      },\n      {\n        \"name\": \"OfferCode\",\n        \"value\": \"300000000\"\n      },\n      {\n        \"name\": \"Language\",\n        \"value\": \"1\"\n      },\n      {\n        \"name\": \"CpId\",\n        \"value\": \"EXT_ID_1000\"\n      }\n        ]\n    }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://dsdpstg-apinb.safaricom.com/api/public/SDP/deactivate",
+          "protocol": "https",
+          "host": [
+            "dsdpstg-apinb",
+            "safaricom",
+            "com"
+          ],
+          "path": [
+            "api",
+            "public",
+            "SDP",
+            "deactivate"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "PAYMENT",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "accept",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Requested-With",
+            "value": "XMLHttpRequest"
+          },
+          {
+            "key": "X-Country",
+            "value": "KEN"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Authorization",
+            "value": "Bearer eyJhbGciOiJIizI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI2YmM5YjQwZC0zMzQ4LTQ0NzQtODQ5YS0wMjRhNTM1ODI4ODcifQ.eyJleHAiOjE3NzQ1ODI5MzksImlhdCI6MTc3NDU3NTczOSwianRpIjoiYWIwZGVlNTItM2ExNi00N2QwLWEyZTYtMjEyN2ZmZDQ0ODE1IiwiaXNzIjoiaHR0cHM6Ly9kc2RwLWlhbS5zYWZhcmljb20uY29tL3JlYWxtcy9waC1jb3JlIiwiYXVkIjoiaHR0cHM6Ly9kc2RwLWlhbS5zYWZhcmljb20uY29tL3JlYWxtcy9waC1jb3JlIiwic3ViIjoiYjUzNmJmYzktYmVlOS00NzA5LWI3MTEtOTk1MmE2YzEzODI1IiwidHlwIjoiUmVmcmVzaCIsImF6cCI6InBhcnRuZXItYXBpIiwic2Vzc2lvbl9zdGF0ZSI6IjlkNGVmMTJiLTJkOWMtNDFkZS05NTdiLTVkYTIwM2QxZjBiZiIsInNjb3BlIjoib3BlcmF0b3JzX2lkcyBvcGVyYXRvcl9pZCBlbWFpbCBwYXJ0bmVyX2lkIHByb2ZpbGUiLCJzaWQiOiI5ZDRlZjEyYi0yZDljLTQxZGUtOTU3Yi01ZGEyMDNkMWYwYmYifQ.J0EaRywe6mHr5jxXOPS8D39ZxbItF2KS6XzKgh85sHk"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"requestId\": \"b74c1d70-d352-49d0-805e-220dcaf4be04\",\n  \"channel\": \"SMS\",\n  \"operation\": \"PAYMENT\",\n  \"requestParam\": {\n    \"data\": [\n        {\n        \"name\": \"Msisdn\",\n        \"value\": \"254722000000\"\n      },\n      {\n        \"name\": \"OfferCode\",\n        \"value\": \"300000000\"\n      },\n      {\n        \"name\": \"Language\",\n        \"value\": \"1\"\n      },\n      {\n        \"name\": \"CpId\",\n        \"value\": \"EXT_ID_1000\"\n      },\n      {\n        \"name\": \"ChargeAmount\",\n        \"value\": \"1\"\n      }\n    ]\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://dsdpstg-apinb.safaricom.com/api/public/SDP/paymentRequest",
+          "protocol": "https",
+          "host": [
+            "dsdpstg-apinb",
+            "safaricom",
+            "com"
+          ],
+          "path": [
+            "api",
+            "public",
+            "SDP",
+            "paymentRequest"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "SENDSMS",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJJZ0JxLTJvZnpMakRpeXliV2VnWS1OOXYwZ0V2RDdJMVdJbl80V1YxWnZJIn0.eyJleHAiOjE3NzAyNzc0MTYsImlhdCI6MTc3MDI3NjgxNiwianRpIjoiNTY1YjgwYzctNDQ1NS00ZWZhLWExN2YtMGQ3OWVlODlkZGJlIiwiaXNzIjoiaHR0cDovL2RzZHAta2V5Y2xvYWstZGlnaXRhbC1zZHAuYXBwcy5vY3B2YXMtdGhpa2Euc2FmYXJpY29tLm5ldC9yZWFsbXMvcGgtY29yZSIsImF1ZCI6WyJwaC1wb3J0YWwiLCJhY2NvdW50Il0sInN1YiI6ImI1MzZiZmM5LWJlZTktNDcwOS1iNzExLTk5NTJhNmMxMzgyNSIsInR5cCI6IkJlYXJlciIsImF6cCI6InBhcnRuZXItYXBpIiwic2Vzc2lvbl9zdGF0ZSI6IjcyMjIyYWZmLTMxYTktNGNiYy04MWJjLWQ5MjFkZmYxZWYyNiIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiLyoiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbImRlZmF1bHQtcm9sZXMtcGgtY29yZSIsIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJwaC1wb3J0YWwiOnsicm9sZXMiOlsiZWRpdF9wcm9fb2ZmIiwic21zYi12IiwicHJvZF9jIiwicHJvZF9lIiwic3VzcGVuZF9wcm9fb2ZmZXJzIiwidmlld19yIiwiZGVsZXRlX3Byb19vZmYiLCJ1c2VyX2FjdGl2aXR5IiwiYnVuZF9lIiwidmlld19wcm9fb2ZmIiwiYWRkX3Byb19vZmYiLCJjYW5kX3YiLCJidW5kX2MiLCJtZXNzYWdlX3AiLCJhcHByb3ZlX3Byb19vZmYiLCJidW5kX2EiLCJjcmVfYWRkIiwib2ZmX2UiLCJvZmZfYyIsImJ1bmRfdiJdfSwiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJvcGVyYXRvcnNfaWRzIG9wZXJhdG9yX2lkIGVtYWlsIHBhcnRuZXJfaWQgcHJvZmlsZSIsInNpZCI6IjcyMjIyYWZmLTMxYTktNGNiYy04MWJjLWQ5MjFkZmYxZWYyNiIsIm9wZXJhdG9yc19pZHMiOls2MDZdLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6InBlZHJvIG1hbHRleiIsImdyb3VwcyI6WyJQT1JUQUxfT1BFUkFUT1JfT0ZGRVJfQURNSU4iXSwicHJlZmVycmVkX3VzZXJuYW1lIjoicGVkcm8ubWFsdGV6IiwiZ2l2ZW5fbmFtZSI6InBlZHJvIiwiZmFtaWx5X25hbWUiOiJtYWx0ZXoiLCJlbWFpbCI6InBlZHJvLm1hbHRleisxMjhAdGltd2V0ZWNoLmNvbSJ9.GlrgpySl8cxFI1uYFyPHzMLM4z97wZd0vb9RAid0tq6OaAxT-2aNYfbeKjJzw8pDnDTXCENlM0AsYqS8LWDnL2v0nMBBC6ZgyNVPcQ4PKk50dNW6IStrr8Go0v69S0hsWVDGuOzOH6Qg_kAtlvzurDyyvHwO5noBUVtLrh9pL_OjnvELfQOhhYXok_iGV1qIqGIR0N9Wtqc99aq1Y5ChomGHNlSMl2fOV9KggtaLIWuwIj-tYW374SHuocXzFENtPSaivUhpBsZ60gpr9Fam9zAyYLP3Uar0EA7FHsm-hvDPdKqypnq-iJJGxf3TzG4HQN4rMZOl9NvinMUx8NaWfw",
+            "disabled": true
+          },
+          {
+            "key": "X-Country",
+            "value": "KEN"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJJZ0JxLTJvZnpMakRpeXliV2VnWS1OOXYwZ0V2RDdJMVdJbl80V1YxWnZJIn0.eyJleHAiOjE3NzIwMjU0NzAsImlhdCI6MTc3MjAyMTg3MCwianRpIjoiZmQ2YWI3MDktODM4Zi00ZGNhLTlkZTAtYjIxOTlmYzEyZmM0IiwiaXNzIjoiaHR0cHM6Ly9kc2RwLWlhbS5zYWZhcmljb20uY29tL3JlYWxtcy9waC1jb3JlIiwiYXVkIjpbInBoLXBvcnRhbCIsImFjY291bnQiXSwic3ViIjoiYjUzNmJmYzktYmVlOS00NzA5LWI3MTEtOTk1MmE2YzEzODI1IiwidHlwIjoiQmVhcmVyIiwiYXpwIjoicGFydG5lci1hcGkiLCJzZXNzaW9uX3N0YXRlIjoiMWUyYjQyYTUtNGRmNy00ZjZkLWI2NzktYmYyNDU0M2E4Y2I2IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIvKiJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsiZGVmYXVsdC1yb2xlcy1waC1jb3JlIiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7InBoLXBvcnRhbCI6eyJyb2xlcyI6WyJlZGl0X3Byb19vZmYiLCJzbXNiLXYiLCJwcm9kX2MiLCJwcm9kX2UiLCJzdXNwZW5kX3Byb19vZmZlcnMiLCJ2aWV3X3IiLCJkZWxldGVfcHJvX29mZiIsInVzZXJfYWN0aXZpdHkiLCJidW5kX2UiLCJ2aWV3X3Byb19vZmYiLCJhZGRfcHJvX29mZiIsImNhbmRfdiIsImJ1bmRfYyIsIm1lc3NhZ2VfcCIsImFwcHJvdmVfcHJvX29mZiIsImJ1bmRfYSIsImNyZV9hZGQiLCJvZmZfZSIsIm9mZl9jIiwiYnVuZF92Il19LCJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6Im9wZXJhdG9yc19pZHMgb3BlcmF0b3JfaWQgZW1haWwgcGFydG5lcl9pZCBwcm9maWxlIiwic2lkIjoiMWUyYjQyYTUtNGRmNy00ZjZkLWI2NzktYmYyNDU0M2E4Y2I2Iiwib3BlcmF0b3JzX2lkcyI6WzYwNl0sImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoicGVkcm8gbWFsdGV6IiwiZ3JvdXBzIjpbIlBPUlRBTF9PUEVSQVRPUl9PRkZFUl9BRE1JTiJdLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJwZWRyby5tYWx0ZXoiLCJnaXZlbl9uYW1lIjoicGVkcm8iLCJmYW1pbHlfbmFtZSI6Im1hbHRleiIsImVtYWlsIjoicGVkcm8ubWFsdGV6KzEyOEB0aW13ZXRlY2guY29tIn0.TN1XkJzIlUaQaeQ3m87yK4NF3GDnQK-FXPzxfAuv3n-61CfCOPGDn0FiS8kU0J76YpRttUht9iYL1iyjcHRSFK0jaC0gMEtxqKMDDRI4s85pe-VKOO1ZBJksodZRqDthxBwOqvuwUv6Bm9iwCF7kct79g8umCw8VQn9WJoMVXXWIBpfC-jChXGmSqLQGGqsyncYvvmz-BfF3zZgSqw3shm7ZJzF-mYr7eMLmmJlrYyyAZkqrYp2BBs4pNqA4Q72Uw7ZCyd-INV0dr6K7EglmJ7blq6oISg0UH8Cx5pbdzQl-Mc2h_8iX5gm7qg7WZkOUYOh8nE5tXuC_PJu7wfiZ8Q"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"requestId\": \"60141234567890567894231\",\n    \"channel\": \"SMS\",\n    \"operation\": \"SendSMS\",\n    \"requestParam\": {\n        \"data\": [\n            {\n                \"name\": \"Msisdn\",\n                \"value\": \"254722000000\"\n            },\n            {\n                \"name\": \"OfferCode\",\n                \"value\": \"300001544\"\n            },\n            {\n                \"name\": \"Language\",\n                \"value\": \"1\"\n            },\n            {\n                \"name\": \"CpId\",\n                \"value\": \"EXT_ID_1000\"\n            },\n            {\n                \"name\": \"Content\",\n                \"value\": \"Subscription SendSMS 1\"\n            }\n        ]\n    }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://dsdpstg-apinb.safaricom.com/api/public/SDP/sendSMSRequest",
+          "protocol": "https",
+          "host": [
+            "dsdpstg-apinb",
+            "safaricom",
+            "com"
+          ],
+          "path": [
+            "api",
+            "public",
+            "SDP",
+            "sendSMSRequest"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}

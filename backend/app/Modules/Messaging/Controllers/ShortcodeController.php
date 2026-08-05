@@ -178,36 +178,47 @@ class ShortcodeController extends Controller
     public function handleSafaricomMO(Request $request)
     {
         $payload = $request->all();
-        Log::info('MO Webhook Received: ', $payload);
+        Log::info('Safaricom DSDP Webhook Received: ', $payload);
         
         $shortcodeText = null;
         $msisdn = null;
         $messageText = null;
         $linkId = null;
+        $requestId = $payload['requestId'] ?? (string) time();
 
-        // Safaricom SDP INTERACTIVE MO payload parser
-        if (isset($payload['operation']) && $payload['operation'] === 'INTERACTIVE' && isset($payload['requestParam'])) {
+        // Safaricom DSDP v1.1 CP_NOTIFICATION / NOTIFY_LINKID / INTERACTIVE parser
+        if (isset($payload['operation']) && in_array($payload['operation'], ['CP_NOTIFICATION', 'INTERACTIVE'])) {
             $data = $payload['requestParam']['data'] ?? [];
             foreach ($data as $item) {
-                if (isset($item['name']) && strtoupper($item['name']) === 'MSISDN') {
-                    $msisdn = $item['value'];
+                if (!isset($item['name']) || !isset($item['value'])) continue;
+                $name = strtoupper($item['name']);
+                $val = $item['value'];
+
+                if ($name === 'MSISDN') {
+                    $msisdn = $val;
+                } elseif (in_array($name, ['USER_DATA', 'SMS', 'CONTENT', 'MESSAGE'])) {
+                    $messageText = $val;
+                } elseif ($name === 'LINKID') {
+                    $linkId = $val;
+                } elseif (in_array($name, ['DA', 'SHORTCODE', 'OFFERCODE'])) {
+                    $shortcodeText = $val;
                 }
             }
+
             $additionalData = $payload['requestParam']['additionalData'] ?? [];
             foreach ($additionalData as $item) {
-                if (isset($item['name'])) {
-                    $name = strtoupper($item['name']);
-                    if ($name === 'DA') {
-                        $shortcodeText = $item['value'];
-                    } elseif ($name === 'SMS') {
-                        $messageText = $item['value'];
-                    }
+                if (!isset($item['name']) || !isset($item['value'])) continue;
+                $name = strtoupper($item['name']);
+                if ($name === 'DA') {
+                    $shortcodeText = $item['value'];
+                } elseif ($name === 'SMS') {
+                    $messageText = $item['value'];
                 }
             }
         }
 
-        // Extremely greedy extraction to support Safaricom SDP (standard), Africa's Talking, Celcom, and Custom Aggregators
-        if (!$shortcodeText) $shortcodeText = $payload['smsServiceActivationNumber'] ?? $payload['shortcode'] ?? $payload['to'] ?? $payload['destination'] ?? $payload['receiver'] ?? null;
+        // Greedy fallback extraction across all supported aggregators
+        if (!$shortcodeText) $shortcodeText = $payload['smsServiceActivationNumber'] ?? $payload['shortcode'] ?? $payload['to'] ?? $payload['destination'] ?? $payload['receiver'] ?? '20606';
         if (!$msisdn) $msisdn = $payload['senderAddress'] ?? $payload['msisdn'] ?? $payload['from'] ?? $payload['sender'] ?? $payload['source'] ?? null;
         
         if (!$messageText) {
@@ -217,41 +228,43 @@ class ShortcodeController extends Controller
         
         if (!$linkId) $linkId = $payload['linkId'] ?? $payload['link_id'] ?? $payload['correlator'] ?? $payload['requestId'] ?? null;
 
-        if (!$shortcodeText || !$msisdn || !$messageText) {
-            Log::warning('MO Webhook missing critical fields', $payload);
-            return response()->json(['error' => 'Invalid payload structure', 'received_payload' => $payload], 400);
-        }
-
-        $requestIp = $request->ip();
-
-        // Create the response
-        $response = response()->json([
-            'status' => 'SUCCESS',
-            'message' => 'MO accepted for processing'
+        // Safaricom DSDP v1.1 Compliant Acknowledgement Payload
+        $acknowledgement = response()->json([
+            'requestId' => (string) $requestId,
+            'responseId' => 'cp_' . $requestId,
+            'responseTimeStamp' => date('YmdHis'),
+            'operation' => 'CP_NOTIFICATION',
+            'responseParam' => [
+                'status' => '0',
+                'statusCode' => '0000',
+                'description' => 'Success'
+            ]
         ]);
 
-        // 1. Send the response headers and content to Safaricom immediately
-        $response->send();
+        // 1. Send the compliance response to Safaricom DSDP server immediately
+        $acknowledgement->send();
 
-        // 2. Force the web server (LiteSpeed/Apache) to close the connection to Safaricom
+        // 2. Flush and close HTTP connection so Safaricom receives HTTP 200 without waiting
         if (function_exists('fastcgi_finish_request')) {
             fastcgi_finish_request();
         } else {
-            // Fallback for forcing the buffer to flush to the client
             while (ob_get_level() > 0) {
                 ob_end_flush();
             }
             flush();
         }
 
-        // 3. NOW run the heavy processing! Safaricom is already gone and happy.
-        try {
-            $this->processMO($shortcodeText, $msisdn, $messageText, $requestIp, null, $linkId);
-        } catch (\Exception $e) {
-            Log::error("Deferred processMO Error: " . $e->getMessage());
+        // 3. Process MO in background
+        if ($shortcodeText && $msisdn && $messageText) {
+            try {
+                $requestIp = $request->ip();
+                $this->processMO($shortcodeText, $msisdn, $messageText, $requestIp, null, $linkId);
+            } catch (\Exception $e) {
+                Log::error("Deferred processMO Error: " . $e->getMessage());
+            }
         }
 
-        // 4. Exit to prevent Laravel from trying to send the response again
+        // 4. Exit script cleanly
         exit;
     }
 
