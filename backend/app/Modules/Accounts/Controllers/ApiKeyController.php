@@ -17,16 +17,16 @@ class ApiKeyController extends Controller
             return $user->client_account_id;
         }
         if (!empty($user->clientAccount) && ClientAccount::where('id', $user->clientAccount->id)->exists()) {
+            $user->update(['client_account_id' => $user->clientAccount->id]);
             return $user->clientAccount->id;
         }
-        $first = ClientAccount::first();
-        if ($first) {
-            return $first->id;
-        }
+        
         $created = ClientAccount::create([
-            'company_name' => 'Casamoko Default Account',
-            'wallet_balance' => 1000.00
+            'company_name' => ($user->name ?? 'User') . ' Account',
+            'wallet_balance' => 100.0000
         ]);
+        
+        $user->update(['client_account_id' => $created->id]);
         return $created->id;
     }
 
@@ -35,12 +35,27 @@ class ApiKeyController extends Controller
         try {
             $user = $request->user();
             $clientAccountId = $this->resolveClientAccountId($user);
-            $keys = ApiKey::where('client_account_id', $clientAccountId)->get();
+
+            // Fetch keys by client_account_id or user_id for auto-healing
+            $keys = ApiKey::where('client_account_id', $clientAccountId)
+                          ->orWhere('user_id', $user->id)
+                          ->get();
+
+            // Auto-heal any keys pointing to legacy account
+            foreach ($keys as $k) {
+                if ($k->client_account_id !== $clientAccountId || $k->user_id !== $user->id) {
+                    $k->update([
+                        'client_account_id' => $clientAccountId,
+                        'user_id' => $user->id
+                    ]);
+                }
+            }
 
             if ($keys->isEmpty()) {
                 $rawKey = 'live_csmk_' . Str::random(24);
                 $key = ApiKey::create([
                     'client_account_id' => $clientAccountId,
+                    'user_id' => $user->id,
                     'name' => 'Live Production Key',
                     'api_key' => $rawKey,
                 ]);
@@ -65,10 +80,13 @@ class ApiKeyController extends Controller
             $clientAccountId = $this->resolveClientAccountId($user);
             $rawKey = 'live_csmk_' . Str::random(24);
 
-            ApiKey::where('client_account_id', $clientAccountId)->delete();
+            ApiKey::where('client_account_id', $clientAccountId)
+                  ->orWhere('user_id', $user->id)
+                  ->delete();
 
             $key = ApiKey::create([
                 'client_account_id' => $clientAccountId,
+                'user_id' => $user->id,
                 'name' => $request->name ?? 'Live Production Key',
                 'api_key' => $rawKey,
             ]);
@@ -90,7 +108,12 @@ class ApiKeyController extends Controller
         try {
             $user = $request->user();
             $clientAccountId = $this->resolveClientAccountId($user);
-            ApiKey::where('client_account_id', $clientAccountId)->where('id', $id)->delete();
+            ApiKey::where('id', $id)
+                  ->where(function($q) use ($clientAccountId, $user) {
+                      $q->where('client_account_id', $clientAccountId)
+                        ->orWhere('user_id', $user->id);
+                  })
+                  ->delete();
             return response()->json(['status' => 'SUCCESS']);
         } catch (\Exception $e) {
             return response()->json(['status' => 'ERROR', 'message' => $e->getMessage()], 500);

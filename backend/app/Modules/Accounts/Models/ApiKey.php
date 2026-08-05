@@ -11,6 +11,7 @@ class ApiKey extends Model
 
     protected $fillable = [
         'client_account_id',
+        'user_id',
         'name',
         'api_key',
         'last_used_at',
@@ -25,5 +26,10 @@ class ApiKey extends Model
     public function clientAccount()
     {
         return $this->belongsTo(ClientAccount::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

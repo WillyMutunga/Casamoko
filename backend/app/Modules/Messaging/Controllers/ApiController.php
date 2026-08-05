@@ -49,27 +49,23 @@ class ApiController extends Controller
         
         $totalCost = $baseRate * $segments;
 
-        // Check balance
-        if ($clientAccount->wallet_balance < $totalCost) {
+        // Refresh client account from DB to ensure accurate balance
+        $clientAccount = \App\Modules\Accounts\Models\ClientAccount::find($clientAccount->id);
+
+        if (!$clientAccount) {
             return response()->json([
                 'status' => 'ERROR',
-                'message' => 'Insufficient wallet balance.'
-            ], 402);
+                'message' => 'Account context not found.'
+            ], 404);
         }
 
-        // Atomically deduct the balance
-        try {
-            $ledgerService->debit(
-                $clientAccount->id,
-                $totalCost,
-                'SMS_API_DISPATCH',
-                null,
-                null,
-                'API Bulk SMS Dispatch'
-            );
-        } catch (\Exception $e) {
-            Log::error("API SendSMS: Ledger debit failed - " . $e->getMessage());
-            return response()->json(['status' => 'ERROR', 'message' => 'Transaction failed'], 500);
+        // Check balance (wallet balance + credit limit)
+        $availableBalance = (float) $clientAccount->wallet_balance + (float) $clientAccount->credit_limit;
+        if ($availableBalance < $totalCost) {
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'Insufficient wallet balance. Required: KES ' . number_format($totalCost, 2) . ', Available: KES ' . number_format($availableBalance, 2)
+            ], 402);
         }
 
         // Create a contact silently (or just hash it)
@@ -79,16 +75,14 @@ class ApiController extends Controller
             ['msisdn' => $phone, 'name' => 'API Subscriber']
         );
 
-        // We don't have a specific campaign, so we create a dummy campaign or use a specific API campaign!
-        // For architectural simplicity, we create a pseudo campaign if none exists, or just allow null.
-        // The SendSMSJob requires a MessageRecord, which requires a campaign_id in the DB schema.
+        // API Default Campaign for client dashboard stats
         $campaign = \App\Modules\Messaging\Models\Campaign::firstOrCreate(
             ['client_account_id' => $clientAccount->id, 'name' => 'API Dispatches Default'],
             [
                 'template' => 'API Dispatch',
-                'sender_id_id' => null, // Or look up the requested sender_id
+                'sender_id_id' => null,
                 'status' => 'COMPLETED',
-                'tps_limit' => 100, // API is fast
+                'tps_limit' => 100,
             ]
         );
 
@@ -99,6 +93,22 @@ class ApiController extends Controller
             'price' => $totalCost,
             'status' => 'QUEUED',
         ]);
+
+        // Atomically deduct the balance from the client's wallet
+        try {
+            $ledgerService->debit(
+                $clientAccount->id,
+                $totalCost,
+                'SMS_API_DISPATCH',
+                MessageRecord::class,
+                $record->id,
+                "API SMS Dispatch to {$phone}"
+            );
+        } catch (\Exception $e) {
+            Log::error("API SendSMS: Ledger debit failed - " . $e->getMessage());
+            $record->update(['status' => 'FAILED', 'network_status_code' => 'INSUFFICIENT_FUNDS']);
+            return response()->json(['status' => 'ERROR', 'message' => $e->getMessage()], 402);
+        }
 
         $senderId = $request->input('sender_id') ?: 'CASAMOKO';
 
@@ -125,6 +135,20 @@ class ApiController extends Controller
                     'status' => 'FAILED',
                     'network_status_code' => $gatewayResponse['error_code'] ?? 'GATEWAY_ERROR'
                 ]);
+
+                // Refund on gateway rejection
+                try {
+                    $ledgerService->credit(
+                        $clientAccount->id,
+                        $totalCost,
+                        'REFUND',
+                        MessageRecord::class,
+                        $record->id,
+                        "Refund for failed API SMS dispatch to {$phone}"
+                    );
+                } catch (\Exception $refundEx) {
+                    Log::error("API Refund Exception: " . $refundEx->getMessage());
+                }
             }
         } catch (\Exception $e) {
             Log::error("API Inline Dispatch Exception: " . $e->getMessage());
