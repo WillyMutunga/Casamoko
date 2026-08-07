@@ -2453,11 +2453,13 @@ const getChatDateHeader = (timestampStr: string) => {
             />
           )}
           {/* 2.1 SIDEBAR NAVIGATION PANEL */}
-          <aside className={`${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 w-64 md:w-20'} fixed md:relative z-50 md:z-20 h-full bg-slate-950/80 border-r border-slate-800 hover:bg-slate-900/80 hover:border-slate-700 hover:shadow-[4px_0_24px_-4px_rgba(99,102,241,0.15)] transition-all duration-300 flex flex-col overflow-hidden`}>
-            <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800/60">
+          <aside className={`${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 w-64 md:w-20'} fixed md:relative z-50 md:z-20 h-full bg-slate-950/90 backdrop-blur-2xl border-r border-indigo-500/20 hover:border-indigo-500/35 hover:shadow-[4px_0_30px_-4px_rgba(99,102,241,0.18)] transition-all duration-300 flex flex-col overflow-hidden`}>
+            <div className="h-16 flex items-center justify-between px-5 border-b border-indigo-500/20">
               <div className="flex items-center gap-3">
-                  <MessageSquare className="w-6 h-6 shrink-0 text-indigo-500" />
-                  <span className={`font-black text-lg text-white tracking-widest uppercase transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>CASAMOKO</span>
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 shrink-0">
+                    <MessageSquare className="w-5 h-5 text-white" />
+                  </div>
+                  <span className={`font-black text-xl tracking-widest uppercase bg-gradient-to-r from-indigo-200 via-white to-pink-300 bg-clip-text text-transparent transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>CASAMOKO</span>
                 </div>
             </div>
 
@@ -2469,51 +2471,51 @@ const getChatDateHeader = (timestampStr: string) => {
                 <>
                   <button 
                     onClick={() => handleNavClick('dashboard')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'dashboard' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'dashboard' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <Activity className="w-5 h-5 shrink-0" />
+                    <Activity className={`w-5 h-5 shrink-0 ${currentPage === 'dashboard' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>System Overview</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('resellers')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'resellers' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'resellers' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <Building className="w-5 h-5 shrink-0" />
+                    <Building className={`w-5 h-5 shrink-0 ${currentPage === 'resellers' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Manage Resellers</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('compliance')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'compliance' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'compliance' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <ShieldCheck className="w-5 h-5 shrink-0" />
+                    <ShieldCheck className={`w-5 h-5 shrink-0 ${currentPage === 'compliance' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Sender Approvals</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('audit')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'audit' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'audit' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <Lock className="w-5 h-5 shrink-0" />
+                    <Lock className={`w-5 h-5 shrink-0 ${currentPage === 'audit' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Security Audits</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('routing')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'routing' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'routing' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <Cpu className="w-5 h-5 shrink-0" />
+                    <Cpu className={`w-5 h-5 shrink-0 ${currentPage === 'routing' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>SMPP Routing</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('campaigns')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'campaigns' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'campaigns' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <Send className="w-5 h-5 shrink-0" />
+                    <Send className={`w-5 h-5 shrink-0 ${currentPage === 'campaigns' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Campaigns & Queue</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('inbox')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'inbox' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'inbox' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <Inbox className="w-5 h-5 shrink-0" />
+                    <Inbox className={`w-5 h-5 shrink-0 ${currentPage === 'inbox' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Shortcode Messenger</span>
                   </button>
                 </>
@@ -2524,30 +2526,30 @@ const getChatDateHeader = (timestampStr: string) => {
                 <>
                   <button 
                     onClick={() => handleNavClick('dashboard')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'dashboard' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'dashboard' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <Activity className="w-5 h-5 shrink-0" />
+                    <Activity className={`w-5 h-5 shrink-0 ${currentPage === 'dashboard' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Channel Overview</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('clients')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'clients' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'clients' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <Users className="w-5 h-5 shrink-0" />
+                    <Users className={`w-5 h-5 shrink-0 ${currentPage === 'clients' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Onboarded Clients</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('campaigns')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'campaigns' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'campaigns' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <Send className="w-5 h-5 shrink-0" />
+                    <Send className={`w-5 h-5 shrink-0 ${currentPage === 'campaigns' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Campaigns & Queue</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('inbox')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'inbox' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'inbox' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <Inbox className="w-5 h-5 shrink-0" />
+                    <Inbox className={`w-5 h-5 shrink-0 ${currentPage === 'inbox' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Shortcode Messenger</span>
                   </button>
                 </>
@@ -2558,79 +2560,79 @@ const getChatDateHeader = (timestampStr: string) => {
                 <>
                   <button 
                     onClick={() => handleNavClick('dashboard')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'dashboard' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'dashboard' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <TrendingUp className="w-5 h-5 shrink-0" />
+                    <TrendingUp className={`w-5 h-5 shrink-0 ${currentPage === 'dashboard' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Dashboard</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('campaigns')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'campaigns' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'campaigns' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <Send className="w-5 h-5 shrink-0" />
+                    <Send className={`w-5 h-5 shrink-0 ${currentPage === 'campaigns' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Campaigns & Queue</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('inbox')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'inbox' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'inbox' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <Inbox className="w-5 h-5 shrink-0" />
+                    <Inbox className={`w-5 h-5 shrink-0 ${currentPage === 'inbox' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Shortcode Messenger</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('reports')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'reports' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'reports' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <BarChart2 className="w-5 h-5 shrink-0" />
+                    <BarChart2 className={`w-5 h-5 shrink-0 ${currentPage === 'reports' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Delivery Analytics</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('contacts')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'contacts' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'contacts' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <Users className="w-5 h-5 shrink-0" />
+                    <Users className={`w-5 h-5 shrink-0 ${currentPage === 'contacts' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Contacts & Blocklist</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('finance')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'finance' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'finance' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <Wallet className="w-5 h-5 shrink-0" />
+                    <Wallet className={`w-5 h-5 shrink-0 ${currentPage === 'finance' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Wallet Ledger</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('team')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'team' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'team' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <Activity className="w-5 h-5 shrink-0" />
+                    <Activity className={`w-5 h-5 shrink-0 ${currentPage === 'team' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Team & Activity</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('shortcodes')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'shortcodes' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'shortcodes' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <MessageSquare className="w-5 h-5 shrink-0" />
+                    <MessageSquare className={`w-5 h-5 shrink-0 ${currentPage === 'shortcodes' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Shortcode Services</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('sender_ids')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'sender_ids' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'sender_ids' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <Sliders className="w-5 h-5 shrink-0" />
+                    <Sliders className={`w-5 h-5 shrink-0 ${currentPage === 'sender_ids' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Sender ID Config</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('templates')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'templates' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'templates' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <MessageSquareDashed className="w-5 h-5 shrink-0" />
+                    <MessageSquareDashed className={`w-5 h-5 shrink-0 ${currentPage === 'templates' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Dynamic Templates</span>
                   </button>
                   <button 
                     onClick={() => handleNavClick('developer')} 
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'developer' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'developer' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
-                    <TerminalSquare className="w-5 h-5 shrink-0" />
+                    <TerminalSquare className={`w-5 h-5 shrink-0 ${currentPage === 'developer' ? 'text-cyan-300' : 'text-indigo-400'}`} />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Developer APIs</span>
                   </button>
                 </>
@@ -2655,15 +2657,15 @@ const getChatDateHeader = (timestampStr: string) => {
             <div className="absolute w-[400px] h-[400px] rounded-full bg-blue-600/5 blur-3xl bottom-20 right-20 pointer-events-none"></div>
 
             {/* Header Navbar */}
-            <header className="h-16 bg-slate-900/20 backdrop-blur-md border-b border-slate-850 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 w-full">
+            <header className="h-16 bg-slate-950/85 backdrop-blur-xl border-b border-indigo-500/20 flex items-center justify-between px-4 md:px-8 sticky top-0 z-30 w-full shadow-xl">
               <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
                 <button 
                   onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="p-1.5 shrink-0 bg-slate-900/60 border border-slate-800 rounded-lg text-gray-400 hover:text-white"
+                  className="p-2 shrink-0 bg-slate-900/80 border border-slate-800 hover:border-indigo-500/40 rounded-xl text-gray-300 hover:text-white transition-all shadow-sm"
                 >
-                  <Menu className="w-5 h-5" />
+                  <Menu className="w-5 h-5 text-indigo-400" />
                 </button>
-                <h1 className="text-sm md:text-xl font-black text-white tracking-wide uppercase truncate">
+                <h1 className="text-sm md:text-lg font-black tracking-wider uppercase truncate bg-gradient-to-r from-indigo-200 via-white to-pink-300 bg-clip-text text-transparent">
                   {currentPage === 'dashboard' 
                     ? `${user.role_tier} OVERVIEW` 
                     : currentPage === 'shortcodes' 
@@ -2684,34 +2686,34 @@ const getChatDateHeader = (timestampStr: string) => {
               <div className="flex items-center gap-2 md:gap-4 shrink-0 pl-2">
                 {user.role_tier === 'CLIENT' && clientAccount && (
                   <>
-                    <div className="bg-slate-900/60 border border-slate-800/80 px-4 py-1.5 rounded-full hidden lg:flex items-center gap-3">
-                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></div>
-                      <span className="text-xs text-gray-300 font-semibold truncate max-w-[120px]">{clientAccount.name}</span>
+                    <div className="bg-slate-900/80 border border-slate-800 px-4 py-1.5 rounded-full hidden lg:flex items-center gap-2.5 shadow-sm">
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></div>
+                      <span className="text-xs text-slate-200 font-bold truncate max-w-[120px]">{clientAccount.name}</span>
                     </div>
-                    <div className="bg-indigo-600/10 border border-indigo-500/20 px-3 md:px-5 py-1.5 rounded-full flex items-center gap-1.5 md:gap-2 text-indigo-300 font-mono text-xs md:text-sm">
-                      <Wallet className="w-3 h-3 md:w-4 md:h-4" />
-                      <span className="hidden sm:inline">Balance:</span>
-                      <span className="font-extrabold">Ksh {Number(clientAccount.wallet_balance).toFixed(2)}</span>
+                    <div className="bg-slate-900/90 border border-emerald-500/40 px-3.5 md:px-5 py-1.5 rounded-full flex items-center gap-1.5 md:gap-2 text-emerald-400 font-mono text-xs md:text-sm shadow-[0_0_20px_rgba(16,185,129,0.12)]">
+                      <Wallet className="w-3.5 h-3.5 md:w-4 md:h-4 text-emerald-400" />
+                      <span className="hidden sm:inline text-slate-400 font-sans text-xs">Balance:</span>
+                      <span className="font-extrabold text-emerald-300">Ksh {Number(clientAccount.wallet_balance).toFixed(2)}</span>
                     </div>
                     <button 
                       onClick={() => setTopupDrawerOpen(true)}
-                      className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold px-3 py-1.5 rounded-full text-xs shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all flex items-center gap-1"
+                      className="bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-black px-4 py-1.5 rounded-full text-xs shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer"
                     >
-                      <ArrowUpRight className="w-3 h-3" /> <span className="hidden sm:inline">Top Up</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Top Up</span>
                     </button>
                   </>
                 )}
 
                 {user.role_tier === 'RESELLER' && resellerAccount && (
                   <>
-                    <div className="bg-slate-900/60 border border-slate-800/80 px-4 py-1.5 rounded-full hidden md:flex items-center gap-3">
-                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></div>
-                      <span className="text-xs text-gray-300 font-semibold">{resellerAccount.name}</span>
+                    <div className="bg-slate-900/80 border border-slate-800 px-4 py-1.5 rounded-full hidden md:flex items-center gap-2.5 shadow-sm">
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></div>
+                      <span className="text-xs text-slate-200 font-bold">{resellerAccount.name}</span>
                     </div>
-                    <div className="bg-indigo-600/10 border border-indigo-500/20 px-5 py-1.5 rounded-full hidden sm:flex items-center gap-2 text-indigo-300 font-mono text-sm">
-                      <Wallet className="w-4 h-4" />
-                      <span>API Credits:</span>
-                      <span className="font-extrabold">Ksh {Number(resellerAccount.api_credits || 0).toFixed(2)}</span>
+                    <div className="bg-slate-900/90 border border-indigo-500/40 px-5 py-1.5 rounded-full hidden sm:flex items-center gap-2 text-indigo-300 font-mono text-sm shadow-[0_0_20px_rgba(99,102,241,0.12)]">
+                      <Wallet className="w-4 h-4 text-indigo-400" />
+                      <span className="text-slate-400 font-sans text-xs">API Credits:</span>
+                      <span className="font-extrabold text-indigo-200">Ksh {Number(resellerAccount.api_credits || 0).toFixed(2)}</span>
                     </div>
                   </>
                 )}
@@ -2720,18 +2722,18 @@ const getChatDateHeader = (timestampStr: string) => {
                   <>
                     <button 
                       onClick={() => setIsBalanceModalOpen(true)}
-                      className="bg-indigo-500/10 hover:bg-indigo-500/20 transition-all cursor-pointer border border-indigo-500/20 px-4 py-1.5 rounded-full flex items-center gap-2 text-indigo-400 font-bold text-xs"
+                      className="bg-indigo-600/20 hover:bg-indigo-600/30 transition-all cursor-pointer border border-indigo-500/40 px-4 py-1.5 rounded-full flex items-center gap-2 text-indigo-300 font-bold text-xs shadow-[0_0_15px_rgba(99,102,241,0.15)]"
                     >
                       {isFetchingBalance ? (
-                        <div className="w-3 h-3 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+                        <div className="w-3.5 h-3.5 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
                       ) : (
-                        <Wallet className="w-3 h-3" />
+                        <Wallet className="w-3.5 h-3.5 text-indigo-400" />
                       )}
-                      <span className="font-mono">Ksh {gatewayBalance || '0.00'}</span>
+                      <span className="font-mono text-indigo-200">Ksh {gatewayBalance || '0.00'}</span>
                     </button>
-                    <div className="bg-emerald-600/10 border border-emerald-500/20 px-5 py-1.5 rounded-full hidden md:flex items-center gap-2 text-emerald-350 font-bold text-xs uppercase tracking-wider">
-                      <Activity className="w-4 h-4 text-emerald-400" />
-                      <span>Compliance Core Bindings: Active</span>
+                    <div className="bg-emerald-600/15 border border-emerald-500/30 px-5 py-1.5 rounded-full hidden md:flex items-center gap-2 text-emerald-300 font-bold text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                      <Activity className="w-4 h-4 text-emerald-400 animate-pulse" />
+                      <span>Compliance Core: Active</span>
                     </div>
                   </>
                 )}
@@ -2772,57 +2774,57 @@ const getChatDateHeader = (timestampStr: string) => {
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <div 
                           onClick={() => handleNavClick('dashboard')}
-                          className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between cursor-pointer hover:border-emerald-500/40 hover:bg-slate-800/50 transition-all duration-300 hover:scale-[1.02]"
+                          className="glass-panel p-6 rounded-3xl border border-indigo-500/20 glow-card flex items-center justify-between cursor-pointer hover:border-emerald-500/40 hover:scale-[1.02] shadow-xl transition-all duration-300"
                         >
                           <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Global Revenue</p>
-                            <h3 className="text-3xl font-black text-white font-mono">Ksh {adminAnalytics.global_revenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
-                            <p className="text-[10px] text-emerald-400 mt-1 font-bold">+12% Profit margins this week</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Global Revenue</p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-emerald-200 to-teal-300 bg-clip-text text-transparent">Ksh {adminAnalytics.global_revenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
+                            <p className="text-[11px] text-emerald-400 mt-1.5 font-bold">+12% Profit margins this week</p>
                           </div>
-                          <div className="p-4 bg-emerald-500/10 rounded-2xl text-emerald-400 border border-emerald-500/20">
-                            <Wallet className="w-6 h-6" />
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10">
+                            <Wallet className="w-7 h-7" />
                           </div>
                         </div>
 
                         <div 
                           onClick={() => handleNavClick('resellers')}
-                          className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between cursor-pointer hover:border-indigo-500/40 hover:bg-slate-800/50 transition-all duration-300 hover:scale-[1.02]"
+                          className="glass-panel p-6 rounded-3xl border border-indigo-500/20 glow-card flex items-center justify-between cursor-pointer hover:border-indigo-500/40 hover:scale-[1.02] shadow-xl transition-all duration-300"
                         >
                           <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Onboarded Channels</p>
-                            <h3 className="text-3xl font-black text-white font-mono">{adminAnalytics.onboarded_resellers} <span className="text-xs font-normal">Resellers</span></h3>
-                            <p className="text-[10px] text-gray-400 mt-1">Multi-level networks active</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Onboarded Channels</p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-indigo-200 to-violet-300 bg-clip-text text-transparent">{adminAnalytics.onboarded_resellers} <span className="text-xs font-semibold text-indigo-300">Resellers</span></h3>
+                            <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Multi-level networks active</p>
                           </div>
-                          <div className="p-4 bg-indigo-500/10 rounded-2xl text-indigo-400 border border-indigo-500/20">
-                            <Building className="w-6 h-6" />
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-500/20 to-violet-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-lg shadow-indigo-500/10">
+                            <Building className="w-7 h-7" />
                           </div>
                         </div>
 
                         <div 
                           onClick={() => handleNavClick('campaigns')}
-                          className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between cursor-pointer hover:border-blue-500/40 hover:bg-slate-800/50 transition-all duration-300 hover:scale-[1.02]"
+                          className="glass-panel p-6 rounded-3xl border border-indigo-500/20 glow-card flex items-center justify-between cursor-pointer hover:border-blue-500/40 hover:scale-[1.02] shadow-xl transition-all duration-300"
                         >
                           <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Global SMS Fired</p>
-                            <h3 className="text-3xl font-black text-white font-mono">{adminAnalytics.total_sms_fired.toLocaleString()}</h3>
-                            <p className="text-[10px] text-gray-400 mt-1">Total operational dispatches</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Global SMS Fired</p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-blue-200 to-cyan-300 bg-clip-text text-transparent">{adminAnalytics.total_sms_fired.toLocaleString()}</h3>
+                            <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Total operational dispatches</p>
                           </div>
-                          <div className="p-4 bg-blue-500/10 rounded-2xl text-blue-400 border border-blue-500/20">
-                            <Send className="w-6 h-6" />
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-500/20 to-cyan-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-lg shadow-blue-500/10">
+                            <Send className="w-7 h-7" />
                           </div>
                         </div>
 
                         <div 
                           onClick={() => handleNavClick('routing')}
-                          className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between cursor-pointer hover:border-violet-500/40 hover:bg-slate-800/50 transition-all duration-300 hover:scale-[1.02]"
+                          className="glass-panel p-6 rounded-3xl border border-indigo-500/20 glow-card flex items-center justify-between cursor-pointer hover:border-violet-500/40 hover:scale-[1.02] shadow-xl transition-all duration-300"
                         >
                           <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Peak Capacity</p>
-                            <h3 className="text-3xl font-black text-white font-mono">{adminAnalytics.peak_capacity_tps.toLocaleString()} <span className="text-xs font-normal">TPS</span></h3>
-                            <p className="text-[10px] text-emerald-400 mt-1 flex items-center gap-0.5 font-bold"><CheckCircle className="w-3 h-3 text-emerald-500" /> sub-200ms latency binds</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Peak Capacity</p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-violet-200 to-pink-300 bg-clip-text text-transparent">{adminAnalytics.peak_capacity_tps.toLocaleString()} <span className="text-xs font-semibold text-violet-300">TPS</span></h3>
+                            <p className="text-[11px] text-emerald-400 mt-1.5 flex items-center gap-1 font-bold"><CheckCircle className="w-3 h-3 text-emerald-400" /> sub-200ms latency binds</p>
                           </div>
-                          <div className="p-4 bg-violet-500/10 rounded-2xl text-violet-400 border border-violet-500/20">
-                            <Activity className="w-6 h-6" />
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-violet-500/20 to-pink-500/20 border border-violet-500/30 flex items-center justify-center text-violet-400 shadow-lg shadow-violet-500/10">
+                            <Activity className="w-7 h-7" />
                           </div>
                         </div>
                       </div>
@@ -3526,47 +3528,47 @@ const getChatDateHeader = (timestampStr: string) => {
                   {currentPage === 'dashboard' && (
                     <div className="space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
+                        <div className="glass-panel p-6 rounded-3xl border border-indigo-500/20 glow-card flex items-center justify-between shadow-xl transition-all duration-300 hover:scale-[1.02] hover:border-emerald-500/40">
                           <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Available API Credits</p>
-                            <h3 className="text-3xl font-black text-white font-mono">Ksh {Number(resellerAccount.api_credits).toFixed(2)}</h3>
-                            <p className="text-[10px] text-gray-400 mt-1">Used to fund sub-client balances</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Available API Credits</p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-emerald-200 to-teal-300 bg-clip-text text-transparent">Ksh {Number(resellerAccount.api_credits).toFixed(2)}</h3>
+                            <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Used to fund sub-client balances</p>
                           </div>
-                          <div className="p-4 bg-emerald-500/10 rounded-2xl text-emerald-400 border border-emerald-500/20">
-                            <Wallet className="w-6 h-6" />
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10">
+                            <Wallet className="w-7 h-7" />
                           </div>
                         </div>
 
-                        <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
+                        <div className="glass-panel p-6 rounded-3xl border border-indigo-500/20 glow-card flex items-center justify-between shadow-xl transition-all duration-300 hover:scale-[1.02] hover:border-indigo-500/40">
                           <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">My Markup Profits</p>
-                            <h3 className="text-3xl font-black text-white font-mono">Ksh 184.20</h3>
-                            <p className="text-[10px] text-emerald-400 mt-1 font-bold">+10% markup profit margin active</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">My Markup Profits</p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-indigo-200 to-violet-300 bg-clip-text text-transparent">Ksh 184.20</h3>
+                            <p className="text-[11px] text-emerald-400 mt-1.5 font-bold">+10% markup profit margin active</p>
                           </div>
-                          <div className="p-4 bg-indigo-500/10 rounded-2xl text-indigo-400 border border-indigo-500/20">
-                            <TrendingUp className="w-6 h-6" />
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-500/20 to-violet-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-lg shadow-indigo-500/10">
+                            <TrendingUp className="w-7 h-7" />
                           </div>
                         </div>
 
-                        <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
+                        <div className="glass-panel p-6 rounded-3xl border border-indigo-500/20 glow-card flex items-center justify-between shadow-xl transition-all duration-300 hover:scale-[1.02] hover:border-blue-500/40">
                           <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Active Client Tenants</p>
-                            <h3 className="text-3xl font-black text-white font-mono">{onboardedClients.length}</h3>
-                            <p className="text-[10px] text-gray-400 mt-1">Multi-tenant client accounts</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Active Client Tenants</p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-blue-200 to-cyan-300 bg-clip-text text-transparent">{onboardedClients.length}</h3>
+                            <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Multi-tenant client accounts</p>
                           </div>
-                          <div className="p-4 bg-blue-500/10 rounded-2xl text-blue-400 border border-blue-500/20">
-                            <Users className="w-6 h-6" />
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-500/20 to-cyan-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-lg shadow-blue-500/10">
+                            <Users className="w-7 h-7" />
                           </div>
                         </div>
 
-                        <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
+                        <div className="glass-panel p-6 rounded-3xl border border-indigo-500/20 glow-card flex items-center justify-between shadow-xl transition-all duration-300 hover:scale-[1.02] hover:border-violet-500/40">
                           <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Managed SMS Fired</p>
-                            <h3 className="text-3xl font-black text-white font-mono">14,290</h3>
-                            <p className="text-[10px] text-emerald-400 mt-1 flex items-center gap-0.5 font-bold"><CheckCircle className="w-3 h-3 text-emerald-500" /> sub-client SMS logged</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Managed SMS Fired</p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-violet-200 to-pink-300 bg-clip-text text-transparent">14,290</h3>
+                            <p className="text-[11px] text-emerald-400 mt-1.5 flex items-center gap-1 font-bold"><CheckCircle className="w-3 h-3 text-emerald-400" /> sub-client SMS logged</p>
                           </div>
-                          <div className="p-4 bg-violet-500/10 rounded-2xl text-violet-400 border border-violet-500/20">
-                            <Send className="w-6 h-6" />
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-violet-500/20 to-pink-500/20 border border-violet-500/30 flex items-center justify-center text-violet-400 shadow-lg shadow-violet-500/10">
+                            <Send className="w-7 h-7" />
                           </div>
                         </div>
                       </div>
@@ -3757,47 +3759,47 @@ const getChatDateHeader = (timestampStr: string) => {
                   {currentPage === 'dashboard' && user.role_tier === 'CLIENT' && (
                     <div className="space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
+                        <div className="glass-panel p-6 rounded-3xl border border-indigo-500/20 glow-card flex items-center justify-between shadow-xl transition-all duration-300 hover:scale-[1.02] hover:border-emerald-500/40">
                           <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Double-Entry Balance</p>
-                            <h3 className="text-3xl font-black text-white font-mono">Ksh {Number(clientAccount.wallet_balance).toFixed(2)}</h3>
-                            <p className="text-[10px] text-gray-400 mt-1">Credit Limit: ${Number(clientAccount.credit_limit).toFixed(2)}</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Wallet Balance</p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-emerald-200 to-teal-300 bg-clip-text text-transparent">Ksh {Number(clientAccount.wallet_balance).toFixed(2)}</h3>
+                            <p className="text-[11px] text-emerald-400 mt-1.5 font-bold flex items-center gap-1"><CheckCircle className="w-3 h-3 text-emerald-400" /> Credit Limit: ${Number(clientAccount.credit_limit).toFixed(2)}</p>
                           </div>
-                          <div className="p-4 bg-emerald-500/10 rounded-2xl text-emerald-400 border border-emerald-500/20">
-                            <Wallet className="w-6 h-6" />
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10">
+                            <Wallet className="w-7 h-7" />
                           </div>
                         </div>
 
-                        <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
+                        <div className="glass-panel p-6 rounded-3xl border border-indigo-500/20 glow-card flex items-center justify-between shadow-xl transition-all duration-300 hover:scale-[1.02] hover:border-indigo-500/40">
                           <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">System Throughput</p>
-                            <h3 className="text-3xl font-black text-white font-mono">10,240 <span className="text-xs font-normal">TPS</span></h3>
-                            <p className="text-[10px] text-emerald-400 mt-1 flex items-center gap-1 font-bold"><TrendingUp className="w-3 h-3" /> Baseline Peak Capacity</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">System Throughput</p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-indigo-200 to-violet-300 bg-clip-text text-transparent">10,240 <span className="text-xs font-semibold text-indigo-300">TPS</span></h3>
+                            <p className="text-[11px] text-indigo-300 mt-1.5 flex items-center gap-1 font-bold"><TrendingUp className="w-3 h-3 text-indigo-400" /> Baseline Peak Capacity</p>
                           </div>
-                          <div className="p-4 bg-indigo-500/10 rounded-2xl text-indigo-400 border border-indigo-500/20">
-                            <TrendingUp className="w-6 h-6" />
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-500/20 to-violet-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-lg shadow-indigo-500/10">
+                            <TrendingUp className="w-7 h-7" />
                           </div>
                         </div>
 
-                        <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
+                        <div className="glass-panel p-6 rounded-3xl border border-indigo-500/20 glow-card flex items-center justify-between shadow-xl transition-all duration-300 hover:scale-[1.02] hover:border-blue-500/40">
                           <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Outbound SMS Count</p>
-                            <h3 className="text-3xl font-black text-white font-mono">{clientAnalytics.total_sms.toLocaleString()}</h3>
-                            <p className="text-[10px] text-gray-400 mt-1">Total successfully sent</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Outbound SMS Count</p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-blue-200 to-cyan-300 bg-clip-text text-transparent">{clientAnalytics.total_sms.toLocaleString()}</h3>
+                            <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Total successfully sent</p>
                           </div>
-                          <div className="p-4 bg-blue-500/10 rounded-2xl text-blue-400 border border-blue-500/20">
-                            <Send className="w-6 h-6" />
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-500/20 to-cyan-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-lg shadow-blue-500/10">
+                            <Send className="w-7 h-7" />
                           </div>
                         </div>
 
-                        <div className="glass-panel p-6 rounded-2xl border border-slate-850 glow-card flex items-center justify-between">
+                        <div className="glass-panel p-6 rounded-3xl border border-indigo-500/20 glow-card flex items-center justify-between shadow-xl transition-all duration-300 hover:scale-[1.02] hover:border-violet-500/40">
                           <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Deliverability DLR</p>
-                            <h3 className="text-3xl font-black text-white font-mono">{clientAnalytics.delivery_rate}%</h3>
-                            <p className="text-[10px] text-emerald-400 mt-1 flex items-center gap-0.5"><CheckCircle className="w-3 h-3 text-emerald-500" /> Latency sub-200ms</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Deliverability DLR</p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-violet-200 to-pink-300 bg-clip-text text-transparent">{clientAnalytics.delivery_rate}%</h3>
+                            <p className="text-[11px] text-emerald-400 mt-1.5 flex items-center gap-1 font-bold"><CheckCircle className="w-3 h-3 text-emerald-400" /> Latency sub-200ms</p>
                           </div>
-                          <div className="p-4 bg-violet-500/10 rounded-2xl text-violet-400 border border-violet-500/20">
-                            <CheckCircle className="w-6 h-6" />
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-violet-500/20 to-pink-500/20 border border-violet-500/30 flex items-center justify-center text-violet-400 shadow-lg shadow-violet-500/10">
+                            <CheckCircle className="w-7 h-7" />
                           </div>
                         </div>
                       </div>
