@@ -797,24 +797,25 @@ const getChatDateHeader = (timestampStr: string) => {
 
   const handleBulkActionMessages = async (action: 'delete' | 'archive' | 'unarchive') => {
     if (selectedMessageKeys.length === 0) return;
-    const items = selectedMessageKeys.map(key => {
+    const activeKeys = [...selectedMessageKeys];
+    const items = activeKeys.map(key => {
       const [type, idStr] = key.split('_');
       return { id: parseInt(idStr), type };
     });
 
     try {
       await apiClient.post('/shortcodes/messages/bulk-action', { action, items });
-      toast.success(`Bulk ${action} completed`);
+      toast.success(`Bulk ${action} completed for ${items.length} message(s)`);
       setSelectedMessageKeys([]);
       setIsBulkSelectMode(false);
       
       setInboxChats(prev => prev.map(chat => {
         let updatedHistory = chat.history;
         if (action === 'delete') {
-          updatedHistory = updatedHistory.filter((m: any) => !selectedMessageKeys.includes(`${m.type}_${m.id}`));
+          updatedHistory = updatedHistory.filter((m: any) => !activeKeys.includes(`${m.type}_${m.id}`));
         } else {
           const isArchived = action === 'archive';
-          updatedHistory = updatedHistory.map((m: any) => selectedMessageKeys.includes(`${m.type}_${m.id}`) ? { ...m, is_archived: isArchived } : m);
+          updatedHistory = updatedHistory.map((m: any) => activeKeys.includes(`${m.type}_${m.id}`) ? { ...m, is_archived: isArchived } : m);
         }
         return { ...chat, history: updatedHistory };
       }));
@@ -6853,14 +6854,21 @@ const getChatDateHeader = (timestampStr: string) => {
                                     {/* Bulk Selection Toggle */}
                                     <button
                                       onClick={() => {
-                                        setIsBulkSelectMode(!isBulkSelectMode);
-                                        setSelectedMessageKeys([]);
+                                        if (isBulkSelectMode) {
+                                          setIsBulkSelectMode(false);
+                                          setSelectedMessageKeys([]);
+                                        } else {
+                                          setIsBulkSelectMode(true);
+                                          // Select all visible messages in current chat by default
+                                          const visibleKeys = visibleHistory.map((m: any) => `${m.type}_${m.id}`);
+                                          setSelectedMessageKeys(visibleKeys);
+                                        }
                                       }}
-                                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${isBulkSelectMode ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-900/80 text-gray-400 border-slate-800 hover:text-white'}`}
-                                      title="Toggle Bulk Select Mode"
+                                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${isBulkSelectMode ? 'bg-indigo-600 text-white border-indigo-500 shadow-md' : 'bg-slate-900/80 text-gray-400 border-slate-800 hover:text-white'}`}
+                                      title="Toggle Multi-Select Mode"
                                     >
                                       <CheckSquare className="w-3.5 h-3.5" />
-                                      <span>{isBulkSelectMode ? 'Cancel Select' : 'Select'}</span>
+                                      <span>{isBulkSelectMode ? 'Cancel Select' : 'Select Messages'}</span>
                                     </button>
 
                                     {/* Thread Archive */}
@@ -6884,28 +6892,47 @@ const getChatDateHeader = (timestampStr: string) => {
                                 </div>
 
                                 {/* Floating Bulk Action Bar */}
-                                {selectedMessageKeys.length > 0 && (
-                                  <div className="bg-indigo-950/90 border border-indigo-500/40 rounded-xl px-5 py-2.5 flex items-center justify-between mx-6 my-3 animate-fade-in shadow-xl z-20">
-                                    <span className="text-xs text-indigo-200 font-bold">
-                                      {selectedMessageKeys.length} message(s) selected
-                                    </span>
+                                {(selectedMessageKeys.length > 0 || isBulkSelectMode) && (
+                                  <div className="bg-slate-900/95 border border-indigo-500/40 rounded-xl px-5 py-2.5 flex items-center justify-between mx-6 my-3 animate-fade-in shadow-2xl z-20 backdrop-blur-md">
+                                    <div className="flex items-center gap-3">
+                                      <span className="text-xs text-indigo-200 font-bold">
+                                        {selectedMessageKeys.length} / {visibleHistory.length} selected
+                                      </span>
+                                      <button
+                                        onClick={() => {
+                                          if (selectedMessageKeys.length === visibleHistory.length) {
+                                            setSelectedMessageKeys([]);
+                                          } else {
+                                            setSelectedMessageKeys(visibleHistory.map((m: any) => `${m.type}_${m.id}`));
+                                          }
+                                        }}
+                                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded-lg text-[11px] font-bold transition-all border border-slate-700"
+                                      >
+                                        {selectedMessageKeys.length === visibleHistory.length ? 'Deselect All' : 'Select All'}
+                                      </button>
+                                    </div>
                                     <div className="flex items-center gap-2">
                                       <button
+                                        disabled={selectedMessageKeys.length === 0}
                                         onClick={() => handleBulkActionMessages(inboxTab === 'archived' ? 'unarchive' : 'archive')}
-                                        className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md"
+                                        className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md"
                                       >
                                         <Archive className="w-3.5 h-3.5" />
-                                        <span>{inboxTab === 'archived' ? 'Unarchive' : 'Archive'}</span>
+                                        <span>{inboxTab === 'archived' ? 'Unarchive Selected' : 'Archive Selected'}</span>
                                       </button>
                                       <button
+                                        disabled={selectedMessageKeys.length === 0}
                                         onClick={() => handleBulkActionMessages('delete')}
-                                        className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md"
+                                        className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md"
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
-                                        <span>Delete</span>
+                                        <span>Delete Selected</span>
                                       </button>
                                       <button
-                                        onClick={() => setSelectedMessageKeys([])}
+                                        onClick={() => {
+                                          setSelectedMessageKeys([]);
+                                          setIsBulkSelectMode(false);
+                                        }}
                                         className="px-2.5 py-1.5 text-gray-400 hover:text-white text-xs font-bold transition-colors"
                                       >
                                         Cancel
