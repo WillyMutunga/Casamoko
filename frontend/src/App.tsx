@@ -6716,13 +6716,16 @@ const getChatDateHeader = (timestampStr: string) => {
 
                   {/* III.Z TWO-WAY SMS INBOX */}
                   {currentPage === 'inbox' && (
-                    <div className="h-[75vh] flex bg-slate-950 border border-slate-800/80 rounded-2xl overflow-hidden animate-fade-in-up">
+                    <div className="h-[78vh] flex bg-slate-900/60 backdrop-blur-2xl border border-indigo-500/20 rounded-3xl overflow-hidden animate-fade-in-up shadow-[0_16px_50px_rgba(0,0,0,0.7),0_0_35px_rgba(99,102,241,0.1)]">
                       {/* Left Pane - Chats List */}
-                      <div className={`w-full md:w-80 border-r border-slate-800/80 flex flex-col bg-slate-900/40 ${selectedChatId ? 'hidden md:flex' : 'flex'}`}>
-                        <div className="p-4 border-b border-slate-800/60 bg-slate-950/80">
-                          <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-white font-bold tracking-wider flex items-center gap-2">
-                              <Inbox className="w-5 h-5 text-indigo-400" /> Shortcode Messenger
+                      <div className={`w-full md:w-80 border-r border-slate-800/80 flex flex-col bg-slate-950/60 ${selectedChatId ? 'hidden md:flex' : 'flex'}`}>
+                        <div className="p-4 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md">
+                          <div className="flex items-center justify-between mb-3.5">
+                            <h3 className="text-white font-black tracking-wide text-sm flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center shadow-md shadow-indigo-500/30">
+                                <Inbox className="w-4 h-4 text-white" />
+                              </div>
+                              <span className="bg-gradient-to-r from-indigo-200 via-white to-pink-200 bg-clip-text text-transparent">Shortcode Messenger</span>
                             </h3>
                             <button
                               onClick={() => {
@@ -6733,7 +6736,7 @@ const getChatDateHeader = (timestampStr: string) => {
                                   setIsThreadSelectMode(true);
                                 }
                               }}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border ${isThreadSelectMode ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm' : 'bg-slate-900 text-gray-400 border-slate-800 hover:text-white'}`}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${isThreadSelectMode ? 'bg-indigo-600 text-white border-indigo-400 shadow-md shadow-indigo-500/30' : 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/25 hover:border-indigo-400 font-bold'}`}
                               title="Toggle Multi-Select Conversations"
                             >
                               <CheckSquare className="w-3.5 h-3.5" />
@@ -6741,14 +6744,14 @@ const getChatDateHeader = (timestampStr: string) => {
                             </button>
                           </div>
                           {/* Inbox Tabs: Active vs Archived */}
-                          <div className="flex bg-slate-900 rounded-lg p-1 border border-slate-800">
+                          <div className="flex bg-slate-900/90 rounded-xl p-1 border border-slate-800 shadow-inner">
                             <button
                               onClick={() => {
                                 setInboxTab('active');
                                 setSelectedMessageKeys([]);
                                 setSelectedThreadMsisdns([]);
                               }}
-                              className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${inboxTab === 'active' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-white'}`}
+                              className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg transition-all ${inboxTab === 'active' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/30' : 'text-gray-400 hover:text-white'}`}
                             >
                               Active
                             </button>
@@ -6758,7 +6761,7 @@ const getChatDateHeader = (timestampStr: string) => {
                                 setSelectedMessageKeys([]);
                                 setSelectedThreadMsisdns([]);
                               }}
-                              className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${inboxTab === 'archived' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-white'}`}
+                              className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg transition-all ${inboxTab === 'archived' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/30' : 'text-gray-400 hover:text-white'}`}
                             >
                               Archived
                             </button>
@@ -7248,10 +7251,20 @@ const getChatDateHeader = (timestampStr: string) => {
                             );
                           })()
                         ) : (
-                          <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
-                            <MessageSquare className="w-16 h-16 mb-4 opacity-20 text-indigo-400" />
-                            <p className="font-medium">Select a conversation to start messaging</p>
-                            <span className="text-xs text-gray-600 mt-1">Press <kbd className="px-2 py-0.5 bg-slate-900 rounded border border-slate-800 font-mono text-[10px]">Esc</kbd> anytime to close active chat</span>
+                          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-950/30 via-slate-950 to-slate-950 relative overflow-hidden">
+                            <div className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-indigo-600/30 via-violet-600/30 to-pink-500/30 border border-indigo-500/40 flex items-center justify-center shadow-[0_0_50px_rgba(99,102,241,0.25)] mb-6 animate-pulse">
+                              <MessageSquare className="w-12 h-12 text-indigo-300 drop-shadow-[0_0_12px_rgba(165,180,252,0.8)]" />
+                            </div>
+                            <h3 className="text-2xl font-black text-white tracking-wide mb-2 bg-gradient-to-r from-indigo-200 via-white to-pink-200 bg-clip-text text-transparent">
+                              Shortcode Live Messenger
+                            </h3>
+                            <p className="text-xs text-slate-400 leading-relaxed mb-6 font-medium max-w-sm">
+                              Select any conversation on the left sidebar to view two-way SMS transcripts, send real-time replies, or manage message archives.
+                            </p>
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/90 border border-slate-800 text-xs text-indigo-300 shadow-inner">
+                              <kbd className="px-2 py-0.5 bg-indigo-600/40 text-indigo-200 rounded border border-indigo-500/40 font-mono text-[10px] font-extrabold">Esc</kbd>
+                              <span>Press anytime to close active chat</span>
+                            </div>
                           </div>
                         )}
                       </div>
