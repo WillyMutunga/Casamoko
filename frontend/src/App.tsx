@@ -157,6 +157,8 @@ export default function App() {
   const [inboxTab, setInboxTab] = useState<'active' | 'archived'>('active');
   const [isBulkSelectMode, setIsBulkSelectMode] = useState(false);
   const [selectedMessageKeys, setSelectedMessageKeys] = useState<string[]>([]);
+  const [isThreadSelectMode, setIsThreadSelectMode] = useState(false);
+  const [selectedThreadMsisdns, setSelectedThreadMsisdns] = useState<string[]>([]);
   
   // Auth Form State
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -840,6 +842,33 @@ const getChatDateHeader = (timestampStr: string) => {
       }
     } catch (err: any) {
       toast.error(`Failed to ${action} thread: ` + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleBulkManageThreads = async (action: 'delete' | 'archive' | 'unarchive') => {
+    if (selectedThreadMsisdns.length === 0) return;
+    const activeMsisdns = [...selectedThreadMsisdns];
+
+    try {
+      await apiClient.post('/shortcodes/threads/manage', { msisdns: activeMsisdns, action });
+      toast.success(`Bulk ${action} completed for ${activeMsisdns.length} conversation(s)`);
+      setSelectedThreadMsisdns([]);
+      setIsThreadSelectMode(false);
+
+      if (action === 'delete') {
+        setInboxChats(prev => prev.filter(c => !activeMsisdns.includes(c.msisdn)));
+        if (selectedChatId && activeMsisdns.includes(selectedChatId)) {
+          setSelectedChatId(null);
+        }
+      } else {
+        const isArchived = action === 'archive';
+        setInboxChats(prev => prev.map(c => activeMsisdns.includes(c.msisdn) ? {
+          ...c,
+          history: c.history.map((m: any) => ({ ...m, is_archived: isArchived }))
+        } : c));
+      }
+    } catch (err: any) {
+      toast.error(`Bulk ${action} failed: ` + (err.response?.data?.message || err.message));
     }
   };
 
@@ -6677,15 +6706,33 @@ const getChatDateHeader = (timestampStr: string) => {
                       {/* Left Pane - Chats List */}
                       <div className={`w-full md:w-80 border-r border-slate-800/80 flex flex-col bg-slate-900/40 ${selectedChatId ? 'hidden md:flex' : 'flex'}`}>
                         <div className="p-4 border-b border-slate-800/60 bg-slate-950/80">
-                          <h3 className="text-white font-bold tracking-wider flex items-center gap-2 mb-3">
-                            <Inbox className="w-5 h-5 text-indigo-400" /> Shortcode Messenger
-                          </h3>
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-white font-bold tracking-wider flex items-center gap-2">
+                              <Inbox className="w-5 h-5 text-indigo-400" /> Shortcode Messenger
+                            </h3>
+                            <button
+                              onClick={() => {
+                                if (isThreadSelectMode) {
+                                  setIsThreadSelectMode(false);
+                                  setSelectedThreadMsisdns([]);
+                                } else {
+                                  setIsThreadSelectMode(true);
+                                }
+                              }}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border ${isThreadSelectMode ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm' : 'bg-slate-900 text-gray-400 border-slate-800 hover:text-white'}`}
+                              title="Toggle Multi-Select Conversations"
+                            >
+                              <CheckSquare className="w-3.5 h-3.5" />
+                              <span>{isThreadSelectMode ? 'Cancel' : 'Select'}</span>
+                            </button>
+                          </div>
                           {/* Inbox Tabs: Active vs Archived */}
                           <div className="flex bg-slate-900 rounded-lg p-1 border border-slate-800">
                             <button
                               onClick={() => {
                                 setInboxTab('active');
                                 setSelectedMessageKeys([]);
+                                setSelectedThreadMsisdns([]);
                               }}
                               className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${inboxTab === 'active' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-white'}`}
                             >
@@ -6695,6 +6742,7 @@ const getChatDateHeader = (timestampStr: string) => {
                               onClick={() => {
                                 setInboxTab('archived');
                                 setSelectedMessageKeys([]);
+                                setSelectedThreadMsisdns([]);
                               }}
                               className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${inboxTab === 'archived' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-white'}`}
                             >
@@ -6719,85 +6767,157 @@ const getChatDateHeader = (timestampStr: string) => {
                               }
                             });
 
-                            if (filteredChats.length === 0) {
-                              return (
-                                <div className="p-8 text-center text-gray-500 text-xs font-medium">
-                                  No {inboxTab} conversations found.
-                                </div>
-                              );
-                            }
-
-                            return chatsByDate.map((group, gIdx) => (
-                              <div key={gIdx}>
-                                {/* Date Section Header Badge in Conversation List */}
-                                <div className="sticky top-0 bg-slate-950/90 backdrop-blur-md px-4 py-1.5 text-[10px] font-extrabold text-indigo-300 border-y border-slate-800/60 uppercase tracking-wider flex items-center gap-1.5 z-10 shadow-sm">
-                                  <Calendar className="w-3 h-3 text-indigo-400" />
-                                  <span>{group.dateHeader}</span>
-                                </div>
-
-                                {group.chats.map(chat => (
-                                  <div
-                                    key={chat.id}
-                                    className={`w-full p-3.5 flex items-center gap-3 border-b border-slate-800/40 transition-all text-left group relative ${selectedChatId === chat.id ? 'bg-indigo-600/10 border-l-2 border-l-indigo-500' : 'hover:bg-slate-800/40'}`}
-                                  >
-                                    {/* Main Card Body Clickable */}
-                                    <div
-                                      onClick={async () => {
-                                        setSelectedChatId(chat.id);
-                                        setSelectedMessageKeys([]);
-                                        if (chat.unread) {
-                                          setInboxChats(prev => prev.map(c => c.id === chat.id ? { ...c, unread: false } : c));
-                                          try {
-                                            await apiClient.post('/shortcodes/read', { msisdn: chat.msisdn });
-                                          } catch (e) {
-                                            console.error('Failed to mark thread as read', e);
-                                          }
-                                        }
-                                      }}
-                                      className="flex-1 flex items-center gap-3 min-w-0 cursor-pointer"
-                                    >
-                                      <div className="w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0 border border-indigo-500/30">
-                                        <User className="w-4 h-4 text-indigo-300" />
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <div className="flex justify-between items-center mb-0.5">
-                                          <h4 className={`text-xs truncate ${chat.unread ? 'text-white font-extrabold' : 'text-gray-300 font-bold'}`}>{chat.msisdn}</h4>
-                                          <span className="text-[9px] text-gray-500">{chat.time}</span>
-                                        </div>
-                                        <p className={`text-[11px] truncate ${chat.unread ? 'text-indigo-300 font-semibold' : 'text-gray-400'}`}>{chat.lastMessage}</p>
-                                      </div>
-                                      {chat.unread && (
-                                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 flex shrink-0 shadow-[0_0_8px_rgba(99,102,241,0.8)]"></div>
-                                      )}
-                                    </div>
-
-                                    {/* Direct Thread Actions on Hover/Touch */}
-                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                            return (
+                              <>
+                                {/* Floating Thread Toolbar in Select Mode */}
+                                {isThreadSelectMode && (
+                                  <div className="sticky top-0 z-20 bg-slate-900/95 backdrop-blur-md border-b border-indigo-500/40 p-3 shadow-xl flex items-center justify-between text-xs">
+                                    <div className="flex items-center gap-2">
                                       <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleManageThread(chat.msisdn, inboxTab === 'archived' ? 'unarchive' : 'archive');
+                                        onClick={() => {
+                                          const allMsisdns = filteredChats.map(c => c.msisdn);
+                                          if (selectedThreadMsisdns.length === allMsisdns.length) {
+                                            setSelectedThreadMsisdns([]);
+                                          } else {
+                                            setSelectedThreadMsisdns(allMsisdns);
+                                          }
                                         }}
-                                        className="p-1.5 rounded-lg bg-slate-900 hover:bg-indigo-950/80 text-gray-400 hover:text-indigo-300 border border-slate-800 transition-all"
-                                        title={inboxTab === 'archived' ? 'Unarchive thread' : 'Archive thread'}
+                                        className="text-[11px] font-extrabold text-indigo-300 hover:underline"
+                                      >
+                                        {selectedThreadMsisdns.length === filteredChats.length ? 'Deselect All' : 'Select All'}
+                                      </button>
+                                      <span className="text-[10px] text-indigo-200 font-bold">
+                                        ({selectedThreadMsisdns.length}/{filteredChats.length})
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                      <button
+                                        disabled={selectedThreadMsisdns.length === 0}
+                                        onClick={() => handleBulkManageThreads(inboxTab === 'archived' ? 'unarchive' : 'archive')}
+                                        className="p-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-30 transition-all shadow-sm"
+                                        title={inboxTab === 'archived' ? "Unarchive Selected Conversations" : "Archive Selected Conversations"}
                                       >
                                         <Archive className="w-3.5 h-3.5" />
                                       </button>
                                       <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleManageThread(chat.msisdn, 'delete');
-                                        }}
-                                        className="p-1.5 rounded-lg bg-slate-900 hover:bg-rose-950/80 text-gray-400 hover:text-rose-400 border border-slate-800 transition-all"
-                                        title="Delete thread"
+                                        disabled={selectedThreadMsisdns.length === 0}
+                                        onClick={() => handleBulkManageThreads('delete')}
+                                        className="p-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white disabled:opacity-30 transition-all shadow-sm"
+                                        title="Delete Selected Conversations"
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
                                       </button>
                                     </div>
                                   </div>
-                                ))}
-                              </div>
-                            ));
+                                )}
+
+                                {filteredChats.length === 0 ? (
+                                  <div className="p-8 text-center text-gray-500 text-xs font-medium">
+                                    No {inboxTab} conversations found.
+                                  </div>
+                                ) : (
+                                  chatsByDate.map((group, gIdx) => (
+                                    <div key={gIdx}>
+                                      {/* Date Section Header Badge in Conversation List */}
+                                      <div className="sticky top-0 bg-slate-950/90 backdrop-blur-md px-4 py-1.5 text-[10px] font-extrabold text-indigo-300 border-y border-slate-800/60 uppercase tracking-wider flex items-center gap-1.5 z-10 shadow-sm">
+                                        <Calendar className="w-3 h-3 text-indigo-400" />
+                                        <span>{group.dateHeader}</span>
+                                      </div>
+
+                                      {group.chats.map(chat => {
+                                        const isThreadSelected = selectedThreadMsisdns.includes(chat.msisdn);
+
+                                        return (
+                                          <div
+                                            key={chat.id}
+                                            className={`w-full p-3.5 flex items-center gap-3 border-b border-slate-800/40 transition-all text-left group relative ${isThreadSelected ? 'bg-indigo-600/20 border-l-2 border-l-indigo-400' : selectedChatId === chat.id ? 'bg-indigo-600/10 border-l-2 border-l-indigo-500' : 'hover:bg-slate-800/40'}`}
+                                          >
+                                            {/* Thread Multi-Select Checkbox */}
+                                            {isThreadSelectMode && (
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setSelectedThreadMsisdns(prev => 
+                                                    prev.includes(chat.msisdn) ? prev.filter(m => m !== chat.msisdn) : [...prev, chat.msisdn]
+                                                  );
+                                                }}
+                                                className={`w-4 h-4 rounded border flex items-center justify-center transition-all shrink-0 ${isThreadSelected ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-slate-700 bg-slate-900 hover:border-slate-500'}`}
+                                              >
+                                                {isThreadSelected && <CheckSquare className="w-3 h-3" />}
+                                              </button>
+                                            )}
+
+                                            {/* Main Card Body Clickable */}
+                                            <div
+                                              onClick={async () => {
+                                                if (isThreadSelectMode) {
+                                                  setSelectedThreadMsisdns(prev => 
+                                                    prev.includes(chat.msisdn) ? prev.filter(m => m !== chat.msisdn) : [...prev, chat.msisdn]
+                                                  );
+                                                  return;
+                                                }
+
+                                                setSelectedChatId(chat.id);
+                                                setSelectedMessageKeys([]);
+                                                if (chat.unread) {
+                                                  setInboxChats(prev => prev.map(c => c.id === chat.id ? { ...c, unread: false } : c));
+                                                  try {
+                                                    await apiClient.post('/shortcodes/read', { msisdn: chat.msisdn });
+                                                  } catch (e) {
+                                                    console.error('Failed to mark thread as read', e);
+                                                  }
+                                                }
+                                              }}
+                                              className="flex-1 flex items-center gap-3 min-w-0 cursor-pointer"
+                                            >
+                                              <div className="w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0 border border-indigo-500/30">
+                                                <User className="w-4 h-4 text-indigo-300" />
+                                              </div>
+                                              <div className="flex-1 min-w-0">
+                                                <div className="flex justify-between items-center mb-0.5">
+                                                  <h4 className={`text-xs truncate ${chat.unread ? 'text-white font-extrabold' : 'text-gray-300 font-bold'}`}>{chat.msisdn}</h4>
+                                                  <span className="text-[9px] text-gray-500">{chat.time}</span>
+                                                </div>
+                                                <p className={`text-[11px] truncate ${chat.unread ? 'text-indigo-300 font-semibold' : 'text-gray-400'}`}>{chat.lastMessage}</p>
+                                              </div>
+                                              {chat.unread && (
+                                                <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 flex shrink-0 shadow-[0_0_8px_rgba(99,102,241,0.8)]"></div>
+                                              )}
+                                            </div>
+
+                                            {/* Direct Thread Actions on Hover/Touch */}
+                                            {!isThreadSelectMode && (
+                                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                                <button
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleManageThread(chat.msisdn, inboxTab === 'archived' ? 'unarchive' : 'archive');
+                                                  }}
+                                                  className="p-1.5 rounded-lg bg-slate-900 hover:bg-indigo-950/80 text-gray-400 hover:text-indigo-300 border border-slate-800 transition-all"
+                                                  title={inboxTab === 'archived' ? 'Unarchive thread' : 'Archive thread'}
+                                                >
+                                                  <Archive className="w-3.5 h-3.5" />
+                                                </button>
+                                                <button
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleManageThread(chat.msisdn, 'delete');
+                                                  }}
+                                                  className="p-1.5 rounded-lg bg-slate-900 hover:bg-rose-950/80 text-gray-400 hover:text-rose-400 border border-slate-800 transition-all"
+                                                  title="Delete thread"
+                                                >
+                                                  <Trash2 className="w-3.5 h-3.5" />
+                                                </button>
+                                              </div>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  ))
+                                )}
+                              </>
+                            );
                           })()}
                         </div>
                       </div>

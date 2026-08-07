@@ -770,25 +770,40 @@ class ShortcodeController extends Controller
         $user = $request->user();
         if (!$user) return response()->json(['error' => 'UNAUTHENTICATED'], 401);
 
-        $msisdn = preg_replace('/[^0-9]/', '', $request->input('msisdn'));
-        if (str_starts_with($msisdn, '0')) {
-            $msisdn = '254' . substr($msisdn, 1);
-        }
         $action = $request->input('action'); // 'delete', 'archive', 'unarchive'
-        $msisdnHash = Contact::hashMsisdn($msisdn);
+        
+        $msisdnsInput = $request->input('msisdns');
+        if (is_array($msisdnsInput)) {
+            $msisdns = array_values(array_filter(array_map(function($m) {
+                $clean = preg_replace('/[^0-9]/', '', (string)$m);
+                return str_starts_with($clean, '0') ? '254' . substr($clean, 1) : $clean;
+            }, $msisdnsInput)));
+        } else {
+            $clean = preg_replace('/[^0-9]/', '', (string)$request->input('msisdn', ''));
+            if (str_starts_with($clean, '0')) {
+                $clean = '254' . substr($clean, 1);
+            }
+            $msisdns = array_filter([$clean]);
+        }
+
+        if (empty($msisdns)) {
+            return response()->json(['error' => 'No valid MSISDNs provided'], 400);
+        }
+
+        $hashes = array_map(fn($m) => Contact::hashMsisdn($m), $msisdns);
 
         if ($action === 'delete') {
-            IncomingMessage::where('msisdn', $msisdn)->update(['is_deleted' => true]);
-            MessageRecord::where('msisdn_hash', $msisdnHash)->update(['is_deleted' => true]);
+            IncomingMessage::whereIn('msisdn', $msisdns)->update(['is_deleted' => true]);
+            MessageRecord::whereIn('msisdn_hash', $hashes)->update(['is_deleted' => true]);
         } elseif ($action === 'archive') {
-            IncomingMessage::where('msisdn', $msisdn)->update(['is_archived' => true]);
-            MessageRecord::where('msisdn_hash', $msisdnHash)->update(['is_archived' => true]);
+            IncomingMessage::whereIn('msisdn', $msisdns)->update(['is_archived' => true]);
+            MessageRecord::whereIn('msisdn_hash', $hashes)->update(['is_archived' => true]);
         } elseif ($action === 'unarchive') {
-            IncomingMessage::where('msisdn', $msisdn)->update(['is_archived' => false]);
-            MessageRecord::where('msisdn_hash', $msisdnHash)->update(['is_archived' => false]);
+            IncomingMessage::whereIn('msisdn', $msisdns)->update(['is_archived' => false]);
+            MessageRecord::whereIn('msisdn_hash', $hashes)->update(['is_archived' => false]);
         }
 
-        return response()->json(['status' => 'SUCCESS', 'message' => "Thread {$action}d successfully."]);
+        return response()->json(['status' => 'SUCCESS', 'message' => "Thread(s) {$action}d successfully."]);
     }
 
     /**
