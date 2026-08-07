@@ -2509,6 +2509,13 @@ const getChatDateHeader = (timestampStr: string) => {
                     <Send className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Campaigns & Queue</span>
                   </button>
+                  <button 
+                    onClick={() => handleNavClick('inbox')} 
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'inbox' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                  >
+                    <Inbox className="w-5 h-5 shrink-0" />
+                    <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Shortcode Messenger</span>
+                  </button>
                 </>
               )}
 
@@ -2535,6 +2542,13 @@ const getChatDateHeader = (timestampStr: string) => {
                   >
                     <Send className="w-5 h-5 shrink-0" />
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Campaigns & Queue</span>
+                  </button>
+                  <button 
+                    onClick={() => handleNavClick('inbox')} 
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'inbox' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-slate-900/60 hover:text-white'}`}
+                  >
+                    <Inbox className="w-5 h-5 shrink-0" />
+                    <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Shortcode Messenger</span>
                   </button>
                 </>
               )}
