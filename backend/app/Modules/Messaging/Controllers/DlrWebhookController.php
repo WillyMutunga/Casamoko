@@ -117,4 +117,29 @@ class DlrWebhookController extends Controller
             'record_id' => $record->id
         ]);
     }
+
+    /**
+     * Safaricom DSDP UAT Delivery Report Sandbox Webhook
+     */
+    public function handleUATDR(Request $request)
+    {
+        $payload = $request->all();
+        Log::info('=== SAFARICOM DSDP UAT DLR RECEIVED ===', [
+            'ip' => $request->ip(),
+            'headers' => $request->headers->all(),
+            'payload' => $payload
+        ]);
+
+        return response()->json([
+            'requestId' => (string) ($payload['requestId'] ?? time()),
+            'responseId' => 'uat_dr_' . time(),
+            'responseTimeStamp' => date('YmdHis'),
+            'operation' => 'CP_NOTIFICATION',
+            'responseParam' => [
+                'status' => '0',
+                'statusCode' => '0000',
+                'description' => 'Success'
+            ]
+        ]);
+    }
 }

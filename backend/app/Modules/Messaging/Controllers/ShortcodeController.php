@@ -995,4 +995,82 @@ class ShortcodeController extends Controller
             \Illuminate\Support\Facades\Log::error('Auto-migration error: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Safaricom DSDP UAT Sandbox Webhook Handler (MO / Inbound SMS)
+     */
+    public function handleSafaricomUATMO(Request $request)
+    {
+        $payload = $request->all();
+        $requestId = $payload['requestId'] ?? (string) time();
+
+        Log::info('=== SAFARICOM DSDP UAT MO RECEIVED ===', [
+            'ip' => $request->ip(),
+            'headers' => $request->headers->all(),
+            'payload' => $payload
+        ]);
+
+        $acknowledgement = response()->json([
+            'requestId' => (string) $requestId,
+            'responseId' => 'uat_cp_' . $requestId,
+            'responseTimeStamp' => date('YmdHis'),
+            'operation' => 'CP_NOTIFICATION',
+            'responseParam' => [
+                'status' => '0',
+                'statusCode' => '0000',
+                'description' => 'UAT Test Acknowledgement Success'
+            ]
+        ]);
+
+        $acknowledgement->send();
+
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        } else {
+            while (ob_get_level() > 0) {
+                ob_end_flush();
+            }
+            flush();
+        }
+
+        // Process MO in UAT sandbox mode safely
+        try {
+            $shortcodeText = $payload['shortcode'] ?? '20606';
+            $msisdn = $payload['msisdn'] ?? $payload['senderAddress'] ?? '254700000000';
+            $messageText = $payload['message'] ?? $payload['text'] ?? 'UAT TEST MESSAGE';
+            $linkId = $payload['linkId'] ?? $payload['requestId'] ?? null;
+
+            $this->processMO($shortcodeText, $msisdn, $messageText, $request->ip(), null, $linkId);
+        } catch (\Exception $e) {
+            Log::error("Safaricom UAT processMO Error: " . $e->getMessage());
+        }
+
+        exit;
+    }
+
+    /**
+     * Helper route to inspect recent Safaricom UAT logs directly from admin UI / API
+     */
+    public function getUatLogs()
+    {
+        $logPath = storage_path('logs/laravel.log');
+        if (!file_exists($logPath)) {
+            return response()->json(['status' => 'EMPTY', 'logs' => []]);
+        }
+
+        $lines = file($logPath);
+        $uatLogs = [];
+        foreach (array_reverse($lines) as $line) {
+            if (str_contains($line, 'SAFARICOM DSDP UAT')) {
+                $uatLogs[] = $line;
+                if (count($uatLogs) >= 50) break;
+            }
+        }
+
+        return response()->json([
+            'status' => 'SUCCESS',
+            'count' => count($uatLogs),
+            'logs' => array_reverse($uatLogs)
+        ]);
+    }
 }

@@ -297,6 +297,11 @@ Route::post('/inbound-webhook', [\App\Modules\Messaging\Controllers\InboundWebho
 Route::post('/mo-webhook', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'handleSafaricomMO']);
 Route::post('/shortcode/mo', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'handleSafaricomMO']);
 
+// Dedicated Safaricom DSDP UAT Sandbox Webhook Endpoints
+Route::post('/shortcode/uat/mo', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'handleSafaricomUATMO']);
+Route::post('/shortcode/uat/dr', [\App\Modules\Messaging\Controllers\DlrWebhookController::class, 'handleUATDR']);
+Route::get('/shortcode/uat/logs', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'getUatLogs']);
+
 Route::get('/system/debug-messages', function() {
     return \App\Modules\Messaging\Models\IncomingMessage::orderBy('id', 'desc')->take(5)->get();
 });
