@@ -1097,9 +1097,9 @@ const getChatDateHeader = (timestampStr: string) => {
     if (!token) return;
     setManagerGroupLoading(true);
     try {
-      const res = await apiClient.get(`/client/contacts?list_id=${groupId}`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await apiClient.get(`/client/contacts?list_id=${groupId}&per_page=10000`, { headers: { Authorization: `Bearer ${token}` } });
       if (res.data.contacts) {
-        setManagerGroupContacts(res.data.contacts.data);
+        setManagerGroupContacts(res.data.contacts.data || []);
       }
     } catch (err) {
       console.error(err);

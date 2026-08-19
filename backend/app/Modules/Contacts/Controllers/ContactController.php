@@ -94,6 +94,9 @@ class ContactController extends Controller
 
     public function importContacts(Request $request, $listId)
     {
+        @set_time_limit(300);
+        @ini_set('memory_limit', '512M');
+
         $request->validate([
             'contacts' => 'required|array',
             'contacts.*.msisdn' => 'required|string',
@@ -108,24 +111,50 @@ class ContactController extends Controller
                            ->firstOrFail();
 
         $importedCount = 0;
+        $now = now()->toDateTimeString();
 
-        foreach ($request->contacts as $contactData) {
-            $contact = Contact::firstOrCreate(
-                [
-                    'client_account_id' => $clientAccountId,
-                    'msisdn' => $contactData['msisdn'],
-                ],
-                [
-                    'name' => $contactData['name'] ?? 'Subscriber',
-                    'metadata' => $contactData['metadata'] ?? [],
-                ]
-            );
+        // Process in chunks of 500 for high-performance bulk database transactions
+        $chunks = array_chunk($request->contacts, 500);
 
-            $list->contacts()->syncWithoutDetaching([$contact->id]);
-            $importedCount++;
+        foreach ($chunks as $chunk) {
+            DB::transaction(function () use ($chunk, $clientAccountId, $list, &$importedCount, $now) {
+                $contactIds = [];
+
+                foreach ($chunk as $contactData) {
+                    $msisdn = trim($contactData['msisdn']);
+                    if (empty($msisdn)) continue;
+
+                    $name = !empty($contactData['name']) ? $contactData['name'] : 'Subscriber';
+
+                    $contact = Contact::firstOrCreate(
+                        [
+                            'client_account_id' => $clientAccountId,
+                            'msisdn' => $msisdn,
+                        ],
+                        [
+                            'name' => $name,
+                            'metadata' => $contactData['metadata'] ?? [],
+                        ]
+                    );
+
+                    $contactIds[] = $contact->id;
+                    $importedCount++;
+                }
+
+                if (!empty($contactIds)) {
+                    $pivotRows = array_map(function ($cId) use ($list, $now) {
+                        return [
+                            'contact_list_id' => $list->id,
+                            'contact_id' => $cId,
+                            'created_at' => $now,
+                            'updated_at' => $now
+                        ];
+                    }, $contactIds);
+
+                    DB::table('contact_list_members')->insertOrIgnore($pivotRows);
+                }
+            });
         }
-
-        // The contact_count is now dynamically appended by the ContactList model accessor
 
         return response()->json([
             'status' => 'SUCCESS',
@@ -141,6 +170,8 @@ class ContactController extends Controller
     {
         $clientAccountId = $request->user()->client_account_id;
         $listId = $request->query('list_id');
+        $perPage = (int) $request->query('per_page', 2000);
+        if ($perPage <= 0) $perPage = 2000;
         
         $query = DB::table('contact_list_members')
             ->join('contacts', 'contacts.id', '=', 'contact_list_members.contact_id')
@@ -151,7 +182,7 @@ class ContactController extends Controller
             $query->where('contact_list_members.contact_list_id', $listId);
         }
         
-        $contacts = $query->paginate(100);
+        $contacts = $query->paginate($perPage);
         
         return response()->json([
             'contacts' => $contacts
