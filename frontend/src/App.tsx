@@ -4997,6 +4997,7 @@ const getChatDateHeader = (timestampStr: string) => {
                         <thead className="bg-slate-900/60 uppercase tracking-widest text-[10px] text-gray-400">
                           <tr>
                             <th className="px-6 py-4 rounded-l-xl">Group Name</th>
+                            <th className="px-6 py-4">Total Contacts</th>
                             <th className="px-6 py-4">Description</th>
                             <th className="px-6 py-4">Source</th>
                             <th className="px-6 py-4">Tags</th>
@@ -5014,6 +5015,11 @@ const getChatDateHeader = (timestampStr: string) => {
                               }}
                             >
                               <td className="px-6 py-4 font-bold text-white">{g.name}</td>
+                              <td className="px-6 py-4">
+                                <span className="px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full text-xs font-mono font-bold">
+                                  {g.contact_count ?? 0} Contacts
+                                </span>
+                              </td>
                               <td className="px-6 py-4 text-xs text-gray-400">{g.description}</td>
                               <td className="px-6 py-4 text-xs text-indigo-300">{g.subscription_source}</td>
                               <td className="px-6 py-4 flex gap-1.5 flex-wrap">
@@ -7704,6 +7710,9 @@ const getChatDateHeader = (timestampStr: string) => {
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <Users className="w-5 h-5 text-indigo-400" />
                   Manage Group: {selectedManagerGroup.name}
+                  <span className="ml-2 px-3 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-full text-xs font-mono font-bold">
+                    {managerGroupContacts.length} Contacts
+                  </span>
                 </h2>
               </div>
               <button onClick={() => setSelectedManagerGroup(null)} className="p-2 text-gray-400 hover:text-white bg-slate-800 rounded-full">
@@ -7779,7 +7788,13 @@ const getChatDateHeader = (timestampStr: string) => {
 
               {/* Contact List Table */}
               <div>
-                <h4 className="font-bold text-white mb-4 text-sm">Contacts in this Group</h4>
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="font-bold text-white text-sm">Contacts in this Group</h4>
+                  <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-emerald-400" />
+                    Total Subscribers: {managerGroupContacts.length}
+                  </span>
+                </div>
                 {managerGroupLoading ? (
                   <div className="flex justify-center items-center py-8">
                     <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
