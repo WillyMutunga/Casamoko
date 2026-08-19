@@ -142,12 +142,10 @@ class ContactController extends Controller
                 }
 
                 if (!empty($contactIds)) {
-                    $pivotRows = array_map(function ($cId) use ($list, $now) {
+                    $pivotRows = array_map(function ($cId) use ($list) {
                         return [
                             'contact_list_id' => $list->id,
-                            'contact_id' => $cId,
-                            'created_at' => $now,
-                            'updated_at' => $now
+                            'contact_id' => $cId
                         ];
                     }, $contactIds);
 
