@@ -452,6 +452,9 @@ class CampaignController extends Controller
         }
 
         $status = $request->input('status');
+        $perPage = (int) $request->input('per_page', 2000);
+        if ($perPage <= 0) $perPage = 2000;
+
         $query = \App\Modules\Messaging\Models\MessageRecord::with(['contact', 'route'])
             ->where('campaign_id', $campaign->id);
         
@@ -459,7 +462,7 @@ class CampaignController extends Controller
             $query->where('status', $status);
         }
 
-        $logs = $query->orderBy('id', 'desc')->paginate(50);
+        $logs = $query->orderBy('id', 'desc')->paginate($perPage);
         $logs->getCollection()->transform(function ($log) {
             return [
                 'id' => $log->id,

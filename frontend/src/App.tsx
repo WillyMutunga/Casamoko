@@ -4227,9 +4227,9 @@ const getChatDateHeader = (timestampStr: string) => {
                                     setCampaignLogsLoading(true);
                                     if (token) {
                                       try {
-                                        const res = await apiClient.get(`/campaigns/${camp.id}/logs`, { headers: { Authorization: `Bearer ${token}` } });
+                                        const res = await apiClient.get(`/campaigns/${camp.id}/logs?per_page=10000`, { headers: { Authorization: `Bearer ${token}` } });
                                         if (res.data.logs) {
-                                          setCampaignLogsData(res.data.logs.data);
+                                          setCampaignLogsData(res.data.logs.data || []);
                                         }
                                       } catch (err) { console.error(err); }
                                     }
@@ -7849,6 +7849,9 @@ const getChatDateHeader = (timestampStr: string) => {
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <Send className="w-5 h-5 text-indigo-400" />
                   Delivery Report: {viewingCampaignLogs.name}
+                  <span className="ml-3 px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-mono font-bold">
+                    {campaignLogsData.length} Messages Logged
+                  </span>
                 </h2>
                 <p className="text-xs text-gray-400 mt-1">Outbox transparent log viewer</p>
               </div>
