@@ -14,8 +14,11 @@ class AnalyticsController extends Controller
 {
     public function adminDashboard(Request $request)
     {
-        // 1. Gross Revenue (Total charged to clients for SMS dispatches)
-        $grossRevenue = abs(WalletTransaction::whereIn('type', ['SMS_DISPATCH', 'BULK_CAMPAIGN_DISPATCH'])->sum('amount'));
+        // 1. Gross Revenue (Catch all debits or message record prices)
+        $grossRevenue = abs(WalletTransaction::where('amount', '<', 0)->sum('amount'));
+        if ($grossRevenue <= 0) {
+            $grossRevenue = (float) MessageRecord::sum('price');
+        }
 
         // 2. Calculate Total Wholesale Carrier Cost
         $totalCarrierCost = DB::table('message_records')
