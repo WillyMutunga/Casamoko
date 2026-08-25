@@ -186,8 +186,8 @@ class ShortcodeController extends Controller
         $linkId = null;
         $requestId = $payload['requestId'] ?? (string) time();
 
-        // Safaricom DSDP v1.1 CP_NOTIFICATION / NOTIFY_LINKID / INTERACTIVE parser
-        if (isset($payload['operation']) && in_array($payload['operation'], ['CP_NOTIFICATION', 'INTERACTIVE'])) {
+        // Safaricom DSDP v1.1 CP_NOTIFICATION / PAYMENT / NOTIFY_LINKID / INTERACTIVE parser
+        if (isset($payload['operation']) && in_array(strtoupper($payload['operation']), ['CP_NOTIFICATION', 'INTERACTIVE', 'PAYMENT'])) {
             $data = $payload['requestParam']['data'] ?? [];
             foreach ($data as $item) {
                 if (!isset($item['name']) || !isset($item['value'])) continue;
@@ -1081,5 +1081,60 @@ class ShortcodeController extends Controller
             'count' => count($uatLogs),
             'logs' => array_reverse($uatLogs)
         ]);
+    }
+
+    /**
+     * Trigger outbound Payment Request to Safaricom SDP Payment API (Section 2.7 Payment)
+     */
+    public function triggerPaymentRequest(Request $request)
+    {
+        $offerCode = $request->input('offer_code', '001234590');
+        $msisdn = $request->input('msisdn', '254712345678');
+        $chargeAmount = $request->input('charge_amount', '10.0');
+        $cpId = $request->input('cp_id', '73');
+        $isTestbed = $request->input('is_testbed', true);
+
+        $endpoint = $isTestbed 
+            ? 'https://dtsvc.safaricom.com:8480/api/public/SDP/paymentRequest'
+            : 'https://dsvc.safaricom.com:9480/api/public/SDP/paymentRequest';
+
+        $payload = [
+            'requestId' => 'CASAMOKO' . time() . rand(1000, 9999),
+            'channel' => 'APIGW',
+            'requestParam' => [
+                'data' => [
+                    ['name' => 'OfferCode', 'value' => (string) $offerCode],
+                    ['name' => 'Msisdn', 'value' => (string) $msisdn],
+                    ['name' => 'ChargeAmount', 'value' => (string) $chargeAmount],
+                    ['name' => 'CpId', 'value' => (string) $cpId]
+                ]
+            ],
+            'operation' => 'Payment'
+        ];
+
+        Log::info('=== TRIGGERING SAFARICOM SDP PAYMENT REQUEST ===', [
+            'endpoint' => $endpoint,
+            'payload' => $payload
+        ]);
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(30)
+                ->withHeaders(['Content-Type' => 'application/json'])
+                ->post($endpoint, $payload);
+
+            return response()->json([
+                'status' => 'SUCCESS',
+                'endpoint_used' => $endpoint,
+                'request_payload' => $payload,
+                'safaricom_response' => $response->json() ?? $response->body()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'ERROR',
+                'endpoint_used' => $endpoint,
+                'request_payload' => $payload,
+                'error_message' => $e->getMessage()
+            ], 500);
+        }
     }
 }
