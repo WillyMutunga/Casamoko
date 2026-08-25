@@ -14,10 +14,16 @@ class AnalyticsController extends Controller
 {
     public function adminDashboard(Request $request)
     {
-        // 1. Gross Revenue (Catch all debits or message record prices)
-        $grossRevenue = abs(WalletTransaction::where('amount', '<', 0)->sum('amount'));
+        // 1. Gross Revenue (Catch all debits, transactions, message prices, or campaign costs)
+        $grossRevenue = abs((float) WalletTransaction::where('amount', '<', 0)->sum('amount'));
+        if ($grossRevenue <= 0) {
+            $grossRevenue = abs((float) WalletTransaction::sum('amount'));
+        }
         if ($grossRevenue <= 0) {
             $grossRevenue = (float) MessageRecord::sum('price');
+        }
+        if ($grossRevenue <= 0) {
+            $grossRevenue = (float) \App\Modules\Messaging\Models\Campaign::sum('estimated_cost');
         }
 
         // 2. Calculate Total Wholesale Carrier Cost
@@ -34,9 +40,9 @@ class AnalyticsController extends Controller
         $netProfit = max(0, $grossRevenue - $totalCarrierCost);
         $profitMargin = $grossRevenue > 0 ? round(($netProfit / $grossRevenue) * 100, 1) : 0;
 
-        $onboardedResellers = ResellerAccount::count();
-        $onboardedClients = ClientAccount::count();
-        $totalSmsFired = MessageRecord::count();
+        $onboardedResellers = max(ResellerAccount::count(), \App\Modules\Accounts\Models\User::where('role_tier', 'RESELLER')->count());
+        $onboardedClients = max(ClientAccount::count(), \App\Modules\Accounts\Models\User::whereIn('role_tier', ['CLIENT', 'USER'])->count());
+        $totalSmsFired = max(MessageRecord::count(), (int) \App\Modules\Messaging\Models\Campaign::sum('total_contacts'));
         $peakCapacity = 10240; 
 
         // 4. Breakdown by Carrier / Network Operator
@@ -72,27 +78,35 @@ class AnalyticsController extends Controller
         ];
 
         // 5. Client Profitability Leaderboard
-        $clientLeaderboard = ClientAccount::with(['user'])
-            ->get()
-            ->map(function ($client) {
-                $rev = abs(WalletTransaction::where('client_account_id', $client->id)
-                    ->whereIn('type', ['SMS_DISPATCH', 'BULK_CAMPAIGN_DISPATCH'])
-                    ->sum('amount'));
-                $cost = $rev * 0.50; // Average wholesale carrier cost
-                $profit = max(0, $rev - $cost);
-                return [
-                    'id' => $client->id,
-                    'company_name' => $client->company_name ?? $client->user->name ?? 'Client #' . $client->id,
-                    'email' => $client->user->email ?? 'N/A',
-                    'revenue' => round($rev, 2),
-                    'carrier_cost' => round($cost, 2),
-                    'net_profit' => round($profit, 2),
-                    'balance' => round($client->wallet_balance ?? 0, 2)
+        $clientAccounts = ClientAccount::with(['user'])->get();
+        if ($clientAccounts->isEmpty()) {
+            $clientAccounts = \App\Modules\Accounts\Models\User::whereIn('role_tier', ['CLIENT', 'USER'])->get()->map(function ($u) {
+                return (object)[
+                    'id' => $u->id,
+                    'company_name' => $u->name,
+                    'user' => $u,
+                    'wallet_balance' => 0
                 ];
-            })
-            ->sortByDesc('net_profit')
-            ->values()
-            ->take(10);
+            });
+        }
+
+        $clientLeaderboard = $clientAccounts->map(function ($client) {
+            $rev = abs(WalletTransaction::where('client_account_id', $client->id)->sum('amount'));
+            $cost = $rev * 0.50; // Average wholesale carrier cost
+            $profit = max(0, $rev - $cost);
+            return [
+                'id' => $client->id,
+                'company_name' => $client->company_name ?? $client->user->name ?? 'Client #' . $client->id,
+                'email' => $client->user->email ?? 'N/A',
+                'revenue' => round($rev, 2),
+                'carrier_cost' => round($cost, 2),
+                'net_profit' => round($profit, 2),
+                'balance' => round($client->wallet_balance ?? 0, 2)
+            ];
+        })
+        ->sortByDesc('net_profit')
+        ->values()
+        ->take(10);
 
         return response()->json([
             'global_revenue' => round($grossRevenue, 2),
