@@ -29,15 +29,50 @@ class AdminController extends Controller
     }
 
     /**
-     * Get list of all corporate client accounts (FR-UAM-007).
+     * Get list of all corporate client accounts & user balances.
      */
     public function listClients()
     {
-        $clients = \App\Modules\Accounts\Models\ClientAccount::all();
-        return response()->json([
-            'status' => 'SUCCESS',
-            'clients' => $clients
-        ]);
+        try {
+            $clients = \App\Modules\Accounts\Models\ClientAccount::with(['user'])->get()->map(function ($client) {
+                return [
+                    'id' => $client->id,
+                    'name' => $client->company_name ?? ($client->user ? $client->user->name : 'Client Account #' . $client->id),
+                    'email' => $client->user ? $client->user->email : 'N/A',
+                    'role_tier' => $client->user ? $client->user->role_tier : 'CLIENT',
+                    'wallet_balance' => (float) ($client->wallet_balance ?? 0),
+                    'credit_limit' => (float) ($client->credit_limit ?? 0),
+                    'account_status' => $client->account_status ?? 'ACTIVE',
+                    'created_at' => $client->created_at ? $client->created_at->format('Y-m-d H:i') : 'N/A',
+                ];
+            });
+
+            if ($clients->isEmpty()) {
+                $clients = \App\Modules\Accounts\Models\User::all()->map(function ($user) {
+                    return [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'role_tier' => $user->role_tier ?? 'CLIENT',
+                        'wallet_balance' => (float) ($user->wallet_balance ?? 0),
+                        'credit_limit' => 0.0,
+                        'account_status' => $user->is_active_user ? 'ACTIVE' : 'SUSPENDED',
+                        'created_at' => $user->created_at ? $user->created_at->format('Y-m-d H:i') : 'N/A',
+                    ];
+                });
+            }
+
+            return response()->json([
+                'status' => 'SUCCESS',
+                'clients' => $clients
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'ERROR',
+                'clients' => [],
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
 

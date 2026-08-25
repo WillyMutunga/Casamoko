@@ -321,6 +321,15 @@ export default function App() {
   const [lowBalanceAlertThreshold, setLowBalanceAlertThreshold] = useState('10.00');
   const [invoices, setInvoices] = useState<any[]>([]);
 
+  // Wallet Adjustment States for Super Admin
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [selectedClientForWallet, setSelectedClientForWallet] = useState<any>(null);
+  const [walletAdjustmentAmount, setWalletAdjustmentAmount] = useState<string>('');
+  const [walletReasonCode, setWalletReasonCode] = useState<string>('TOPUP');
+  const [walletDescription, setWalletDescription] = useState<string>('');
+  const [isAdjustingWallet, setIsAdjustingWallet] = useState(false);
+  const [clientSearchQuery, setClientSearchQuery] = useState('');
+
 
   // Campaign Wizard States
   const [campaignStep, setCampaignStep] = useState(1);
@@ -1277,6 +1286,29 @@ const getChatDateHeader = (timestampStr: string) => {
       setDeletingReseller(null);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleAdjustClientWallet = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedClientForWallet || !walletAdjustmentAmount) return;
+    setIsAdjustingWallet(true);
+    try {
+      const res = await apiClient.post(`/accounts/admin/client/${selectedClientForWallet.id}/wallet-adjust`, {
+        amount: parseFloat(walletAdjustmentAmount),
+        reason_code: walletReasonCode,
+        description: walletDescription || 'Admin wallet adjustment'
+      });
+      toast.success(res.data.message || 'Wallet balance updated!');
+      setWalletModalOpen(false);
+      setSelectedClientForWallet(null);
+      setWalletAdjustmentAmount('');
+      setWalletDescription('');
+      fetchAdminData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Wallet adjustment failed.');
+    } finally {
+      setIsAdjustingWallet(false);
     }
   };
 
@@ -2501,6 +2533,13 @@ const getChatDateHeader = (timestampStr: string) => {
                     <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Manage Resellers</span>
                   </button>
                   <button 
+                    onClick={() => handleNavClick('accounts')} 
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'accounts' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
+                  >
+                    <Users className={`w-5 h-5 shrink-0 ${currentPage === 'accounts' ? 'text-cyan-300' : 'text-indigo-400'}`} />
+                    <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>Client Balances</span>
+                  </button>
+                  <button 
                     onClick={() => handleNavClick('compliance')} 
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${currentPage === 'compliance' ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white font-extrabold shadow-lg shadow-indigo-500/30 border-l-4 border-l-cyan-400' : 'text-slate-400 hover:bg-slate-900/80 hover:text-white'}`}
                   >
@@ -3063,6 +3102,144 @@ const getChatDateHeader = (timestampStr: string) => {
                               </tbody>
                             </table>
                           </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* I.1.5 SUPER_ADMIN CLIENT BALANCES & ACCOUNTS */}
+                  {currentPage === 'accounts' && (
+                    <div className="space-y-8 animate-fadeIn">
+                      {/* Top Metric Cards */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="glass-panel p-6 rounded-3xl border border-indigo-500/20 glow-card flex items-center justify-between">
+                          <div>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Registered Client Accounts</p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-indigo-200 to-cyan-300 bg-clip-text text-transparent">
+                              {clients.length}
+                            </h3>
+                            <p className="text-[11px] text-indigo-400 mt-1.5 font-bold">Active user accounts</p>
+                          </div>
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-500/20 to-cyan-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-lg">
+                            <Users className="w-7 h-7" />
+                          </div>
+                        </div>
+
+                        <div className="glass-panel p-6 rounded-3xl border border-emerald-500/20 glow-card flex items-center justify-between">
+                          <div>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Total System Deposits / Balances</p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-emerald-200 to-teal-300 bg-clip-text text-transparent">
+                              Ksh {clients.reduce((acc: number, c: any) => acc + (parseFloat(c.wallet_balance) || 0), 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                            </h3>
+                            <p className="text-[11px] text-emerald-400 mt-1.5 font-bold">Cumulative user wallet balance</p>
+                          </div>
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-lg">
+                            <Wallet className="w-7 h-7" />
+                          </div>
+                        </div>
+
+                        <div className="glass-panel p-6 rounded-3xl border border-cyan-500/20 glow-card flex items-center justify-between">
+                          <div>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Avg Balance per Client</p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-cyan-200 to-blue-300 bg-clip-text text-transparent">
+                              Ksh {clients.length > 0 ? (clients.reduce((acc: number, c: any) => acc + (parseFloat(c.wallet_balance) || 0), 0) / clients.length).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00'}
+                            </h3>
+                            <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Real-time wallet health</p>
+                          </div>
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-lg">
+                            <Coins className="w-7 h-7" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Main Client Balances Table */}
+                      <div className="glass-panel p-6 rounded-3xl border border-slate-850 glow-card">
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+                          <div>
+                            <h4 className="font-bold text-white text-lg flex items-center gap-2">
+                              <Users className="w-5 h-5 text-indigo-400" />
+                              All User & Client Balances
+                            </h4>
+                            <p className="text-xs text-slate-400 mt-0.5">Comprehensive real-time ledger of all user wallet balances and credit limits</p>
+                          </div>
+
+                          <div className="w-full md:w-72 relative">
+                            <input
+                              type="text"
+                              value={clientSearchQuery}
+                              onChange={(e) => setClientSearchQuery(e.target.value)}
+                              placeholder="🔍 Search client name or email..."
+                              className="w-full bg-slate-900 border border-slate-700 text-xs rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs">
+                            <thead>
+                              <tr className="border-b border-slate-800 text-slate-400 uppercase tracking-wider text-[10px]">
+                                <th className="py-3 px-4">Client ID</th>
+                                <th className="py-3 px-4">Client Name / Company</th>
+                                <th className="py-3 px-4">Email</th>
+                                <th className="py-3 px-4">Role Tier</th>
+                                <th className="py-3 px-4">Wallet Balance</th>
+                                <th className="py-3 px-4">Credit Limit</th>
+                                <th className="py-3 px-4">Status</th>
+                                <th className="py-3 px-4 text-right">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-800/60">
+                              {clients.filter((c: any) => 
+                                (c.name || c.company_name || '').toLowerCase().includes(clientSearchQuery.toLowerCase()) || 
+                                (c.email || '').toLowerCase().includes(clientSearchQuery.toLowerCase())
+                              ).length === 0 ? (
+                                <tr>
+                                  <td colSpan={8} className="py-8 text-center text-slate-500 font-medium">No client accounts found.</td>
+                                </tr>
+                              ) : (
+                                clients.filter((c: any) => 
+                                  (c.name || c.company_name || '').toLowerCase().includes(clientSearchQuery.toLowerCase()) || 
+                                  (c.email || '').toLowerCase().includes(clientSearchQuery.toLowerCase())
+                                ).map((client: any) => (
+                                  <tr key={client.id} className="hover:bg-slate-900/40 transition-colors">
+                                    <td className="py-3.5 px-4 font-mono font-bold text-slate-400">#{client.id}</td>
+                                    <td className="py-3.5 px-4 font-bold text-white">{client.name}</td>
+                                    <td className="py-3.5 px-4 text-slate-300 font-mono">{client.email}</td>
+                                    <td className="py-3.5 px-4">
+                                      <span className="px-2.5 py-0.5 bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-[10px] font-bold rounded uppercase font-mono">
+                                        {client.role_tier || 'CLIENT'}
+                                      </span>
+                                    </td>
+                                    <td className="py-3.5 px-4 font-mono font-black text-emerald-400 text-sm">
+                                      Ksh {(parseFloat(client.wallet_balance) || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                    </td>
+                                    <td className="py-3.5 px-4 font-mono text-slate-400">
+                                      Ksh {(parseFloat(client.credit_limit) || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                                    </td>
+                                    <td className="py-3.5 px-4">
+                                      <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded uppercase ${client.account_status === 'ACTIVE' || client.account_status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+                                        {client.account_status || 'ACTIVE'}
+                                      </span>
+                                    </td>
+                                    <td className="py-3.5 px-4 text-right">
+                                      <button
+                                        onClick={() => {
+                                          setSelectedClientForWallet(client);
+                                          setWalletAdjustmentAmount('');
+                                          setWalletReasonCode('TOPUP');
+                                          setWalletDescription('');
+                                          setWalletModalOpen(true);
+                                        }}
+                                        className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-lg transition-all shadow-md flex items-center gap-1.5 ml-auto"
+                                      >
+                                        <Wallet className="w-3.5 h-3.5" /> Adjust Balance
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
                         </div>
                       </div>
                     </div>
@@ -7749,6 +7926,102 @@ const getChatDateHeader = (timestampStr: string) => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Adjust Client Wallet Modal for Super Admin */}
+      {walletModalOpen && selectedClientForWallet && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-fadeIn">
+          <div className="glass-panel p-6 rounded-3xl border border-slate-800 w-full max-w-lg glow-card relative">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                  <Wallet className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Adjust Client Wallet</h3>
+                  <p className="text-xs text-slate-400">Client: <b className="text-cyan-300">{selectedClientForWallet.name}</b> ({selectedClientForWallet.email})</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setWalletModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAdjustClientWallet} className="space-y-4">
+              <div className="p-4 bg-slate-900/60 rounded-2xl border border-slate-800 flex items-center justify-between font-mono text-xs">
+                <span className="text-slate-400">Current Wallet Balance:</span>
+                <span className="text-emerald-400 font-bold text-base">
+                  Ksh {(parseFloat(selectedClientForWallet.wallet_balance) || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Adjustment Amount (Ksh)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  required
+                  value={walletAdjustmentAmount}
+                  onChange={(e) => setWalletAdjustmentAmount(e.target.value)}
+                  placeholder="e.g. 5000 (Positive to Credit, Negative to Debit)"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                />
+                <span className="text-[10px] text-slate-500 mt-1 block">Enter positive number to credit (e.g. 5000) or negative number to debit (e.g. -500).</span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Reason Code
+                </label>
+                <select
+                  value={walletReasonCode}
+                  onChange={(e) => setWalletReasonCode(e.target.value)}
+                  className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                >
+                  <option value="TOPUP">💳 TOPUP - Deposit Credit</option>
+                  <option value="MANUAL_CREDIT">✨ MANUAL_CREDIT - Promotional Bonus</option>
+                  <option value="REFUND_CORRECTION">🔄 REFUND_CORRECTION - Delivery Refund</option>
+                  <option value="BILLING_ADJUSTMENT">⚖️ BILLING_ADJUSTMENT - Tariff Adjustment</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Admin Audit Note / Reference
+                </label>
+                <textarea
+                  rows={3}
+                  value={walletDescription}
+                  onChange={(e) => setWalletDescription(e.target.value)}
+                  placeholder="Reference note for auditing purposes..."
+                  className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setWalletModalOpen(false)}
+                  className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-bold rounded-xl border border-slate-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isAdjustingWallet}
+                  className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isAdjustingWallet ? 'Processing...' : 'Confirm Balance Adjustment'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
