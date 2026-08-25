@@ -3872,7 +3872,22 @@ const getChatDateHeader = (timestampStr: string) => {
                             </div>
 
                             <div>
-                              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Message Payload Body</label>
+                              <div className="flex items-center justify-between mb-2">
+                                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Message Payload Body</label>
+                                {messageTemplates.length > 0 && (
+                                  <select
+                                    onChange={(e) => {
+                                      if (e.target.value) setQsMessage(e.target.value);
+                                    }}
+                                    className="bg-slate-900 border border-indigo-500/30 text-cyan-300 text-xs rounded-lg px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer font-medium"
+                                  >
+                                    <option value="">✨ Load Saved Template...</option>
+                                    {messageTemplates.map(t => (
+                                      <option key={t.id} value={t.content}>📋 {t.name}</option>
+                                    ))}
+                                  </select>
+                                )}
+                              </div>
                               <textarea
                                 required
                                 rows={4}
@@ -4402,7 +4417,22 @@ const getChatDateHeader = (timestampStr: string) => {
                             </div>
                           </div>
                           <div>
-                            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">SMS Body (Supports dynamic templates)</label>
+                            <div className="flex items-center justify-between mb-2">
+                              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">SMS Body (Supports dynamic templates)</label>
+                              {messageTemplates.length > 0 && (
+                                <select
+                                  onChange={(e) => {
+                                    if (e.target.value) setWizTemplate(e.target.value);
+                                  }}
+                                  className="bg-slate-900 border border-indigo-500/30 text-cyan-300 text-xs rounded-lg px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer font-medium"
+                                >
+                                  <option value="">✨ Load Saved Template...</option>
+                                  {messageTemplates.map(t => (
+                                    <option key={t.id} value={t.content}>📋 {t.name}</option>
+                                  ))}
+                                </select>
+                              )}
+                            </div>
                             <textarea
                               required
                               rows={6}
@@ -4432,7 +4462,22 @@ const getChatDateHeader = (timestampStr: string) => {
                             {wizIsAbTest && (
                               <div className="space-y-4 pt-4 border-t border-slate-800/40 animate-fadeIn">
                                 <div>
-                                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">SMS Body Variant B</label>
+                                  <div className="flex items-center justify-between mb-2">
+                                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">SMS Body Variant B</label>
+                                    {messageTemplates.length > 0 && (
+                                      <select
+                                        onChange={(e) => {
+                                          if (e.target.value) setWizTemplateB(e.target.value);
+                                        }}
+                                        className="bg-slate-900 border border-indigo-500/30 text-cyan-300 text-xs rounded-lg px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer font-medium"
+                                      >
+                                        <option value="">✨ Load Saved Template...</option>
+                                        {messageTemplates.map(t => (
+                                          <option key={t.id} value={t.content}>📋 {t.name}</option>
+                                        ))}
+                                      </select>
+                                    )}
+                                  </div>
                                   <textarea
                                     rows={4}
                                     value={wizTemplateB}
