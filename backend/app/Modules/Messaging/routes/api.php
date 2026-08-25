@@ -297,12 +297,12 @@ Route::post('/inbound-webhook', [\App\Modules\Messaging\Controllers\InboundWebho
 Route::post('/mo-webhook', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'handleSafaricomMO']);
 Route::post('/shortcode/mo', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'handleSafaricomMO']);
 
-// Dedicated Safaricom DSDP UAT Sandbox Webhook Endpoints (Supports both /api/shortcode/... and /api/v1/shortcode/...)
-Route::post('/shortcode/uat/mo', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'handleSafaricomUATMO']);
-Route::post('/v1/shortcode/uat/mo', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'handleSafaricomUATMO']);
+// Dedicated Safaricom DSDP UAT Sandbox Webhook Endpoints (Supports both GET & POST for /api/shortcode/... and /api/v1/shortcode/...)
+Route::match(['get', 'post'], '/shortcode/uat/mo', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'handleSafaricomUATMO']);
+Route::match(['get', 'post'], '/v1/shortcode/uat/mo', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'handleSafaricomUATMO']);
 
-Route::post('/shortcode/uat/dr', [\App\Modules\Messaging\Controllers\DlrWebhookController::class, 'handleUATDR']);
-Route::post('/v1/shortcode/uat/dr', [\App\Modules\Messaging\Controllers\DlrWebhookController::class, 'handleUATDR']);
+Route::match(['get', 'post'], '/shortcode/uat/dr', [\App\Modules\Messaging\Controllers\DlrWebhookController::class, 'handleUATDR']);
+Route::match(['get', 'post'], '/v1/shortcode/uat/dr', [\App\Modules\Messaging\Controllers\DlrWebhookController::class, 'handleUATDR']);
 
 Route::get('/shortcode/uat/logs', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'getUatLogs']);
 Route::get('/v1/shortcode/uat/logs', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'getUatLogs']);

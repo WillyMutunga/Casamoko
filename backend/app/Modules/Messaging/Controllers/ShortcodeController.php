@@ -1001,6 +1001,15 @@ class ShortcodeController extends Controller
      */
     public function handleSafaricomUATMO(Request $request)
     {
+        if ($request->isMethod('get')) {
+            return response()->json([
+                'status' => 'ONLINE',
+                'service' => 'Safaricom DSDP v1.1 UAT MO Webhook',
+                'allowed_methods' => ['POST', 'GET'],
+                'message' => 'Endpoint is live and ready for Safaricom CP_NOTIFICATION POST callbacks.'
+            ]);
+        }
+
         $payload = $request->all();
         $requestId = $payload['requestId'] ?? (string) time();
 

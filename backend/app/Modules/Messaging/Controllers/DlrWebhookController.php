@@ -123,6 +123,15 @@ class DlrWebhookController extends Controller
      */
     public function handleUATDR(Request $request)
     {
+        if ($request->isMethod('get')) {
+            return response()->json([
+                'status' => 'ONLINE',
+                'service' => 'Safaricom DSDP v1.1 UAT Delivery Report Webhook',
+                'allowed_methods' => ['POST', 'GET'],
+                'message' => 'Endpoint is live and ready for Safaricom DR POST callbacks.'
+            ]);
+        }
+
         $payload = $request->all();
         Log::info('=== SAFARICOM DSDP UAT DLR RECEIVED ===', [
             'ip' => $request->ip(),
