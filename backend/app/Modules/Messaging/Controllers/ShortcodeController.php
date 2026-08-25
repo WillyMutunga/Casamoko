@@ -177,6 +177,15 @@ class ShortcodeController extends Controller
 
     public function handleSafaricomMO(Request $request)
     {
+        if ($request->isMethod('get')) {
+            return response()->json([
+                'status' => 'ONLINE',
+                'service' => 'Safaricom DSDP Production MO & Payment Webhook',
+                'allowed_methods' => ['POST', 'GET'],
+                'message' => 'Production Webhook is live, healthy, and awaiting Safaricom CP_NOTIFICATION & PAYMENT POST callbacks.'
+            ]);
+        }
+
         $payload = $request->all();
         Log::info('Safaricom DSDP Webhook Received: ', $payload);
         

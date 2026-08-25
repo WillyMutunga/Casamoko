@@ -290,12 +290,12 @@ Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry', 'ro
 });
 
 // Public DLR & MO webhooks called by Safaricom DSDP & carrier networks
-Route::post('/dlr-webhook', [\App\Modules\Messaging\Controllers\DlrWebhookController::class, 'handle']);
-Route::post('/shortcode/dr', [\App\Modules\Messaging\Controllers\DlrWebhookController::class, 'handle']);
-Route::post('/inbound-webhook', [\App\Modules\Messaging\Controllers\InboundWebhookController::class, 'handle']);
+Route::match(['get', 'post'], '/dlr-webhook', [\App\Modules\Messaging\Controllers\DlrWebhookController::class, 'handle']);
+Route::match(['get', 'post'], '/shortcode/dr', [\App\Modules\Messaging\Controllers\DlrWebhookController::class, 'handle']);
+Route::match(['get', 'post'], '/inbound-webhook', [\App\Modules\Messaging\Controllers\InboundWebhookController::class, 'handle']);
 
-Route::post('/mo-webhook', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'handleSafaricomMO']);
-Route::post('/shortcode/mo', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'handleSafaricomMO']);
+Route::match(['get', 'post'], '/mo-webhook', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'handleSafaricomMO']);
+Route::match(['get', 'post'], '/shortcode/mo', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'handleSafaricomMO']);
 
 // Dedicated Safaricom DSDP UAT Sandbox Webhook Endpoints (Supports both GET & POST for /api/shortcode/... and /api/v1/shortcode/...)
 Route::match(['get', 'post'], '/shortcode/uat/mo', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'handleSafaricomUATMO']);

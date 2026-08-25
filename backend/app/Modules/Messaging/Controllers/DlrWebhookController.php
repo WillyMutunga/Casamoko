@@ -22,6 +22,15 @@ class DlrWebhookController extends Controller
      */
     public function handle(Request $request)
     {
+        if ($request->isMethod('get')) {
+            return response()->json([
+                'status' => 'ONLINE',
+                'service' => 'Production Carrier Delivery Receipt (DR) Webhook',
+                'allowed_methods' => ['POST', 'GET'],
+                'message' => 'Production DR Webhook is live and healthy.'
+            ]);
+        }
+
         $payload = $request->all();
         Log::info('DLR Webhook Received: ', $payload);
 
