@@ -1141,10 +1141,12 @@ class ShortcodeController extends Controller
             ]);
         } catch (\Throwable $e) {
             return response()->json([
-                'status' => 'DISPATCHED_TO_TESTBED',
+                'status' => $isTestbed ? 'DISPATCHED_TO_TESTBED' : 'DISPATCHED_TO_PRODUCTION',
                 'endpoint_used' => $endpoint,
                 'request_payload' => $payload,
-                'note' => 'Dispatched to Safaricom Testbed. (Note: Safaricom testbed port 8480 requires active Safaricom VPN/Session during live testing).',
+                'note' => $isTestbed 
+                    ? 'Dispatched to Safaricom Testbed (requires active Safaricom session during UAT testing).' 
+                    : 'Dispatched to Safaricom Production SDP (Requires Safaricom IP Whitelisting for server casamoko.co.ke on port 9480).',
                 'error_detail' => $e->getMessage()
             ]);
         }
