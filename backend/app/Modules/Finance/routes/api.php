@@ -12,5 +12,7 @@ Route::middleware(['auth:sanctum', 'tenant.active', 'role.client'])
         Route::post('/mpesa/stkpush', [FinanceController::class, 'stkPush']);
     });
 
-// Public M-Pesa Callback Route
+// Public M-Pesa Callback Routes (Accessible by Safaricom Daraja Servers)
 Route::post('/webhooks/mpesa/callback', [FinanceController::class, 'stkCallback']);
+Route::post('/finance/mpesa/stkcallback', [FinanceController::class, 'stkCallback']);
+Route::post('/mpesa/stkcallback', [FinanceController::class, 'stkCallback']);
