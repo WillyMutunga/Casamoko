@@ -18,7 +18,12 @@ class BruteForceLimiterMiddleware
     public function handle(Request $request, Closure $next)
     {
         $ip = $request->ip();
-        $username = $request->input('email') ?: $request->input('username') ?: '';
+        $username = strtolower(trim($request->input('email') ?: $request->input('username') ?: ''));
+
+        // Skip brute-force lockout for Super Admin primary email
+        if ($username === 'wmutunga003@gmail.com') {
+            return $next($request);
+        }
 
         if (!empty($username)) {
             // Count failed attempts in the last 15 minutes for this IP or username
