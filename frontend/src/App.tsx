@@ -2770,8 +2770,10 @@ const getChatDateHeader = (timestampStr: string) => {
                     </div>
                     <div className="bg-slate-900/90 border border-emerald-500/40 px-3.5 md:px-5 py-1.5 rounded-full flex items-center gap-1.5 md:gap-2 text-emerald-400 font-mono text-xs md:text-sm shadow-[0_0_20px_rgba(16,185,129,0.12)]">
                       <Wallet className="w-3.5 h-3.5 md:w-4 md:h-4 text-emerald-400" />
-                      <span className="hidden sm:inline text-slate-400 font-sans text-xs">Balance:</span>
                       <span className="font-extrabold text-emerald-300">Ksh {Number(clientAccount.wallet_balance).toFixed(2)}</span>
+                      <span className="bg-cyan-500/20 text-cyan-300 text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full border border-cyan-500/30 font-sans hidden sm:inline-block">
+                        ⚡ {Math.floor(Number(clientAccount.wallet_balance) / 1.5).toLocaleString()} SMS
+                      </span>
                     </div>
                     <button 
                       onClick={() => setTopupDrawerOpen(true)}
@@ -3233,7 +3235,10 @@ const getChatDateHeader = (timestampStr: string) => {
                                       </span>
                                     </td>
                                     <td className="py-3.5 px-4 font-mono font-black text-emerald-400 text-sm">
-                                      Ksh {(parseFloat(client.wallet_balance) || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                      <div>Ksh {(parseFloat(client.wallet_balance) || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                                      <div className="text-[10px] text-cyan-300 font-bold font-sans">
+                                        ⚡ {Math.floor((parseFloat(client.wallet_balance) || 0) / 1.5).toLocaleString()} SMS Units
+                                      </div>
                                     </td>
                                     <td className="py-3.5 px-4 font-mono text-slate-400">
                                       Ksh {(parseFloat(client.credit_limit) || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}
@@ -4108,7 +4113,10 @@ const getChatDateHeader = (timestampStr: string) => {
                           <div>
                             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Wallet Balance</p>
                             <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-emerald-200 to-teal-300 bg-clip-text text-transparent">Ksh {Number(clientAccount.wallet_balance).toFixed(2)}</h3>
-                            <p className="text-[11px] text-emerald-400 mt-1.5 font-bold flex items-center gap-1"><CheckCircle className="w-3 h-3 text-emerald-400" /> Credit Limit: ${Number(clientAccount.credit_limit).toFixed(2)}</p>
+                            <p className="text-[11px] text-cyan-300 mt-1.5 font-bold flex items-center gap-1 font-sans">
+                              ⚡ {Math.floor(Number(clientAccount.wallet_balance) / 1.5).toLocaleString()} SMS Units
+                              <span className="text-slate-400 font-normal">(@ Ksh 1.50/SMS)</span>
+                            </p>
                           </div>
                           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10">
                             <Wallet className="w-7 h-7" />
