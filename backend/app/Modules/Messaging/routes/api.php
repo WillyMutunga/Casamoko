@@ -310,6 +310,10 @@ Route::get('/v1/shortcode/uat/logs', [\App\Modules\Messaging\Controllers\Shortco
 Route::match(['get', 'post'], '/shortcode/uat/trigger-payment', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'triggerPaymentRequest']);
 Route::match(['get', 'post'], '/v1/shortcode/uat/trigger-payment', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'triggerPaymentRequest']);
 
+// Production Safaricom DSDP Payment Request Endpoints (Section 2.7 Payment)
+Route::match(['get', 'post'], '/shortcode/payment', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'triggerPaymentRequest']);
+Route::match(['get', 'post'], '/v1/shortcode/payment', [\App\Modules\Messaging\Controllers\ShortcodeController::class, 'triggerPaymentRequest']);
+
 Route::get('/system/debug-messages', function() {
     return \App\Modules\Messaging\Models\IncomingMessage::orderBy('id', 'desc')->take(5)->get();
 });

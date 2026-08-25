@@ -1092,7 +1092,7 @@ class ShortcodeController extends Controller
         $msisdn = $request->input('msisdn', '254712345678');
         $chargeAmount = $request->input('charge_amount', '10.0');
         $cpId = $request->input('cp_id', '143');
-        $isTestbed = $request->input('is_testbed', true);
+        $isTestbed = $request->boolean('is_testbed', false);
 
         $endpoint = $isTestbed 
             ? 'https://dtsvc.safaricom.com:8480/api/public/SDP/paymentRequest'
