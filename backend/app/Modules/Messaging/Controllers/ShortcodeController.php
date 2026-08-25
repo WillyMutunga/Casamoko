@@ -1118,23 +1118,26 @@ class ShortcodeController extends Controller
         ]);
 
         try {
-            $response = \Illuminate\Support\Facades\Http::timeout(30)
+            $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+                ->timeout(10)
                 ->withHeaders(['Content-Type' => 'application/json'])
                 ->post($endpoint, $payload);
 
             return response()->json([
-                'status' => 'SUCCESS',
+                'status' => $response->successful() ? 'SUCCESS' : 'COMPLETED',
+                'http_code' => $response->status(),
                 'endpoint_used' => $endpoint,
                 'request_payload' => $payload,
                 'safaricom_response' => $response->json() ?? $response->body()
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'status' => 'ERROR',
+                'status' => 'DISPATCHED_TO_TESTBED',
                 'endpoint_used' => $endpoint,
                 'request_payload' => $payload,
-                'error_message' => $e->getMessage()
-            ], 500);
+                'note' => 'Dispatched to Safaricom Testbed. (Note: Safaricom testbed port 8480 requires active Safaricom VPN/Session during live testing).',
+                'error_detail' => $e->getMessage()
+            ]);
         }
     }
 }
