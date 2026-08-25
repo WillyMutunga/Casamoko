@@ -62,17 +62,24 @@ class FinanceController extends Controller
 
         $amount = (float) $request->input('amount');
 
+        $env = env('MPESA_ENV', 'live');
+        $baseUrl = (strtolower($env) === 'live' || strtolower($env) === 'production')
+            ? 'https://api.safaricom.co.ke'
+            : 'https://sandbox.safaricom.co.ke';
+
         $consumerKey = env('MPESA_CONSUMER_KEY');
         $consumerSecret = env('MPESA_CONSUMER_SECRET');
         $shortcode = env('MPESA_SHORTCODE');
         $passkey = env('MPESA_PASSKEY');
-        $callbackUrl = env('MPESA_CALLBACK_URL');
+        $callbackUrl = env('MPESA_CALLBACK_URL', 'https://casamoko.co.ke/api/finance/mpesa/stkcallback');
+        $transactionType = env('MPESA_TRANSACTION_TYPE', 'CustomerPayBillOnline');
+        $partyB = env('MPESA_PARTY_B', $shortcode);
 
         // 1. Generate OAuth Token
         $credentials = base64_encode($consumerKey . ':' . $consumerSecret);
         $authResponse = Http::withHeaders([
             'Authorization' => 'Basic ' . $credentials,
-        ])->get('https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials');
+        ])->get($baseUrl . '/oauth/v1/generate?grant_type=client_credentials');
 
         if (!$authResponse->successful()) {
             Log::error('M-Pesa Auth failed: ' . $authResponse->body());
@@ -89,10 +96,10 @@ class FinanceController extends Controller
             'BusinessShortCode' => $shortcode,
             'Password' => $password,
             'Timestamp' => $timestamp,
-            'TransactionType' => 'CustomerPayBillOnline',
+            'TransactionType' => $transactionType,
             'Amount' => $amount,
             'PartyA' => $phone,
-            'PartyB' => $shortcode,
+            'PartyB' => $partyB,
             'PhoneNumber' => $phone,
             'CallBackURL' => $callbackUrl,
             'AccountReference' => 'Casamoko',
@@ -102,7 +109,7 @@ class FinanceController extends Controller
         $stkResponse = Http::withHeaders([
             'Authorization' => 'Bearer ' . $accessToken,
             'Content-Type' => 'application/json',
-        ])->post('https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest', $stkPayload);
+        ])->post($baseUrl . '/mpesa/stkpush/v1/processrequest', $stkPayload);
 
         if (!$stkResponse->successful()) {
             Log::error('M-Pesa STK Push failed: ' . $stkResponse->body());
