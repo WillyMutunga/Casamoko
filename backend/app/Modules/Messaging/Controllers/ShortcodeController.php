@@ -1130,7 +1130,7 @@ class ShortcodeController extends Controller
                 'request_payload' => $payload,
                 'safaricom_response' => $response->json() ?? $response->body()
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return response()->json([
                 'status' => 'DISPATCHED_TO_TESTBED',
                 'endpoint_used' => $endpoint,
