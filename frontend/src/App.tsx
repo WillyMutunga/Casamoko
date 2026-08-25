@@ -582,6 +582,15 @@ export default function App() {
       const invRes = await apiClient.get('/client/finance/invoices', { headers });
       if (invRes.data.invoices) setInvoices(invRes.data.invoices);
 
+      try {
+        const tplRes = await apiClient.get('/templates', { headers });
+        if (tplRes.data && tplRes.data.templates) {
+          setMessageTemplates(tplRes.data.templates);
+        }
+      } catch (e) {
+        console.error("Templates fetch failed", e);
+      }
+
 
 
       // Load analytics for the dashboard
