@@ -1091,7 +1091,7 @@ class ShortcodeController extends Controller
         $offerCode = $request->input('offer_code', '001234590');
         $msisdn = $request->input('msisdn', '254712345678');
         $chargeAmount = $request->input('charge_amount', '10.0');
-        $cpId = $request->input('cp_id', '73');
+        $cpId = $request->input('cp_id', '143');
         $isTestbed = $request->input('is_testbed', true);
 
         $endpoint = $isTestbed 
