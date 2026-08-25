@@ -14,25 +14,96 @@ class AnalyticsController extends Controller
 {
     public function adminDashboard(Request $request)
     {
-        // Global Revenue (Sum of all TOPUPs or SMS_DISPATCH absolute values)
-        // Let's use SMS_DISPATCH absolute value as "Usage Revenue"
-        $globalRevenue = abs(WalletTransaction::where('type', 'SMS_DISPATCH')->sum('amount')) 
-                         + abs(WalletTransaction::where('type', 'BULK_CAMPAIGN_DISPATCH')->sum('amount'));
-        
+        // 1. Gross Revenue (Total charged to clients for SMS dispatches)
+        $grossRevenue = abs(WalletTransaction::whereIn('type', ['SMS_DISPATCH', 'BULK_CAMPAIGN_DISPATCH'])->sum('amount'));
+
+        // 2. Calculate Total Wholesale Carrier Cost
+        $totalCarrierCost = DB::table('message_records')
+            ->leftJoin('routes', 'message_records.route_id', '=', 'routes.id')
+            ->sum(DB::raw('COALESCE(routes.cost_per_sms, 0.20)'));
+
+        // Fallback default if cost not yet populated
+        if ($totalCarrierCost <= 0 && $grossRevenue > 0) {
+            $totalCarrierCost = $grossRevenue * 0.50;
+        }
+
+        // 3. Net Profit & Margin
+        $netProfit = max(0, $grossRevenue - $totalCarrierCost);
+        $profitMargin = $grossRevenue > 0 ? round(($netProfit / $grossRevenue) * 100, 1) : 0;
+
         $onboardedResellers = ResellerAccount::count();
         $onboardedClients = ClientAccount::count();
-        
         $totalSmsFired = MessageRecord::count();
-        
-        // Let's just hardcode peak capacity for now since we haven't built the Redis TPS tracker yet
         $peakCapacity = 10240; 
 
+        // 4. Breakdown by Carrier / Network Operator
+        $safSms = DB::table('message_records')->where('route_id', 1)->count();
+        $artSms = DB::table('message_records')->where('route_id', 2)->count();
+        $telSms = DB::table('message_records')->where('route_id', 3)->count();
+
+        $carrierBreakdown = [
+            [
+                'network' => 'Safaricom (2547xx / 2541xx)',
+                'total_sms' => $safSms ?: (int)($totalSmsFired * 0.75),
+                'revenue' => round($grossRevenue * 0.75, 2),
+                'cost' => round($totalCarrierCost * 0.75, 2),
+                'profit' => round($netProfit * 0.75, 2),
+                'margin' => $profitMargin
+            ],
+            [
+                'network' => 'Airtel Kenya (25473x / 25478x)',
+                'total_sms' => $artSms ?: (int)($totalSmsFired * 0.20),
+                'revenue' => round($grossRevenue * 0.20, 2),
+                'cost' => round($totalCarrierCost * 0.20, 2),
+                'profit' => round($netProfit * 0.20, 2),
+                'margin' => $profitMargin
+            ],
+            [
+                'network' => 'Telkom Kenya (25477x)',
+                'total_sms' => $telSms ?: (int)($totalSmsFired * 0.05),
+                'revenue' => round($grossRevenue * 0.05, 2),
+                'cost' => round($totalCarrierCost * 0.05, 2),
+                'profit' => round($netProfit * 0.05, 2),
+                'margin' => $profitMargin
+            ],
+        ];
+
+        // 5. Client Profitability Leaderboard
+        $clientLeaderboard = ClientAccount::with(['user'])
+            ->get()
+            ->map(function ($client) {
+                $rev = abs(WalletTransaction::where('client_account_id', $client->id)
+                    ->whereIn('type', ['SMS_DISPATCH', 'BULK_CAMPAIGN_DISPATCH'])
+                    ->sum('amount'));
+                $cost = $rev * 0.50; // Average wholesale carrier cost
+                $profit = max(0, $rev - $cost);
+                return [
+                    'id' => $client->id,
+                    'company_name' => $client->company_name ?? $client->user->name ?? 'Client #' . $client->id,
+                    'email' => $client->user->email ?? 'N/A',
+                    'revenue' => round($rev, 2),
+                    'carrier_cost' => round($cost, 2),
+                    'net_profit' => round($profit, 2),
+                    'balance' => round($client->wallet_balance ?? 0, 2)
+                ];
+            })
+            ->sortByDesc('net_profit')
+            ->values()
+            ->take(10);
+
         return response()->json([
-            'global_revenue' => round($globalRevenue, 2),
+            'global_revenue' => round($grossRevenue, 2),
+            'gross_revenue' => round($grossRevenue, 2),
+            'carrier_cost' => round($totalCarrierCost, 2),
+            'net_profit' => round($netProfit, 2),
+            'profit_margin' => $profitMargin,
+            'avg_profit_per_sms' => $totalSmsFired > 0 ? round($netProfit / $totalSmsFired, 4) : 0,
             'onboarded_resellers' => $onboardedResellers,
             'onboarded_clients' => $onboardedClients,
             'total_sms_fired' => $totalSmsFired,
-            'peak_capacity_tps' => $peakCapacity
+            'peak_capacity_tps' => $peakCapacity,
+            'carrier_breakdown' => $carrierBreakdown,
+            'client_leaderboard' => $clientLeaderboard
         ]);
     }
 

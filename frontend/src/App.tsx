@@ -6,6 +6,7 @@ import {
   Send, 
   Users, 
   Wallet, 
+  Coins,
   LogOut, 
   Menu, 
   ShieldCheck, 
@@ -407,10 +408,17 @@ export default function App() {
   // Analytics State
   const [adminAnalytics, setAdminAnalytics] = useState<any>({
     global_revenue: 0,
+    gross_revenue: 0,
+    carrier_cost: 0,
+    net_profit: 0,
+    profit_margin: 0,
+    avg_profit_per_sms: 0,
     onboarded_resellers: 0,
     onboarded_clients: 0,
     total_sms_fired: 0,
-    peak_capacity_tps: 0
+    peak_capacity_tps: 0,
+    carrier_breakdown: [],
+    client_leaderboard: []
   });
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [clientAnalytics, setClientAnalytics] = useState<any>({
@@ -2782,58 +2790,168 @@ const getChatDateHeader = (timestampStr: string) => {
                     <div className="space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <div 
-                          onClick={() => handleNavClick('dashboard')}
-                          className="glass-panel p-6 rounded-3xl border border-indigo-500/20 glow-card flex items-center justify-between cursor-pointer hover:border-emerald-500/40 hover:scale-[1.02] shadow-xl transition-all duration-300"
+                          className="glass-panel p-6 rounded-3xl border border-emerald-500/30 glow-card flex items-center justify-between shadow-xl transition-all duration-300 relative overflow-hidden"
+                        >
+                          <div className="relative z-10">
+                            <p className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest mb-1.5 flex items-center gap-1">
+                              <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> Net System Profit
+                            </p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 bg-clip-text text-transparent">
+                              Ksh {(adminAnalytics.net_profit || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                            </h3>
+                            <p className="text-[11px] text-slate-300 mt-1.5 font-medium flex items-center gap-1">
+                              <span className="text-emerald-400 font-bold">{adminAnalytics.profit_margin || 0}% Margin</span> | Rev: Ksh {(adminAnalytics.gross_revenue || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                            </p>
+                          </div>
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/20 relative z-10">
+                            <Coins className="w-7 h-7" />
+                          </div>
+                        </div>
+
+                        <div 
+                          className="glass-panel p-6 rounded-3xl border border-cyan-500/20 glow-card flex items-center justify-between shadow-xl transition-all duration-300"
                         >
                           <div>
-                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Global Revenue</p>
-                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-emerald-200 to-teal-300 bg-clip-text text-transparent">Ksh {adminAnalytics.global_revenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
-                            <p className="text-[11px] text-emerald-400 mt-1.5 font-bold">+12% Profit margins this week</p>
+                            <p className="text-[11px] font-bold text-cyan-400 uppercase tracking-widest mb-1.5">Gross Revenue (Usage)</p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-cyan-200 to-blue-300 bg-clip-text text-transparent">
+                              Ksh {(adminAnalytics.gross_revenue || adminAnalytics.global_revenue || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                            </h3>
+                            <p className="text-[11px] text-slate-400 mt-1.5 font-medium">
+                              Carrier Cost: Ksh {(adminAnalytics.carrier_cost || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                            </p>
                           </div>
-                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10">
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-lg shadow-cyan-500/10">
                             <Wallet className="w-7 h-7" />
                           </div>
                         </div>
 
                         <div 
-                          onClick={() => handleNavClick('resellers')}
+                          onClick={() => handleNavClick('campaigns')}
                           className="glass-panel p-6 rounded-3xl border border-indigo-500/20 glow-card flex items-center justify-between cursor-pointer hover:border-indigo-500/40 hover:scale-[1.02] shadow-xl transition-all duration-300"
                         >
                           <div>
-                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Onboarded Channels</p>
-                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-indigo-200 to-violet-300 bg-clip-text text-transparent">{adminAnalytics.onboarded_resellers} <span className="text-xs font-semibold text-indigo-300">Resellers</span></h3>
-                            <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Multi-level networks active</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Global SMS Dispatched</p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-indigo-200 to-violet-300 bg-clip-text text-transparent">{(adminAnalytics.total_sms_fired || 0).toLocaleString()}</h3>
+                            <p className="text-[11px] text-indigo-300 mt-1.5 font-semibold">
+                              Avg Profit: Ksh {(adminAnalytics.avg_profit_per_sms || 0).toFixed(4)} / SMS
+                            </p>
                           </div>
                           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-500/20 to-violet-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-lg shadow-indigo-500/10">
-                            <Building className="w-7 h-7" />
-                          </div>
-                        </div>
-
-                        <div 
-                          onClick={() => handleNavClick('campaigns')}
-                          className="glass-panel p-6 rounded-3xl border border-indigo-500/20 glow-card flex items-center justify-between cursor-pointer hover:border-blue-500/40 hover:scale-[1.02] shadow-xl transition-all duration-300"
-                        >
-                          <div>
-                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Global SMS Fired</p>
-                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-blue-200 to-cyan-300 bg-clip-text text-transparent">{adminAnalytics.total_sms_fired.toLocaleString()}</h3>
-                            <p className="text-[11px] text-slate-400 mt-1.5 font-medium">Total operational dispatches</p>
-                          </div>
-                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-500/20 to-cyan-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-lg shadow-blue-500/10">
                             <Send className="w-7 h-7" />
                           </div>
                         </div>
 
                         <div 
-                          onClick={() => handleNavClick('routing')}
-                          className="glass-panel p-6 rounded-3xl border border-indigo-500/20 glow-card flex items-center justify-between cursor-pointer hover:border-violet-500/40 hover:scale-[1.02] shadow-xl transition-all duration-300"
+                          onClick={() => handleNavClick('accounts')}
+                          className="glass-panel p-6 rounded-3xl border border-violet-500/20 glow-card flex items-center justify-between cursor-pointer hover:border-violet-500/40 hover:scale-[1.02] shadow-xl transition-all duration-300"
                         >
                           <div>
-                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Peak Capacity</p>
-                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-violet-200 to-pink-300 bg-clip-text text-transparent">{adminAnalytics.peak_capacity_tps.toLocaleString()} <span className="text-xs font-semibold text-violet-300">TPS</span></h3>
-                            <p className="text-[11px] text-emerald-400 mt-1.5 flex items-center gap-1 font-bold"><CheckCircle className="w-3 h-3 text-emerald-400" /> sub-200ms latency binds</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Active Ecosystem</p>
+                            <h3 className="text-3xl font-black text-white font-mono bg-gradient-to-r from-violet-200 to-pink-300 bg-clip-text text-transparent">{adminAnalytics.onboarded_clients || 0} <span className="text-xs font-semibold text-violet-300">Clients</span></h3>
+                            <p className="text-[11px] text-slate-400 mt-1.5 font-medium">{adminAnalytics.onboarded_resellers || 0} Channel Resellers</p>
                           </div>
                           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-violet-500/20 to-pink-500/20 border border-violet-500/30 flex items-center justify-center text-violet-400 shadow-lg shadow-violet-500/10">
-                            <Activity className="w-7 h-7" />
+                            <Building className="w-7 h-7" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* DETAILED FINANCIAL & PROFIT BREAKDOWN PANELS */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* 1. Network Carrier Profitability Breakdown */}
+                        <div className="glass-panel p-6 rounded-3xl border border-slate-800 glow-card">
+                          <div className="flex items-center justify-between mb-6">
+                            <div>
+                              <h4 className="font-bold text-white text-base flex items-center gap-2">
+                                <BarChart2 className="w-5 h-5 text-emerald-400" />
+                                Network Carrier Profit Breakdown
+                              </h4>
+                              <p className="text-xs text-slate-400 mt-0.5">Wholesale carrier costs vs revenue per telco network</p>
+                            </div>
+                            <span className="text-xs font-bold px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full font-mono">
+                              {adminAnalytics.profit_margin || 0}% Profit Margin
+                            </span>
+                          </div>
+
+                          <div className="space-y-4">
+                            {(adminAnalytics.carrier_breakdown || []).map((cb: any, i: number) => (
+                              <div key={i} className="p-4 bg-slate-900/60 rounded-2xl border border-slate-800/80 hover:border-emerald-500/30 transition-all">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="font-bold text-white text-sm flex items-center gap-2">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    {cb.network}
+                                  </span>
+                                  <span className="text-xs font-mono font-bold text-emerald-400">
+                                    +Ksh {(cb.profit || 0).toLocaleString(undefined, {minimumFractionDigits: 2})} Profit
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-3 gap-2 text-xs font-mono pt-2 border-t border-slate-800/50">
+                                  <div>
+                                    <span className="text-[10px] text-slate-500 block uppercase">Dispatched</span>
+                                    <span className="text-slate-200 font-semibold">{(cb.total_sms || 0).toLocaleString()} SMS</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-[10px] text-slate-500 block uppercase">Revenue</span>
+                                    <span className="text-cyan-300 font-semibold">Ksh {(cb.revenue || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-[10px] text-slate-500 block uppercase">Carrier Cost</span>
+                                    <span className="text-rose-300 font-semibold">Ksh {(cb.cost || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* 2. Top Client Profitability Leaderboard */}
+                        <div className="glass-panel p-6 rounded-3xl border border-slate-800 glow-card">
+                          <div className="flex items-center justify-between mb-6">
+                            <div>
+                              <h4 className="font-bold text-white text-base flex items-center gap-2">
+                                <Users className="w-5 h-5 text-indigo-400" />
+                                Top Client Profitability Leaderboard
+                              </h4>
+                              <p className="text-xs text-slate-400 mt-0.5">Top accounts ranked by net profit generated</p>
+                            </div>
+                            <span className="text-xs font-bold px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full">
+                              Top 10 Accounts
+                            </span>
+                          </div>
+
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left text-xs">
+                              <thead>
+                                <tr className="border-b border-slate-800 text-slate-400 uppercase tracking-wider text-[10px]">
+                                  <th className="py-2.5 px-3">Client / Company</th>
+                                  <th className="py-2.5 px-3">Revenue</th>
+                                  <th className="py-2.5 px-3">Wholesale Cost</th>
+                                  <th className="py-2.5 px-3 text-right">Net Profit</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-800/50">
+                                {(adminAnalytics.client_leaderboard || []).length === 0 ? (
+                                  <tr>
+                                    <td colSpan={4} className="py-8 text-center text-slate-500 font-medium">No client transaction data recorded yet.</td>
+                                  </tr>
+                                ) : (
+                                  (adminAnalytics.client_leaderboard || []).map((cl: any, idx: number) => (
+                                    <tr key={cl.id} className="hover:bg-slate-900/40 transition-colors">
+                                      <td className="py-3 px-3">
+                                        <div className="font-bold text-white flex items-center gap-2">
+                                          <span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center text-[10px] font-mono font-black">{idx + 1}</span>
+                                          <span className="truncate max-w-[140px]">{cl.company_name}</span>
+                                        </div>
+                                        <span className="text-[10px] text-slate-500 block truncate max-w-[140px]">{cl.email}</span>
+                                      </td>
+                                      <td className="py-3 px-3 font-mono text-cyan-300 font-semibold">Ksh {(cl.revenue || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                                      <td className="py-3 px-3 font-mono text-slate-400">Ksh {(cl.carrier_cost || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                                      <td className="py-3 px-3 text-right font-mono font-black text-emerald-400">+Ksh {(cl.net_profit || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                                    </tr>
+                                  ))
+                                )}
+                              </tbody>
+                            </table>
                           </div>
                         </div>
                       </div>
