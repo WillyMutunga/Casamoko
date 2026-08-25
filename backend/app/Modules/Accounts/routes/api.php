@@ -35,7 +35,8 @@ Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry'])->g
         Route::post('/sender-ids/{id}/reject', [AdminController::class, 'rejectSender']);
         Route::post('/sender-ids/{id}/mno-approval', [AdminController::class, 'updateMnoApproval']);
         Route::get('/audit-logs', [AdminController::class, 'listAuditLogs']);
-        Route::post('/client/{id}/status', [KYCController::class, 'updateStatus']);
+        Route::post('/client/{id}/status', [AdminController::class, 'updateClientStatus']);
+        Route::delete('/client/{id}', [AdminController::class, 'deleteClient']);
         Route::post('/client/{id}/wallet-adjust', [AdminController::class, 'adjustWallet']);
     });
 

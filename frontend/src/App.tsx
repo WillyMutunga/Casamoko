@@ -1312,6 +1312,28 @@ const getChatDateHeader = (timestampStr: string) => {
     }
   };
 
+  const handleToggleClientStatus = async (clientId: number, currentStatus: string) => {
+    const newStatus = (currentStatus === 'ACTIVE' || currentStatus === 'APPROVED') ? 'SUSPENDED' : 'ACTIVE';
+    try {
+      const res = await apiClient.post(`/accounts/admin/client/${clientId}/status`, { status: newStatus });
+      toast.success(res.data.message || `Client status updated to ${newStatus}`);
+      fetchAdminData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to update client status');
+    }
+  };
+
+  const handleDeleteClient = async (clientId: number, clientName: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete account "${clientName}"? This action cannot be undone.`)) return;
+    try {
+      const res = await apiClient.delete(`/accounts/admin/client/${clientId}`);
+      toast.success(res.data.message || 'User account deleted successfully!');
+      fetchAdminData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to delete client account.');
+    }
+  };
+
   // Client Sub-user Creation (FR-UAM-003)
   const handleAddTeamMember = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -3222,18 +3244,37 @@ const getChatDateHeader = (timestampStr: string) => {
                                       </span>
                                     </td>
                                     <td className="py-3.5 px-4 text-right">
-                                      <button
-                                        onClick={() => {
-                                          setSelectedClientForWallet(client);
-                                          setWalletAdjustmentAmount('');
-                                          setWalletReasonCode('TOPUP');
-                                          setWalletDescription('');
-                                          setWalletModalOpen(true);
-                                        }}
-                                        className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-lg transition-all shadow-md flex items-center gap-1.5 ml-auto"
-                                      >
-                                        <Wallet className="w-3.5 h-3.5" /> Adjust Balance
-                                      </button>
+                                      <div className="flex items-center justify-end gap-2">
+                                        <button
+                                          onClick={() => {
+                                            setSelectedClientForWallet(client);
+                                            setWalletAdjustmentAmount('');
+                                            setWalletReasonCode('TOPUP');
+                                            setWalletDescription('');
+                                            setWalletModalOpen(true);
+                                          }}
+                                          title="Adjust Wallet Balance"
+                                          className="px-2.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/30 text-xs font-bold rounded-lg transition-all flex items-center gap-1"
+                                        >
+                                          <Wallet className="w-3.5 h-3.5" /> Adjust
+                                        </button>
+
+                                        <button
+                                          onClick={() => handleToggleClientStatus(client.id, client.account_status)}
+                                          title={client.account_status === 'ACTIVE' || client.account_status === 'APPROVED' ? 'Suspend Account' : 'Reactivate Account'}
+                                          className={`px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all border flex items-center gap-1 ${client.account_status === 'ACTIVE' || client.account_status === 'APPROVED' ? 'bg-amber-500/10 hover:bg-amber-600 text-amber-300 hover:text-white border-amber-500/30' : 'bg-blue-500/10 hover:bg-blue-600 text-blue-300 hover:text-white border-blue-500/30'}`}
+                                        >
+                                          {client.account_status === 'ACTIVE' || client.account_status === 'APPROVED' ? '⏸️ Suspend' : '▶️ Activate'}
+                                        </button>
+
+                                        <button
+                                          onClick={() => handleDeleteClient(client.id, client.name)}
+                                          title="Delete Account"
+                                          className="p-1.5 bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/30 rounded-lg transition-all"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
                                     </td>
                                   </tr>
                                 ))

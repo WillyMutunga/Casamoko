@@ -442,5 +442,67 @@ class AdminController extends Controller
             ], 400);
         }
     }
+
+    /**
+     * Suspend, Reactivate, or Change Status for a Client or User Account.
+     */
+    public function updateClientStatus(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|string|in:ACTIVE,APPROVED,SUSPENDED,PENDING',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $newStatus = $request->input('status');
+        $isActive = ($newStatus === 'ACTIVE' || $newStatus === 'APPROVED');
+
+        // 1. Try finding ClientAccount
+        $clientAccount = \App\Modules\Accounts\Models\ClientAccount::find($id);
+        if ($clientAccount) {
+            $clientAccount->update(['status' => $newStatus]);
+            // Also update associated users
+            \App\Modules\Accounts\Models\User::where('client_account_id', $clientAccount->id)
+                ->update(['is_active_user' => $isActive]);
+        }
+
+        // 2. Try finding User directly
+        $user = \App\Modules\Accounts\Models\User::find($id);
+        if ($user) {
+            $user->update(['is_active_user' => $isActive]);
+        }
+
+        return response()->json([
+            'status' => 'SUCCESS',
+            'message' => "Account status updated to '{$newStatus}' successfully!"
+        ]);
+    }
+
+    /**
+     * Delete a Client or User Account completely.
+     */
+    public function deleteClient($id)
+    {
+        // 1. Try finding ClientAccount
+        $clientAccount = \App\Modules\Accounts\Models\ClientAccount::find($id);
+        if ($clientAccount) {
+            // Delete linked users
+            \App\Modules\Accounts\Models\User::where('client_account_id', $clientAccount->id)->delete();
+            $clientAccount->delete();
+        }
+
+        // 2. Try finding User directly
+        $user = \App\Modules\Accounts\Models\User::find($id);
+        if ($user) {
+            $user->delete();
+        }
+
+        return response()->json([
+            'status' => 'SUCCESS',
+            'message' => "User account deleted successfully from the system."
+        ]);
+    }
 }
 
