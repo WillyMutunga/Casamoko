@@ -1030,7 +1030,9 @@ const getChatDateHeader = (timestampStr: string) => {
       }
     } catch (err: any) {
       console.error(err);
-      const errMsg = err.response?.data?.message || err.response?.data?.error || 'Authentication failed. Please verify your credentials.';
+      const backendMsg = err.response?.data?.message;
+      const backendErr = err.response?.data?.error;
+      const errMsg = backendMsg || (backendErr && backendErr !== 'INVALID_CREDENTIALS' ? backendErr : 'Authentication failed. Please verify your credentials or check if password was entered correctly.');
       setAuthError(errMsg);
     } finally {
       setIsLoading(false);
