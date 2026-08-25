@@ -166,6 +166,7 @@ export default function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [totpCode, setTotpCode] = useState('');
+  const [otpChannel, setOtpChannel] = useState<'email' | 'sms'>('email');
   const [authError, setAuthError] = useState<string | null>(null);
   const [authStatus, setAuthStatus] = useState<'IDLE' | '2FA_REQUIRED' | '2FA_SETUP_REQUIRED'>('IDLE');
   
@@ -968,20 +969,23 @@ const getChatDateHeader = (timestampStr: string) => {
 
 
 
-  const handleResendCode = async () => {
+  const handleResendCode = async (channelOverride?: 'email' | 'sms') => {
     setTotpCode('');
+    const channel = channelOverride || otpChannel;
+    setOtpChannel(channel);
     setAuthError(null);
     setIsLoading(true);
     try {
-      const res = await apiClient.post('/accounts/login', {
+      const res = await apiClient.post('/accounts/auth/resend-otp', {
         email,
-        password
+        otp_channel: channel
       });
-      if (res.data.status === '2FA_REQUIRED') {
-        setAuthError('A new authentication code has been sent to your email.');
+      if (res.data.status === 'SUCCESS') {
+        toast.success(res.data.message || `OTP code sent via ${channel.toUpperCase()}`);
+        setAuthError(res.data.message);
       }
     } catch (err: any) {
-      setAuthError(err.response?.data?.error || 'Failed to resend code. Check your credentials.');
+      setAuthError(err.response?.data?.message || err.response?.data?.error || 'Failed to resend OTP code.');
     } finally {
       setIsLoading(false);
     }
@@ -997,7 +1001,8 @@ const getChatDateHeader = (timestampStr: string) => {
       const res = await apiClient.post('/accounts/login', {
         email,
         password,
-        totp_code: totpCode || undefined
+        totp_code: totpCode || undefined,
+        otp_channel: otpChannel
       });
 
       const data = res.data;
@@ -2466,21 +2471,53 @@ const getChatDateHeader = (timestampStr: string) => {
                     )}
 
                     {authStatus === '2FA_REQUIRED' && (
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Email Authentication Code</label>
-                        <div className="relative">
-                          <Lock className="w-5 h-5 text-gray-500 absolute left-4 top-3.5" />
-                          <input 
-                            type="text" 
-                            required 
-                            maxLength={6}
-                            value={totpCode}
-                            onChange={(e) => setTotpCode(e.target.value)}
-                            className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-12 pr-4 py-3 font-mono text-xl tracking-widest text-center text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                            placeholder="123456"
-                          />
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between bg-slate-900/60 p-1.5 rounded-xl border border-slate-800 text-xs">
+                          <span className="text-slate-400 pl-2 font-medium">Delivery Method:</span>
+                          <div className="flex gap-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOtpChannel('email');
+                                handleResendCode('email');
+                              }}
+                              className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${otpChannel === 'email' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+                            >
+                              📧 Email
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOtpChannel('sms');
+                                handleResendCode('sms');
+                              }}
+                              className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${otpChannel === 'sms' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+                            >
+                              💬 SMS (CASAMOKO)
+                            </button>
+                          </div>
                         </div>
-                        <p className="text-xs text-gray-400 mt-2 text-center">Enter the 6-digit authentication code sent to your email.</p>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                            {otpChannel === 'sms' ? '💬 SMS Authentication Code (Sender ID: CASAMOKO)' : '📧 Email Authentication Code'}
+                          </label>
+                          <div className="relative">
+                            <Lock className="w-5 h-5 text-gray-500 absolute left-4 top-3.5" />
+                            <input 
+                              type="text" 
+                              required 
+                              maxLength={6}
+                              value={totpCode}
+                              onChange={(e) => setTotpCode(e.target.value)}
+                              className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-12 pr-4 py-3 font-mono text-xl tracking-widest text-center text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                              placeholder="123456"
+                            />
+                          </div>
+                          <p className="text-xs text-gray-400 mt-2 text-center">
+                            Enter the 6-digit code dispatched via <b className="text-cyan-300 font-bold uppercase">{otpChannel}</b>.
+                          </p>
+                        </div>
                       </div>
                     )}
 
@@ -2495,14 +2532,24 @@ const getChatDateHeader = (timestampStr: string) => {
                           {authStatus === '2FA_REQUIRED' ? 'Confirm OTP Token' : 'Authenticate Session'}
                         </button>
                         {authStatus === '2FA_REQUIRED' && (
-                          <button 
-                            type="button" 
-                            onClick={handleResendCode}
-                            disabled={isLoading}
-                            className="w-full text-xs text-indigo-400 hover:text-indigo-300 font-medium py-2 transition-colors disabled:opacity-50"
-                          >
-                            Didn't receive the code? Resend
-                          </button>
+                          <div className="flex items-center justify-between text-xs pt-1">
+                            <button 
+                              type="button" 
+                              onClick={() => handleResendCode('email')}
+                              disabled={isLoading}
+                              className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors disabled:opacity-50"
+                            >
+                              📧 Resend via Email
+                            </button>
+                            <button 
+                              type="button" 
+                              onClick={() => handleResendCode('sms')}
+                              disabled={isLoading}
+                              className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors disabled:opacity-50"
+                            >
+                              💬 Resend via SMS (CASAMOKO)
+                            </button>
+                          </div>
                         )}
                       </div>
                     )}

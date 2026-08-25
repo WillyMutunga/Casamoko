@@ -14,6 +14,7 @@ use App\Modules\Accounts\Controllers\AnalyticsController;
 Route::prefix('accounts')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->middleware('brute.limit');
     Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/auth/resend-otp', [AuthController::class, 'resendOtp']);
 
 // Protected session endpoints
 Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry'])->group(function () {

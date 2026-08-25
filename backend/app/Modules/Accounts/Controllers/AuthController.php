@@ -110,13 +110,30 @@ class AuthController extends Controller
             $totpCode = $request->input('totp_code');
 
             if (!$totpCode) {
+                $otpChannel = strtolower($request->input('otp_channel', 'email'));
                 // Generate a random 6-digit OTP
                 $newCode = str_pad((string)rand(0, 999999), 6, '0', STR_PAD_LEFT);
                 
                 // Cache the OTP for 15 minutes
                 \Illuminate\Support\Facades\Cache::put('email_otp_' . $user->id, $newCode, now()->addMinutes(15));
                 
-                // Dispatch the OTP email via queue to prevent SMTP delays on the frontend
+                if ($otpChannel === 'sms' && !empty($user->phone_number)) {
+                    try {
+                        dispatch(new \App\Jobs\SendOtpSmsJob($user->phone_number, $newCode, 'CASAMOKO'));
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error('Failed to dispatch OTP SMS job: ' . $e->getMessage());
+                    }
+
+                    return response()->json([
+                        'status' => '2FA_REQUIRED',
+                        'otp_channel' => 'sms',
+                        'message' => 'An authentication code has been sent via SMS (Sender ID: CASAMOKO) to your phone number. Please enter it below.',
+                        'email' => $email,
+                        'phone_number' => $user->phone_number
+                    ]);
+                }
+
+                // Default to Email
                 try {
                     dispatch(new \App\Jobs\SendOtpEmailJob($user->email, $newCode));
                 } catch (\Exception $e) {
@@ -125,8 +142,10 @@ class AuthController extends Controller
 
                 return response()->json([
                     'status' => '2FA_REQUIRED',
-                    'message' => 'An authentication code has been sent to your email. Please enter it below to secure this administrative session.',
-                    'email' => $email
+                    'otp_channel' => 'email',
+                    'message' => 'An authentication code has been sent to your email address. Please enter it below to secure this administrative session.',
+                    'email' => $email,
+                    'phone_number' => $user->phone_number
                 ]);
             }
 
@@ -389,6 +408,60 @@ class AuthController extends Controller
             }
         }
         
-        return $bytes;
+        return $binary;
+    }
+
+    /**
+     * Resend OTP code via SMS (CASAMOKO) or Email based on user preference.
+     */
+    public function resendOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email',
+            'otp_channel' => 'required|string|in:email,sms',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $email = $request->input('email');
+        $channel = strtolower($request->input('otp_channel'));
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'USER_NOT_FOUND', 'message' => 'User account not found.'], 404);
+        }
+
+        // Generate a fresh 6-digit OTP
+        $newCode = str_pad((string)rand(0, 999999), 6, '0', STR_PAD_LEFT);
+        \Illuminate\Support\Facades\Cache::put('email_otp_' . $user->id, $newCode, now()->addMinutes(15));
+
+        if ($channel === 'sms' && !empty($user->phone_number)) {
+            try {
+                dispatch(new \App\Jobs\SendOtpSmsJob($user->phone_number, $newCode, 'CASAMOKO'));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to dispatch OTP SMS job: ' . $e->getMessage());
+            }
+
+            return response()->json([
+                'status' => 'SUCCESS',
+                'otp_channel' => 'sms',
+                'message' => 'A fresh OTP authentication code has been sent via SMS (Sender ID: CASAMOKO) to your phone number.'
+            ]);
+        }
+
+        // Default / Fallback to Email
+        try {
+            dispatch(new \App\Jobs\SendOtpEmailJob($user->email, $newCode));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to dispatch OTP email job: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'status' => 'SUCCESS',
+            'otp_channel' => 'email',
+            'message' => 'A fresh OTP authentication code has been sent to your email address.'
+        ]);
     }
 }

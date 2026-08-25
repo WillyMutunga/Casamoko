@@ -131,6 +131,20 @@ class ResellerController extends Controller
                 'is_active_user' => true,
             ]);
 
+            // Dispatch Welcome SMS if phone number is provided
+            if (!empty($request->input('phone_number'))) {
+                try {
+                    dispatch(new \App\Jobs\SendWelcomeSmsJob(
+                        $request->input('phone_number'),
+                        $request->input('tenant_name'),
+                        $request->input('email'),
+                        'CASAMOKO'
+                    ));
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to dispatch Welcome SMS: ' . $e->getMessage());
+                }
+            }
+
             // 4. Log initial double-entry transaction
             $this->ledgerService->credit(
                 $client->id,
