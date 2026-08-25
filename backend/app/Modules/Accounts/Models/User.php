@@ -23,6 +23,7 @@ class User extends Authenticatable
         'reseller_account_id',
         'name',
         'email',
+        'phone_number',
         'email_verified_at',
         'password',
         'role_tier', // SUPER_ADMIN, RESELLER, CLIENT

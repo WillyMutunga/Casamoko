@@ -16,13 +16,16 @@ class ClientAccount extends Model
     protected $fillable = [
         'reseller_account_id',
         'name',
+        'phone_number',
         'status', // PENDING, APPROVED, SUSPENDED
         'wallet_balance',
         'credit_limit',
+        'cost_per_sms',
+        'default_sender_id',
+        'low_balance_threshold',
         'kyc_metadata',
         'billing_type', // PREPAID, POSTPAID
         'currency', // KES, USD
-        'low_balance_threshold',
     ];
 
     /**
@@ -33,8 +36,9 @@ class ClientAccount extends Model
     protected $casts = [
         'wallet_balance' => 'decimal:4',
         'credit_limit' => 'decimal:4',
-        'kyc_metadata' => 'array',
+        'cost_per_sms' => 'decimal:4',
         'low_balance_threshold' => 'decimal:4',
+        'kyc_metadata' => 'array',
     ];
 
     /**

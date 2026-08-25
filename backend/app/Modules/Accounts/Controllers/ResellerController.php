@@ -59,9 +59,13 @@ class ResellerController extends Controller
             'tenant_name' => 'required|string|max:255',
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|unique:users',
+            'phone_number' => 'nullable|string|max:25',
             'password' => 'required|string|min:6',
             'seeding_balance' => 'required|numeric|min:0',
             'credit_limit' => 'required|numeric|min:0',
+            'cost_per_sms' => 'nullable|numeric|min:0.01',
+            'default_sender_id' => 'nullable|string|max:11',
+            'low_balance_threshold' => 'nullable|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -104,9 +108,13 @@ class ResellerController extends Controller
             $client = ClientAccount::create([
                 'reseller_account_id' => $reseller->id,
                 'name' => $request->input('tenant_name'),
+                'phone_number' => $request->input('phone_number'),
                 'status' => 'APPROVED',
                 'wallet_balance' => $seedingBalance,
                 'credit_limit' => $creditLimit,
+                'cost_per_sms' => (float) ($request->input('cost_per_sms') ?: 1.5000),
+                'default_sender_id' => $request->input('default_sender_id'),
+                'low_balance_threshold' => (float) ($request->input('low_balance_threshold') ?: 100.0000),
             ]);
 
             // 3. Create the client user
@@ -114,6 +122,7 @@ class ResellerController extends Controller
                 'client_account_id' => $client->id,
                 'name' => $request->input('name'),
                 'email' => $request->input('email'),
+                'phone_number' => $request->input('phone_number'),
                 'password' => \Illuminate\Support\Facades\Hash::make($request->input('password')),
                 'role_tier' => 'CLIENT',
                 'sub_role' => 'CLIENT_ADMIN',

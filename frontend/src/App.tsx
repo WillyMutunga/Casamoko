@@ -251,9 +251,13 @@ export default function App() {
   const [newClientTenantName, setNewClientTenantName] = useState('');
   const [newClientName, setNewClientName] = useState('');
   const [newClientEmail, setNewClientEmail] = useState('');
+  const [newClientPhone, setNewClientPhone] = useState('');
   const [newClientPassword, setNewClientPassword] = useState('');
   const [newClientCredits, setNewClientCredits] = useState('500');
   const [newClientLimit, setNewClientLimit] = useState('100');
+  const [newClientCostPerSms, setNewClientCostPerSms] = useState('1.50');
+  const [newClientSenderId, setNewClientSenderId] = useState('');
+  const [newClientLowBalanceThreshold, setNewClientLowBalanceThreshold] = useState('100.00');
   const [resellerStatus, setResellerStatus] = useState<string | null>(null);
 
   // --- CLIENT EXCLUSIVE STATES ---
@@ -1740,9 +1744,13 @@ const getChatDateHeader = (timestampStr: string) => {
         tenant_name: newClientTenantName,
         name: newClientName,
         email: newClientEmail,
+        phone_number: newClientPhone,
         password: newClientPassword,
         seeding_balance: credits,
-        credit_limit: limit
+        credit_limit: limit,
+        cost_per_sms: parseFloat(newClientCostPerSms) || 1.50,
+        default_sender_id: newClientSenderId,
+        low_balance_threshold: parseFloat(newClientLowBalanceThreshold) || 100.00,
       });
       if (res.data.status === 'SUCCESS') {
         setOnboardedClients([...onboardedClients, res.data.client]);
@@ -1753,9 +1761,13 @@ const getChatDateHeader = (timestampStr: string) => {
         setNewClientTenantName('');
         setNewClientName('');
         setNewClientEmail('');
+        setNewClientPhone('');
         setNewClientPassword('');
         setNewClientCredits('500');
         setNewClientLimit('100');
+        setNewClientCostPerSms('1.50');
+        setNewClientSenderId('');
+        setNewClientLowBalanceThreshold('100.00');
       }
     } catch (err: any) {
       setResellerStatus(err.response?.data?.message || err.response?.data?.errors?.email?.[0] || 'Client onboarding failed.');
@@ -4000,6 +4012,16 @@ const getChatDateHeader = (timestampStr: string) => {
                                 placeholder="john@globex.co.ke"
                               />
                             </div>
+                             <div>
+                              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Contact Phone Number (M-Pesa / Alerts)</label>
+                              <input 
+                                type="text"
+                                value={newClientPhone}
+                                onChange={(e) => setNewClientPhone(e.target.value)}
+                                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-mono"
+                                placeholder="254712345678"
+                              />
+                            </div>
                             <div>
                               <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Initial Password</label>
                               <div className="relative">
@@ -4042,6 +4064,41 @@ const getChatDateHeader = (timestampStr: string) => {
                                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
                                 />
                               </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Custom SMS Rate (Ksh)</label>
+                                <input 
+                                  type="number"
+                                  step="0.01"
+                                  value={newClientCostPerSms}
+                                  onChange={(e) => setNewClientCostPerSms(e.target.value)}
+                                  placeholder="1.50"
+                                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-cyan-300 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Low-Balance Alert (Ksh)</label>
+                                <input 
+                                  type="number"
+                                  step="10"
+                                  value={newClientLowBalanceThreshold}
+                                  onChange={(e) => setNewClientLowBalanceThreshold(e.target.value)}
+                                  placeholder="100.00"
+                                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-amber-300 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Default Assigned Sender ID</label>
+                              <input 
+                                type="text"
+                                maxLength={11}
+                                value={newClientSenderId}
+                                onChange={(e) => setNewClientSenderId(e.target.value.toUpperCase())}
+                                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm uppercase font-mono tracking-wider"
+                                placeholder="e.g. CASAMOKO"
+                              />
                             </div>
                             <button
                               type="submit"
