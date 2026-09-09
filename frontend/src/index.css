@@ -22,6 +22,21 @@
   }
 }
 
+/* Fix native select dropdown option text visibility across all OS & browsers */
+select option {
+  background-color: #0b0f19 !important;
+  color: #f8fafc !important;
+  padding: 8px 12px !important;
+}
+
+select option:hover,
+select option:focus,
+select option:active,
+select option:checked {
+  background-color: #4f46e5 !important;
+  color: #ffffff !important;
+}
+
 /* Custom premium scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;

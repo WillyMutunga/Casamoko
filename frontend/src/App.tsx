@@ -4338,9 +4338,9 @@ const getChatDateHeader = (timestampStr: string) => {
                                   onChange={(e) => setQsSenderId(parseInt(e.target.value))}
                                   className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                                 >
-                                  <option value="">-- Choose Sender ID --</option>
+                                  <option value="" className="bg-slate-900 text-white font-medium">-- Choose Sender ID --</option>
                                   {senderIds.map(s => (
-                                    <option key={s.id} value={s.id}>{s.sender_id} ({s.status})</option>
+                                    <option key={s.id} value={s.id} className="bg-slate-900 text-white font-medium">{s.sender_id} ({s.status})</option>
                                   ))}
                                 </select>
                               </div>
@@ -4877,9 +4877,9 @@ const getChatDateHeader = (timestampStr: string) => {
                                 onChange={(e) => setWizSenderId(parseInt(e.target.value))}
                                 className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                               >
-                                <option value="">-- Choose Sender ID --</option>
+                                <option value="" className="bg-slate-900 text-white font-medium">-- Choose Sender ID --</option>
                                 {senderIds.map(s => (
-                                  <option key={s.id} value={s.id}>{s.sender_id} ({s.status})</option>
+                                  <option key={s.id} value={s.id} className="bg-slate-900 text-white font-medium">{s.sender_id} ({s.status})</option>
                                 ))}
                               </select>
                             </div>
