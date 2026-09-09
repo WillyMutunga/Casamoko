@@ -40,8 +40,6 @@ class SendOtpEmailJob implements ShouldQueue
             });
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to send OTP email: ' . $e->getMessage());
-            // Rethrow the exception so the queue can attempt to retry it
-            throw $e;
         }
     }
 }

@@ -167,6 +167,7 @@ export default function App() {
   const [password, setPassword] = useState('');
   const [totpCode, setTotpCode] = useState('');
   const [otpChannel, setOtpChannel] = useState<'email' | 'sms'>('email');
+  const [otpSent, setOtpSent] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [authStatus, setAuthStatus] = useState<'IDLE' | '2FA_REQUIRED' | '2FA_SETUP_REQUIRED'>('IDLE');
   
@@ -981,11 +982,12 @@ const getChatDateHeader = (timestampStr: string) => {
         otp_channel: channel
       });
       if (res.data.status === 'SUCCESS') {
+        setOtpSent(true);
         toast.success(res.data.message || `OTP code sent via ${channel.toUpperCase()}`);
         setAuthError(res.data.message);
       }
     } catch (err: any) {
-      setAuthError(err.response?.data?.message || err.response?.data?.error || 'Failed to resend OTP code.');
+      setAuthError(err.response?.data?.message || err.response?.data?.error || 'Failed to send OTP code.');
     } finally {
       setIsLoading(false);
     }
@@ -1002,14 +1004,19 @@ const getChatDateHeader = (timestampStr: string) => {
         email,
         password,
         totp_code: totpCode || undefined,
-        otp_channel: otpChannel
+        otp_channel: otpSent ? otpChannel : undefined
       });
 
       const data = res.data;
 
       if (data.status === '2FA_REQUIRED') {
         setAuthStatus('2FA_REQUIRED');
-        setAuthError(null);
+        if (data.otp_channel) {
+          setOtpSent(true);
+        } else {
+          setOtpSent(false);
+        }
+        setAuthError(data.message || null);
       } else if (data.status === 'SUCCESS' && data.token) {
         sessionStorage.setItem('casamoko_session_token', data.token);
         setToken(data.token);
@@ -2472,52 +2479,72 @@ const getChatDateHeader = (timestampStr: string) => {
 
                     {authStatus === '2FA_REQUIRED' && (
                       <div className="space-y-4">
-                        <div className="flex items-center justify-between bg-slate-900/60 p-1.5 rounded-xl border border-slate-800 text-xs">
-                          <span className="text-slate-400 pl-2 font-medium">Delivery Method:</span>
-                          <div className="flex gap-1">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setOtpChannel('email');
-                                handleResendCode('email');
-                              }}
-                              className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${otpChannel === 'email' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
-                            >
-                              📧 Email
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setOtpChannel('sms');
-                                handleResendCode('sms');
-                              }}
-                              className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${otpChannel === 'sms' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
-                            >
-                              💬 SMS (CASAMOKO)
-                            </button>
+                        {!otpSent ? (
+                          <div className="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-center space-y-3">
+                            <p className="text-xs text-gray-300 font-medium">Choose how you wish to receive your 6-digit security OTP code:</p>
+                            <div className="grid grid-cols-2 gap-3 pt-1">
+                              <button
+                                type="button"
+                                disabled={isLoading}
+                                onClick={() => handleResendCode('email')}
+                                className="bg-indigo-600/90 hover:bg-indigo-600 text-white font-bold py-3 px-3 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-indigo-500/20"
+                              >
+                                {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <span>📧 Send via Email</span>}
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isLoading}
+                                onClick={() => handleResendCode('sms')}
+                                className="bg-emerald-600/90 hover:bg-emerald-600 text-white font-bold py-3 px-3 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20"
+                              >
+                                {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <span>💬 Send via SMS</span>}
+                              </button>
+                            </div>
                           </div>
-                        </div>
+                        ) : (
+                          <>
+                            <div className="flex items-center justify-between bg-slate-900/60 p-1.5 rounded-xl border border-slate-800 text-xs">
+                              <span className="text-slate-400 pl-2 font-medium">Channel:</span>
+                              <div className="flex gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleResendCode('email')}
+                                  className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${otpChannel === 'email' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+                                >
+                                  📧 Email
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleResendCode('sms')}
+                                  className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${otpChannel === 'sms' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+                                >
+                                  💬 SMS (CASAMOKO)
+                                </button>
+                              </div>
+                            </div>
 
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                            {otpChannel === 'sms' ? '💬 SMS Authentication Code (Sender ID: CASAMOKO)' : '📧 Email Authentication Code'}
-                          </label>
-                          <div className="relative">
-                            <Lock className="w-5 h-5 text-gray-500 absolute left-4 top-3.5" />
-                            <input 
-                              type="text" 
-                              required 
-                              maxLength={6}
-                              value={totpCode}
-                              onChange={(e) => setTotpCode(e.target.value)}
-                              className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-12 pr-4 py-3 font-mono text-xl tracking-widest text-center text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                              placeholder="123456"
-                            />
-                          </div>
-                          <p className="text-xs text-gray-400 mt-2 text-center">
-                            Enter the 6-digit code dispatched via <b className="text-cyan-300 font-bold uppercase">{otpChannel}</b>.
-                          </p>
-                        </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                                {otpChannel === 'sms' ? '💬 SMS Authentication Code (Sender ID: CASAMOKO)' : '📧 Email Authentication Code'}
+                              </label>
+                              <div className="relative">
+                                <Lock className="w-5 h-5 text-gray-500 absolute left-4 top-3.5" />
+                                <input 
+                                  type="text" 
+                                  required 
+                                  maxLength={6}
+                                  value={totpCode}
+                                  onChange={(e) => setTotpCode(e.target.value)}
+                                  className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-12 pr-4 py-3 font-mono text-xl tracking-widest text-center text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                  placeholder="123456"
+                                />
+                              </div>
+                              <p className="text-xs text-gray-400 mt-2 text-center">
+                                Enter the 6-digit code dispatched via <b className="text-cyan-300 font-bold uppercase">{otpChannel}</b>.
+                              </p>
+                            </div>
+                          </>
+                        )}
                       </div>
                     )}
 

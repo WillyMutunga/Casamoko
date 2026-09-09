@@ -123,7 +123,18 @@ class AuthController extends Controller
             $totpCode = $request->input('totp_code');
 
             if (!$totpCode) {
-                $otpChannel = strtolower($request->input('otp_channel', 'email'));
+                // If user has not yet specified a channel (initial login step), return 2FA_REQUIRED without sending code
+                if (!$request->has('otp_channel')) {
+                    return response()->json([
+                        'status' => '2FA_REQUIRED',
+                        'otp_channel' => null,
+                        'message' => 'Please select your preferred OTP delivery method below to receive your authentication code.',
+                        'email' => $email,
+                        'phone_number' => $user->phone_number
+                    ]);
+                }
+
+                $otpChannel = strtolower($request->input('otp_channel'));
                 // Generate a random 6-digit OTP
                 $newCode = str_pad((string)rand(0, 999999), 6, '0', STR_PAD_LEFT);
                 
@@ -132,7 +143,7 @@ class AuthController extends Controller
                 
                 if ($otpChannel === 'sms' && !empty($user->phone_number)) {
                     try {
-                        dispatch(new \App\Jobs\SendOtpSmsJob($user->phone_number, $newCode, 'CASAMOKO'));
+                        \App\Jobs\SendOtpSmsJob::dispatchSync($user->phone_number, $newCode, 'CASAMOKO');
                     } catch (\Exception $e) {
                         \Illuminate\Support\Facades\Log::error('Failed to dispatch OTP SMS job: ' . $e->getMessage());
                     }
@@ -146,9 +157,9 @@ class AuthController extends Controller
                     ]);
                 }
 
-                // Default to Email
+                // Default / Explicit Email
                 try {
-                    dispatch(new \App\Jobs\SendOtpEmailJob($user->email, $newCode));
+                    \App\Jobs\SendOtpEmailJob::dispatchSync($user->email, $newCode);
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::error('Failed to dispatch OTP email job: ' . $e->getMessage());
                 }
@@ -452,7 +463,7 @@ class AuthController extends Controller
 
         if ($channel === 'sms' && !empty($user->phone_number)) {
             try {
-                dispatch(new \App\Jobs\SendOtpSmsJob($user->phone_number, $newCode, 'CASAMOKO'));
+                \App\Jobs\SendOtpSmsJob::dispatchSync($user->phone_number, $newCode, 'CASAMOKO');
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Failed to dispatch OTP SMS job: ' . $e->getMessage());
             }
@@ -466,7 +477,7 @@ class AuthController extends Controller
 
         // Default / Fallback to Email
         try {
-            dispatch(new \App\Jobs\SendOtpEmailJob($user->email, $newCode));
+            \App\Jobs\SendOtpEmailJob::dispatchSync($user->email, $newCode);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to dispatch OTP email job: ' . $e->getMessage());
         }
