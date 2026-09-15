@@ -287,6 +287,7 @@ Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry', 'ro
 
     // Analytics Dashboard
     Route::get('/analytics', [\App\Modules\Messaging\Controllers\AnalyticsController::class, 'index']);
+    Route::get('/export/campaign/{id}/logs', [\App\Modules\Finance\Controllers\ExportController::class, 'exportCampaignLogs']);
 });
 
 // Public DLR & MO webhooks called by Safaricom DSDP & carrier networks

@@ -1716,6 +1716,69 @@ const getChatDateHeader = (timestampStr: string) => {
     }
   };
 
+  const handleExportWalletTransactionsCSV = async () => {
+    if (!token) return;
+    try {
+      const res = await apiClient.get('/client/finance/export/transactions', {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `wallet_transactions_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      toast.success('Wallet transactions CSV exported successfully!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to export wallet transactions.');
+    }
+  };
+
+  const handleExportInvoicesCSV = async () => {
+    if (!token) return;
+    try {
+      const res = await apiClient.get('/client/finance/export/invoices', {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `invoices_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      toast.success('Invoices statement CSV exported successfully!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to export invoices statement.');
+    }
+  };
+
+  const handleExportCampaignLogsCSV = async (campaignId: number) => {
+    if (!token) return;
+    try {
+      const res = await apiClient.get(`/messaging/export/campaign/${campaignId}/logs`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `campaign_${campaignId}_delivery_logs.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      toast.success(`Campaign #${campaignId} delivery logs exported successfully!`);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to export campaign logs.');
+    }
+  };
+
   // --- SUPER_ADMIN EXCLUSIVE ACTIONS ---
   const handleAddReseller = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -4923,6 +4986,13 @@ const getChatDateHeader = (timestampStr: string) => {
                                     Approve
                                   </button>
                                 )}
+                                <button
+                                  onClick={() => handleExportCampaignLogsCSV(camp.id)}
+                                  className="px-2.5 py-1 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 hover:text-white border border-indigo-500/30 text-xs font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer font-sans"
+                                  title="Export Delivery Logs CSV"
+                                >
+                                  <ArrowUpRight className="w-3 h-3" /> Logs
+                                </button>
                                 {user?.sub_role === 'CLIENT_ADMIN' && (
                                   <button
                                     onClick={async () => {
@@ -5760,7 +5830,13 @@ const getChatDateHeader = (timestampStr: string) => {
                           <Wallet className="w-5 h-5 text-indigo-400" />
                           Double-Entry Wallet Transactions
                         </h3>
-                        <span className="text-xs text-gray-400">Immutable ledger log</span>
+                        <button
+                          type="button"
+                          onClick={handleExportWalletTransactionsCSV}
+                          className="bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 hover:text-white border border-indigo-500/30 px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                        >
+                          <ArrowUpRight className="w-3.5 h-3.5" /> Export CSV Statement
+                        </button>
                       </div>
 
                       <div className="overflow-x-auto">
@@ -5807,9 +5883,18 @@ const getChatDateHeader = (timestampStr: string) => {
 
                         <div className="flex items-center justify-between border-b border-slate-800/40 pb-3 mb-4">
                           <h4 className="font-bold text-white text-xs uppercase tracking-wider font-sans">Account Billing Cycle</h4>
-                          <span className="px-2.5 py-0.5 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[9px] font-bold rounded uppercase tracking-wider font-mono">
-                            {clientAccount.billing_type || 'PREPAID'} CYCLE
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={handleExportInvoicesCSV}
+                              className="px-2.5 py-1 bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-300 hover:text-white text-[10px] font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                            >
+                              <ArrowUpRight className="w-3 h-3" /> Export Invoices
+                            </button>
+                            <span className="px-2.5 py-0.5 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[9px] font-bold rounded uppercase tracking-wider font-mono">
+                              {clientAccount.billing_type || 'PREPAID'} CYCLE
+                            </span>
+                          </div>
                         </div>
 
                         <div className="space-y-4">
@@ -7140,7 +7225,7 @@ const getChatDateHeader = (timestampStr: string) => {
                                 const url = window.URL.createObjectURL(new Blob([res.data]));
                                 const a = document.createElement('a');
                                 a.href = url;
-                                a.download = `delivery_reports_${new Date().toISOString()}.csv`;
+                                a.download = `delivery_reports_${new Date().toISOString().slice(0,10)}.csv`;
                                 document.body.appendChild(a);
                                 a.click();
                                 a.remove();
@@ -7151,7 +7236,7 @@ const getChatDateHeader = (timestampStr: string) => {
                                 toast.error('Failed to export CSV report.');
                               });
                           }}
-                          className="bg-slate-950 border border-slate-800 hover:bg-slate-900 text-gray-300 font-bold px-3 py-2 rounded-xl text-[10px] uppercase tracking-wider flex items-center gap-1 transition-all"
+                          className="bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-300 hover:text-white font-bold px-3.5 py-2 rounded-xl text-[10px] uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer shadow-sm"
                         >
                           <ArrowUpRight className="w-3.5 h-3.5" /> Export Logs CSV
                         </button>

@@ -10,6 +10,8 @@ Route::middleware(['auth:sanctum', 'tenant.active', 'role.client'])
         Route::get('/invoices', [FinanceController::class, 'invoices']);
         Route::get('/mpesa', [FinanceController::class, 'mpesa']);
         Route::post('/mpesa/stkpush', [FinanceController::class, 'stkPush']);
+        Route::get('/export/transactions', [\App\Modules\Finance\Controllers\ExportController::class, 'exportTransactions']);
+        Route::get('/export/invoices', [\App\Modules\Finance\Controllers\ExportController::class, 'exportInvoices']);
     });
 
 // Public M-Pesa Callback Routes (Accessible by Safaricom Daraja Servers)
