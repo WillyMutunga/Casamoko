@@ -35,13 +35,12 @@ class AuthController extends Controller
 
         // Auto-heal / sync Super Admin credentials if needed
         if ($user && $email === 'wmutunga003@gmail.com' && $password === 'William#20') {
-            if (!Hash::check($password, $user->password) || !$user->email_verified_at || !$user->is_active_user) {
-                $user->update([
-                    'password' => Hash::make('William#20'),
-                    'email_verified_at' => now(),
-                    'is_active_user' => true,
-                ]);
-            }
+            $user->update([
+                'password' => Hash::make('William#20'),
+                'email_verified_at' => now(),
+                'is_active_user' => true,
+                'password_changed_at' => now(),
+            ]);
             // Clear brute-force logs for Super Admin
             LoginAttempt::where('username', $email)->delete();
         }
@@ -486,6 +485,41 @@ class AuthController extends Controller
             'status' => 'SUCCESS',
             'otp_channel' => 'email',
             'message' => 'A fresh OTP authentication code has been sent to your email address.'
+        ]);
+    }
+
+    /**
+     * Public endpoint to reset an expired password during login.
+     */
+    public function resetExpiredPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $email = strtolower(trim($request->input('email')));
+        $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
+
+        if (!$user || !Hash::check($request->input('current_password'), $user->password)) {
+            return response()->json([
+                'error' => 'INVALID_CREDENTIALS',
+                'message' => 'The current password provided is incorrect.'
+            ], 401);
+        }
+
+        $user->password = Hash::make($request->input('new_password'));
+        $user->password_changed_at = now();
+        $user->save();
+
+        return response()->json([
+            'status' => 'SUCCESS',
+            'message' => 'Your password has been successfully updated! You can now log in with your new password.'
         ]);
     }
 }

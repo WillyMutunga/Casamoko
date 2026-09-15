@@ -171,6 +171,13 @@ export default function App() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [authStatus, setAuthStatus] = useState<'IDLE' | '2FA_REQUIRED' | '2FA_SETUP_REQUIRED'>('IDLE');
   
+  // Expired Password Reset States
+  const [showResetPasswordForm, setShowResetPasswordForm] = useState(false);
+  const [resetCurrentPassword, setResetCurrentPassword] = useState('');
+  const [resetNewPassword, setResetNewPassword] = useState('');
+  const [resetConfirmPassword, setResetConfirmPassword] = useState('');
+  const [resetSuccessMsg, setResetSuccessMsg] = useState<string | null>(null);
+  
   // Password Visibility Toggles
   const [showPassword, setShowPassword] = useState(false);
   const [showRegPassword, setShowRegPassword] = useState(false);
@@ -1037,8 +1044,54 @@ const getChatDateHeader = (timestampStr: string) => {
       }
     } catch (err: any) {
       console.error(err);
-      const errMsg = err.response?.data?.message || err.response?.data?.error || 'Authentication failed. Please verify your credentials.';
+      const errCode = err.response?.data?.error;
+      const errMsg = err.response?.data?.message || errCode || 'Authentication failed. Please verify your credentials.';
+      if (errCode === 'PASSWORD_EXPIRED' || (errMsg && errMsg.toLowerCase().includes('password has expired'))) {
+        setShowResetPasswordForm(true);
+      }
       setAuthError(errMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Perform Expired Password Reset
+  const handleResetExpiredPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+    setResetSuccessMsg(null);
+
+    if (resetNewPassword !== resetConfirmPassword) {
+      setAuthError('New password and confirm password do not match.');
+      return;
+    }
+
+    if (resetNewPassword.length < 6) {
+      setAuthError('New password must be at least 6 characters.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await apiClient.post('/accounts/reset-expired-password', {
+        email,
+        current_password: resetCurrentPassword || password,
+        new_password: resetNewPassword,
+      });
+
+      if (res.data.status === 'SUCCESS') {
+        toast.success(res.data.message || 'Password updated successfully!');
+        setResetSuccessMsg('✅ Password updated successfully! Please re-authenticate with your new password.');
+        setPassword(resetNewPassword);
+        setShowResetPasswordForm(false);
+        setResetCurrentPassword('');
+        setResetNewPassword('');
+        setResetConfirmPassword('');
+        setAuthError(null);
+        setAuthStatus('IDLE');
+      }
+    } catch (err: any) {
+      setAuthError(err.response?.data?.message || err.response?.data?.error || 'Failed to update password. Please check your current password.');
     } finally {
       setIsLoading(false);
     }
@@ -2360,11 +2413,93 @@ const getChatDateHeader = (timestampStr: string) => {
                 {authError && (
                   <div className="p-4 bg-red-900/30 border border-red-500/40 rounded-xl mb-6 flex items-start gap-3">
                     <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                    <span className="text-red-300 text-sm font-medium">{authError}</span>
+                    <div className="space-y-2 text-sm font-medium">
+                      <span className="text-red-300 block">{authError}</span>
+                      {(authError.toLowerCase().includes('expired') || authError.toLowerCase().includes('rotation') || showResetPasswordForm) && (
+                        <button
+                          type="button"
+                          onClick={() => { setShowResetPasswordForm(true); setAuthError(null); }}
+                          className="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-bold px-3 py-1.5 rounded-lg transition-all inline-flex items-center gap-1 border border-amber-500/30 mt-1 cursor-pointer"
+                        >
+                          🔒 Reset Expired Password Now
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
 
-                {isRegistering ? (
+                {resetSuccessMsg && (
+                  <div className="p-4 bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs rounded-xl mb-6 font-medium">
+                    {resetSuccessMsg}
+                  </div>
+                )}
+
+                {showResetPasswordForm ? (
+                  <form onSubmit={handleResetExpiredPassword} className="space-y-4">
+                    <div className="p-3 bg-amber-950/40 border border-amber-500/30 text-amber-300 text-xs rounded-xl font-medium">
+                      🔒 Administrative policy requires password rotation every 90 days. Please enter your new password below to update your account.
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Account Email</label>
+                      <input 
+                        type="email" 
+                        required 
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Current Password</label>
+                      <input 
+                        type="password" 
+                        required 
+                        value={resetCurrentPassword || password}
+                        onChange={(e) => setResetCurrentPassword(e.target.value)}
+                        className="w-full bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">New Password (Min 6 chars)</label>
+                      <input 
+                        type="password" 
+                        required 
+                        minLength={6}
+                        value={resetNewPassword}
+                        onChange={(e) => setResetNewPassword(e.target.value)}
+                        className="w-full bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Confirm New Password</label>
+                      <input 
+                        type="password" 
+                        required 
+                        minLength={6}
+                        value={resetConfirmPassword}
+                        onChange={(e) => setResetConfirmPassword(e.target.value)}
+                        className="w-full bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    <button 
+                      type="submit" 
+                      disabled={isLoading}
+                      className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-xl transition-all hover:shadow-lg disabled:opacity-50 text-xs uppercase tracking-wider mt-2 cursor-pointer"
+                    >
+                      {isLoading ? 'Updating Password...' : '🔒 Update Password & Continue'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowResetPasswordForm(false)}
+                      className="w-full text-xs text-gray-400 hover:text-white py-1 transition-colors cursor-pointer"
+                    >
+                      ← Back to Login
+                    </button>
+                  </form>
+                ) : isRegistering ? (
                   <form onSubmit={handleRegister} className="space-y-4">
                     <div className="p-3 bg-indigo-950/40 border border-indigo-500/20 text-indigo-300 text-xs rounded-xl font-medium">
                       📋 Register a new corporate client account. Reseller accounts are provisioned by the system administrator.
