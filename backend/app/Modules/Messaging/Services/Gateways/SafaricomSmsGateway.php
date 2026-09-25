@@ -34,7 +34,7 @@ class SafaricomSmsGateway implements SmsGatewayInterface
         $this->password = '5qITcVn81hRion';
         // Safaricom has mapped the new account to integer ID 143 and Package 891 (25,000 units)
         $this->cpId = '143';
-        $this->packageId = (int) env('SAFARICOM_SDP_PACKAGE_ID', 891);
+        $this->packageId = (string) (env('SAFARICOM_SDP_PACKAGE_ID') ?: '891');
     }
 
     /**
@@ -127,7 +127,8 @@ class SafaricomSmsGateway implements SmsGatewayInterface
                             array_filter([
                                 'userName' => $this->cpId,
                                 'channel' => 'sms',
-                                'packageId' => $this->packageId,
+                                'packageId' => (string) $this->packageId,
+                                'serviceId' => (string) $this->packageId,
                                 'oa' => $senderId,
                                 'msisdn' => $cleanMsisdn,
                                 'message' => $message,
