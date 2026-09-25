@@ -46,15 +46,23 @@ class SafaricomSmsGateway implements SmsGatewayInterface
         
         return Cache::remember($cacheKey, 3000, function () {
             try {
-                $response = Http::timeout(60)->withHeaders([
-                    'accept' => 'application/json',
-                    'X-Requested-With' => 'XMLHttpRequest',
-                    'X-Country' => 'KEN',
-                    'Content-Type' => 'application/json'
-                ])->post($this->authUrl, [
-                    'username' => $this->username,
-                    'password' => $this->password
-                ]);
+                $response = Http::timeout(30)
+                    ->withOptions([
+                        'curl' => [
+                            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                            CURLOPT_FORBID_REUSE => true,
+                            CURLOPT_FRESH_CONNECT => true
+                        ]
+                    ])
+                    ->withHeaders([
+                        'accept' => 'application/json',
+                        'X-Requested-With' => 'XMLHttpRequest',
+                        'X-Country' => 'KEN',
+                        'Content-Type' => 'application/json'
+                    ])->post($this->authUrl, [
+                        'username' => $this->username,
+                        'password' => $this->password
+                    ]);
 
                 if ($response->successful()) {
                     $data = $response->json();
@@ -84,8 +92,8 @@ class SafaricomSmsGateway implements SmsGatewayInterface
         $uniqueId = 'SAF_CMS_' . uniqid();
         $dlrUrl = 'https://casamoko.co.ke/api/dlr-webhook';
 
-        // Attempt dispatch with token invalidation retry loop
-        for ($attempt = 1; $attempt <= 2; $attempt++) {
+        // Attempt dispatch with token invalidation and fresh connection retry loop (up to 3 attempts)
+        for ($attempt = 1; $attempt <= 3; $attempt++) {
             $token = $this->getJwtToken();
 
             if (!$token) {
@@ -97,36 +105,45 @@ class SafaricomSmsGateway implements SmsGatewayInterface
             }
 
             try {
-                // Post to CMS Bulk SMS endpoint
-                $response = Http::timeout(60)->withHeaders([
-                    'accept' => 'application/json',
-                    'X-Requested-With' => 'XMLHttpRequest',
-                    'X-Country' => 'KEN',
-                    'Content-Type' => 'application/json',
-                    'X-Authorization' => 'Bearer ' . $token,
-                    'Authorization' => 'Bearer ' . $token // Send both variants to ensure compat
-                ])->post($this->sendUrl, [
-                    'timeStamp' => (int) round(microtime(true) * 1000),
-                    'dataSet' => [
-                        array_filter([
-                            'userName' => $this->cpId,
-                            'channel' => 'sms',
-                            'packageId' => $this->packageId,
-                            'oa' => $senderId,
-                            'msisdn' => $cleanMsisdn,
-                            'message' => $message,
-                            'uniqueId' => $uniqueId,
-                            'actionResponseURL' => $dlrUrl,
-                            'hashed' => 'no',
-                            'linkId' => $linkId
-                        ], fn($val) => !is_null($val))
-                    ]
-                ]);
+                // Post to CMS Bulk SMS endpoint with fresh HTTP/1.1 connection settings
+                $response = Http::timeout(30)
+                    ->withOptions([
+                        'curl' => [
+                            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                            CURLOPT_FORBID_REUSE => true,
+                            CURLOPT_FRESH_CONNECT => true
+                        ]
+                    ])
+                    ->withHeaders([
+                        'accept' => 'application/json',
+                        'X-Requested-With' => 'XMLHttpRequest',
+                        'X-Country' => 'KEN',
+                        'Content-Type' => 'application/json',
+                        'X-Authorization' => 'Bearer ' . $token,
+                        'Authorization' => 'Bearer ' . $token
+                    ])->post($this->sendUrl, [
+                        'timeStamp' => (int) round(microtime(true) * 1000),
+                        'dataSet' => [
+                            array_filter([
+                                'userName' => $this->cpId,
+                                'channel' => 'sms',
+                                'packageId' => $this->packageId,
+                                'oa' => $senderId,
+                                'msisdn' => $cleanMsisdn,
+                                'message' => $message,
+                                'uniqueId' => $uniqueId,
+                                'actionResponseURL' => $dlrUrl,
+                                'hashed' => 'no',
+                                'linkId' => $linkId
+                            ], fn($val) => !is_null($val))
+                        ]
+                    ]);
 
                 // Handle token expiration/revocation cleanly
                 if ($response->status() === 401) {
                     $cacheKey = 'safaricom_sdp_jwt_token_' . md5($this->username);
                     Cache::forget($cacheKey);
+                    usleep(200000); // 200ms pause
                     continue;
                 }
 
@@ -157,6 +174,11 @@ class SafaricomSmsGateway implements SmsGatewayInterface
 
                 Log::error("SafaricomSDP CMS SMS Dispatch [Failed] - Status: {$response->status()} | Body: {$response->body()}");
 
+                if ($attempt < 3) {
+                    usleep(200000);
+                    continue;
+                }
+
                 return [
                     'status' => 'FAILED',
                     'error_code' => 'HTTP_' . $response->status(),
@@ -164,7 +186,15 @@ class SafaricomSmsGateway implements SmsGatewayInterface
                 ];
 
             } catch (\Exception $e) {
-                Log::error("SafaricomSDP CMS SMS Dispatch [Exception] - Trace: " . $e->getMessage());
+                Log::warning("SafaricomSDP CMS SMS Dispatch Exception (Attempt {$attempt}/3): " . $e->getMessage());
+                // Invalidate cached token in case connection error was due to stale session handle
+                $cacheKey = 'safaricom_sdp_jwt_token_' . md5($this->username);
+                Cache::forget($cacheKey);
+
+                if ($attempt < 3) {
+                    usleep(300000); // 300ms pause before retrying
+                    continue;
+                }
 
                 return [
                     'status' => 'FAILED',
@@ -193,14 +223,22 @@ class SafaricomSmsGateway implements SmsGatewayInterface
             }
 
             try {
-                $response = Http::timeout(10)->withHeaders([
-                    'accept' => 'application/json',
-                    'X-Requested-With' => 'XMLHttpRequest',
-                    'X-Country' => 'KEN',
-                    'Content-Type' => 'application/json',
-                    'X-Authorization' => 'Bearer ' . $token,
-                    'Authorization' => 'Bearer ' . $token
-                ])->get($this->balanceUrl . '?spId=' . $this->cpId);
+                $response = Http::timeout(10)
+                    ->withOptions([
+                        'curl' => [
+                            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                            CURLOPT_FORBID_REUSE => true,
+                            CURLOPT_FRESH_CONNECT => true
+                        ]
+                    ])
+                    ->withHeaders([
+                        'accept' => 'application/json',
+                        'X-Requested-With' => 'XMLHttpRequest',
+                        'X-Country' => 'KEN',
+                        'Content-Type' => 'application/json',
+                        'X-Authorization' => 'Bearer ' . $token,
+                        'Authorization' => 'Bearer ' . $token
+                    ])->get($this->balanceUrl . '?spId=' . $this->cpId);
 
                 if ($response->status() === 401) {
                     $cacheKey = 'safaricom_sdp_jwt_token_' . md5($this->username);
