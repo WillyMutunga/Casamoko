@@ -32,9 +32,9 @@ class SafaricomSmsGateway implements SmsGatewayInterface
 
         $this->username = 'casamoko_api';
         $this->password = '5qITcVn81hRion';
-        // Safaricom has mapped the new account to integer ID 143 and Package 891 (25,000 units)
+        // Safaricom account integer ID 143 (Package 890)
         $this->cpId = '143';
-        $this->packageId = (string) (env('SAFARICOM_SDP_PACKAGE_ID') ?: '891');
+        $this->packageId = (string) (env('SAFARICOM_SDP_PACKAGE_ID') ?: '890');
     }
 
     /**
