@@ -5,6 +5,7 @@ namespace App\Modules\Messaging\Services\Gateways;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class SafaricomSmsGateway implements SmsGatewayInterface
 {
@@ -14,7 +15,9 @@ class SafaricomSmsGateway implements SmsGatewayInterface
     protected string $username;
     protected string $password;
     protected string $cpId;
-    protected int $packageId;
+    protected string $packageId;
+    protected string $offerCode;
+    protected string $mode;
 
     /**
      * Initialize the Safaricom Digital SDP client settings.
@@ -32,9 +35,10 @@ class SafaricomSmsGateway implements SmsGatewayInterface
 
         $this->username = 'casamoko_api';
         $this->password = '5qITcVn81hRion';
-        // Safaricom account integer ID 143 (Package 890)
-        $this->cpId = '143';
+        $this->cpId = (string) (env('SAFARICOM_SDP_CP_ID') ?: '143');
         $this->packageId = (string) (env('SAFARICOM_SDP_PACKAGE_ID') ?: '890');
+        $this->offerCode = (string) (env('SAFARICOM_SDP_OFFER_CODE') ?: '300000863');
+        $this->mode = (string) (env('SAFARICOM_SDP_MODE') ?: 'non_interactive');
     }
 
     /**
@@ -89,8 +93,56 @@ class SafaricomSmsGateway implements SmsGatewayInterface
             $cleanMsisdn = '254' . substr($cleanMsisdn, 1);
         }
 
-        $uniqueId = 'SAF_CMS_' . uniqid();
+        $uniqueId = (string) Str::uuid();
         $dlrUrl = 'https://casamoko.co.ke/api/dlr-webhook';
+
+        // Build Payload depending on interactive / non-interactive shortcode status
+        if ($this->mode === 'non_interactive') {
+            $timestamp = date('YmdHis');
+            $data = [
+                ['name' => 'OfferCode', 'value' => (string) $this->offerCode],
+                ['name' => 'RefernceId', 'value' => $uniqueId],
+                ['name' => 'ClientTransactionId', 'value' => $uniqueId],
+                ['name' => 'Language', 'value' => '1'],
+                ['name' => 'Channel', 'value' => 'SMS'],
+                ['name' => 'Type', 'value' => $linkId ? 'NOTIFY_LINKID' : 'NOTIFY_LINKID'],
+                ['name' => 'Msisdn', 'value' => $cleanMsisdn],
+                ['name' => 'USER_DATA', 'value' => $message]
+            ];
+
+            if ($linkId) {
+                array_unshift($data, ['name' => 'LinkId', 'value' => $linkId]);
+            }
+
+            $payload = [
+                'requestId' => $uniqueId,
+                'requestTimestamp' => $timestamp,
+                'operation' => 'CP_NOTIFICATION',
+                'requestParam' => [
+                    'data' => $data,
+                    'additionalData' => []
+                ]
+            ];
+        } else {
+            $payload = [
+                'timeStamp' => (int) round(microtime(true) * 1000),
+                'dataSet' => [
+                    array_filter([
+                        'userName' => $this->cpId,
+                        'channel' => 'sms',
+                        'packageId' => (string) $this->packageId,
+                        'serviceId' => (string) $this->packageId,
+                        'oa' => $senderId,
+                        'msisdn' => $cleanMsisdn,
+                        'message' => $message,
+                        'uniqueId' => 'SAF_CMS_' . uniqid(),
+                        'actionResponseURL' => $dlrUrl,
+                        'hashed' => 'no',
+                        'linkId' => $linkId
+                    ], fn($val) => !is_null($val))
+                ]
+            ];
+        }
 
         // Attempt dispatch with token invalidation and fresh connection retry loop (up to 3 attempts)
         for ($attempt = 1; $attempt <= 3; $attempt++) {
@@ -121,24 +173,7 @@ class SafaricomSmsGateway implements SmsGatewayInterface
                         'Content-Type' => 'application/json',
                         'X-Authorization' => 'Bearer ' . $token,
                         'Authorization' => 'Bearer ' . $token
-                    ])->post($this->sendUrl, [
-                        'timeStamp' => (int) round(microtime(true) * 1000),
-                        'dataSet' => [
-                            array_filter([
-                                'userName' => $this->cpId,
-                                'channel' => 'sms',
-                                'packageId' => (string) $this->packageId,
-                                'serviceId' => (string) $this->packageId,
-                                'oa' => $senderId,
-                                'msisdn' => $cleanMsisdn,
-                                'message' => $message,
-                                'uniqueId' => $uniqueId,
-                                'actionResponseURL' => $dlrUrl,
-                                'hashed' => 'no',
-                                'linkId' => $linkId
-                            ], fn($val) => !is_null($val))
-                        ]
-                    ]);
+                    ])->post($this->sendUrl, $payload);
 
                 // Handle token expiration/revocation cleanly
                 if ($response->status() === 401) {
@@ -151,12 +186,11 @@ class SafaricomSmsGateway implements SmsGatewayInterface
                 if ($response->successful()) {
                     $data = $response->json();
                     
-                    // Safaricom returns HTTP 200 even for logical errors like Quota Exceeded
-                    // Success is indicated by statusCode SC0000 or status SUCCESS
-                    $statusCode = $data['statusCode'] ?? null;
-                    $statusStr = $data['status'] ?? null;
+                    // Safaricom returns HTTP 200 even for logical status codes
+                    $statusCode = $data['statusCode'] ?? $data['responseCode'] ?? $data['code'] ?? null;
+                    $statusStr = $data['status'] ?? $data['responseMessage'] ?? null;
 
-                    if ($statusCode === 'SC0000' || $statusStr === 'SUCCESS') {
+                    if ($statusCode === 'SC0000' || $statusCode === '0' || $statusStr === 'SUCCESS' || isset($data['requestId'])) {
                         $messageId = $data['transactionId'] ?? $data['requestId'] ?? $uniqueId;
                         return [
                             'status' => 'SENT',
@@ -168,7 +202,7 @@ class SafaricomSmsGateway implements SmsGatewayInterface
                     // Logical failure despite HTTP 200 (e.g. SC0011 TOTAL_QUOTA_EXCEEDED)
                     return [
                         'status' => 'FAILED',
-                        'error_code' => $statusCode ?? 'API_LOGICAL_ERROR',
+                        'error_code' => (string) ($statusCode ?? 'API_LOGICAL_ERROR'),
                         'message' => json_encode($data)
                     ];
                 }
