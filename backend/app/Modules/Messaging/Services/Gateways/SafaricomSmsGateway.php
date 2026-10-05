@@ -257,46 +257,6 @@ class SafaricomSmsGateway implements SmsGatewayInterface
      */
     public function getBalance(): ?string
     {
-        for ($attempt = 0; $attempt < 2; $attempt++) {
-            $token = $this->getJwtToken();
-            if (!$token) {
-                return null;
-            }
-
-            try {
-                $response = Http::timeout(10)
-                    ->withOptions([
-                        'curl' => [
-                            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                            CURLOPT_FORBID_REUSE => true,
-                            CURLOPT_FRESH_CONNECT => true
-                        ]
-                    ])
-                    ->withHeaders([
-                        'accept' => 'application/json',
-                        'X-Requested-With' => 'XMLHttpRequest',
-                        'X-Country' => 'KEN',
-                        'Content-Type' => 'application/json',
-                        'X-Authorization' => 'Bearer ' . $token,
-                        'Authorization' => 'Bearer ' . $token
-                    ])->get($this->balanceUrl . '?spId=' . $this->cpId);
-
-                if ($response->status() === 401) {
-                    $cacheKey = 'safaricom_sdp_jwt_token_' . md5($this->username);
-                    Cache::forget($cacheKey);
-                    continue;
-                }
-
-                if ($response->successful()) {
-                    $data = $response->json();
-                    return $data['balance'] ?? $data['data']['balance'] ?? 'Unknown';
-                }
-                return null;
-            } catch (\Exception $e) {
-                Log::error("SafaricomSDP Balance Fetch Exception: " . $e->getMessage());
-                return null;
-            }
-        }
-        return null;
+        return 'N/A';
     }
 }
