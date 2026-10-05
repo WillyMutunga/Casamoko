@@ -38,7 +38,7 @@ class SafaricomSmsGateway implements SmsGatewayInterface
         $this->cpId = (string) (env('SAFARICOM_SDP_CP_ID') ?: '143');
         $this->packageId = (string) (env('SAFARICOM_SDP_PACKAGE_ID') ?: '890');
         $this->offerCode = (string) (env('SAFARICOM_SDP_OFFER_CODE') ?: '300000863');
-        $this->mode = (string) (env('SAFARICOM_SDP_MODE') ?: 'non_interactive');
+        $this->mode = (string) (env('SAFARICOM_SDP_MODE') ?: 'interactive');
     }
 
     /**
