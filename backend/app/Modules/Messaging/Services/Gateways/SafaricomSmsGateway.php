@@ -175,12 +175,18 @@ class SafaricomSmsGateway implements SmsGatewayInterface
                         'Authorization' => 'Bearer ' . $token
                     ])->post($this->sendUrl, $payload);
 
-                // Handle token expiration/revocation cleanly
-                if ($response->status() === 401) {
+                // Handle token expiration/revocation cleanly (HTTP 401, HTTP 403, or INVALID_USER_TOKEN)
+                $responseBody = $response->body();
+                if ($response->status() === 401 || $response->status() === 403 || str_contains($responseBody, 'INVALID_USER_TOKEN') || str_contains($responseBody, 'different user')) {
                     $cacheKey = 'safaricom_sdp_jwt_token_' . md5($this->username);
                     Cache::forget($cacheKey);
-                    usleep(200000); // 200ms pause
-                    continue;
+
+                    Log::warning("SafaricomSDP Token Invalidated (Attempt {$attempt}/3) - Status: {$response->status()} | Body: {$responseBody}");
+
+                    if ($attempt < 3) {
+                        usleep(200000); // 200ms pause before acquiring fresh token
+                        continue;
+                    }
                 }
 
                 if ($response->successful()) {
