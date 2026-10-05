@@ -31,7 +31,9 @@ import {
   ArrowDownLeft,
   Sliders,
   User,
-  X
+  X,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { Key, Copy, Trash2, Code, Library, Webhook, TerminalSquare, FileCode2, MessageSquareDashed, GitMerge, ArrowRightLeft, Route, Inbox, CheckSquare, Archive, ArrowLeft } from 'lucide-react';
 import apiClient from './services/api';
@@ -105,6 +107,22 @@ interface LoginAttemptLog {
 }
 
 export default function App() {
+  // Theme State (Light / Dark)
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem('casamoko_theme') as 'dark' | 'light') || 'dark');
+
+  useEffect(() => {
+    if (theme === 'light') {
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+    }
+    localStorage.setItem('casamoko_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
   // Navigation State
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
   const [devApiKey, setDevApiKey] = useState('live_csmk_' + Math.random().toString(36).substring(2, 26));
@@ -2373,6 +2391,13 @@ const getChatDateHeader = (timestampStr: string) => {
               </div>
               <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                 <button 
+                  onClick={toggleTheme}
+                  title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+                  className="p-2 sm:p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-300 hover:text-white transition-all shadow-sm flex items-center justify-center cursor-pointer"
+                >
+                  {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+                </button>
+                <button 
                   onClick={() => setShowAuthModal(true)}
                   className="px-3 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition-colors"
                 >
@@ -3002,7 +3027,14 @@ const getChatDateHeader = (timestampStr: string) => {
 
             </nav>
 
-            <div className="p-4 border-t border-slate-800/60">
+            <div className="p-4 border-t border-slate-800/60 space-y-2">
+              <button
+                onClick={toggleTheme}
+                className="w-full flex items-center gap-4 px-4 py-2.5 rounded-xl font-medium text-slate-300 hover:bg-slate-900 transition-all cursor-pointer"
+              >
+                {theme === 'dark' ? <Sun className="w-5 h-5 shrink-0 text-amber-400" /> : <Moon className="w-5 h-5 shrink-0 text-indigo-500" />}
+                <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-2'}`}>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+              </button>
               <button 
                 onClick={handleLogout}
                 className="w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-red-450 hover:bg-red-950/20 transition-all"
@@ -3101,6 +3133,14 @@ const getChatDateHeader = (timestampStr: string) => {
                     </div>
                   </>
                 )}
+
+                <button 
+                  onClick={toggleTheme}
+                  title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+                  className="p-2 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-800/80 hover:border-indigo-500/50 text-slate-300 hover:text-white transition-all shadow-sm flex items-center justify-center cursor-pointer ml-1"
+                >
+                  {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+                </button>
 
                 <button 
                   onClick={() => {
