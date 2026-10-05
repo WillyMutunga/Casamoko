@@ -33,9 +33,9 @@ class SafaricomSmsGateway implements SmsGatewayInterface
         $this->sendUrl = str_replace(['dsvc.safaricom.com:9480', 'dsvc.safaricom.com:8481'], 'dsdp-apinb.safaricom.com', $sendUrl);
         $this->balanceUrl = str_replace(['dsvc.safaricom.com:9480', 'dsvc.safaricom.com:8481'], 'dsdp-apinb.safaricom.com', $balanceUrl);
 
-        $this->username = env('SAFARICOM_SDP_USERNAME', 'casamoko_api');
-        $this->password = env('SAFARICOM_SDP_PASSWORD', '5qITcVn81hRion');
-        $this->cpId = (string) (env('SAFARICOM_SDP_CP_ID') ?: '143');
+        $this->username = 'casamoko_api';
+        $this->password = '5qITcVn81hRion';
+        $this->cpId = '143';
         $this->packageId = (string) (env('SAFARICOM_SDP_PACKAGE_ID') ?: '890');
         $this->offerCode = (string) (env('SAFARICOM_SDP_OFFER_CODE') ?: '300000863');
         $this->mode = (string) (env('SAFARICOM_SDP_MODE') ?: 'interactive');
@@ -46,9 +46,9 @@ class SafaricomSmsGateway implements SmsGatewayInterface
      */
     protected function getJwtToken(): ?string
     {
-        $cacheKey = 'safaricom_sdp_jwt_token_' . md5($this->username);
+        $cacheKey = 'safaricom_sdp_jwt_token_v2_' . md5($this->username);
         
-        return Cache::remember($cacheKey, 3000, function () {
+        return Cache::remember($cacheKey, 300, function () {
             try {
                 $response = Http::timeout(30)
                     ->withOptions([
@@ -178,8 +178,8 @@ class SafaricomSmsGateway implements SmsGatewayInterface
                 // Handle token expiration/revocation cleanly (HTTP 401, HTTP 403, or INVALID_USER_TOKEN)
                 $responseBody = $response->body();
                 if ($response->status() === 401 || $response->status() === 403 || str_contains($responseBody, 'INVALID_USER_TOKEN') || str_contains($responseBody, 'different user')) {
-                    $cacheKey = 'safaricom_sdp_jwt_token_' . md5($this->username);
-                    Cache::forget($cacheKey);
+                    Cache::forget('safaricom_sdp_jwt_token_v2_' . md5($this->username));
+                    Cache::forget('safaricom_sdp_jwt_token_' . md5($this->username));
 
                     Log::warning("SafaricomSDP Token Invalidated (Attempt {$attempt}/3) - Status: {$response->status()} | Body: {$responseBody}");
 
