@@ -292,6 +292,7 @@ Route::middleware(['auth:sanctum', 'tenant.active', 'admin.password.expiry', 'ro
 
 // Public DLR & MO webhooks called by Safaricom DSDP & carrier networks
 Route::match(['get', 'post'], '/dlr-webhook', [\App\Modules\Messaging\Controllers\DlrWebhookController::class, 'handle']);
+Route::match(['get', 'post'], '/messaging/dlr-webhook', [\App\Modules\Messaging\Controllers\DlrWebhookController::class, 'handle']);
 Route::match(['get', 'post'], '/shortcode/dr', [\App\Modules\Messaging\Controllers\DlrWebhookController::class, 'handle']);
 Route::match(['get', 'post'], '/v1/shortcode/dr', [\App\Modules\Messaging\Controllers\DlrWebhookController::class, 'handle']);
 Route::match(['get', 'post'], '/inbound-webhook', [\App\Modules\Messaging\Controllers\InboundWebhookController::class, 'handle']);
