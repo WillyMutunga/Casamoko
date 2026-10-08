@@ -2423,15 +2423,15 @@ const getChatDateHeader = (timestampStr: string) => {
               <span className="truncate">Enterprise Messaging Platform 2.0</span>
             </div>
             
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight mb-6 sm:mb-8 max-w-4xl leading-[1.1] sm:leading-tight">
-              Scale Your Communications with <br className="hidden sm:block" />
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight mb-6 sm:mb-8 max-w-5xl leading-[1.1] sm:leading-tight">
+              Enterprise Bulk SMS API & <br className="hidden sm:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-blue-400 to-indigo-300">
-                Precision & Speed.
+                SMPP Gateway in Kenya.
               </span>
             </h1>
             
-            <p className="text-lg md:text-xl text-slate-400 max-w-2xl mb-12 leading-relaxed">
-              Casamoko provides high-throughput SMS delivery, robust contact management, and granular real-time billing for enterprise clients and resellers.
+            <p className="text-lg md:text-xl text-slate-400 max-w-3xl mb-12 leading-relaxed">
+              Casamoko provides high-throughput Bulk SMS APIs, instant OTP verification, 2-Way Shortcode messaging, and carrier-grade SMPP gateway routing across Safaricom, Airtel, and Telkom networks in Kenya.
             </p>
             
             <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -2442,25 +2442,52 @@ const getChatDateHeader = (timestampStr: string) => {
                 Start Free Trial
               </button>
               <button 
+                onClick={() => setShowAuthModal(true)}
                 className="px-8 py-4 text-base font-semibold bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white rounded-xl transition-all w-full sm:w-auto"
               >
-                View Documentation
+                Client Portal Login
               </button>
             </div>
 
+            {/* Section Header H2 */}
+            <div className="mt-28 mb-8 text-center max-w-3xl">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-3">
+                Why Leading Businesses Choose Casamoko for Bulk SMS in Kenya
+              </h2>
+              <p className="text-slate-400 text-sm sm:text-base">
+                Engineered for maximum delivery rates, sub-second latency, and transparent real-time wallet analytics.
+              </p>
+            </div>
+
             {/* Features Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl mt-32 text-left">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full max-w-7xl text-left">
               {[
-                { title: 'High Throughput API', desc: 'Deliver millions of messages reliably with our horizontally scaled API infrastructure.', icon: <Activity className="w-8 h-8 text-blue-400" /> },
-                { title: 'Intelligent Routing', desc: 'Smart algorithms ensure the highest delivery rates across global MNO networks.', icon: <Cpu className="w-8 h-8 text-indigo-400" /> },
-                { title: 'Secure Billing Engine', desc: 'Real-time wallet deductions and reseller margin management built-in.', icon: <Wallet className="w-8 h-8 text-purple-400" /> }
+                { title: 'High Throughput REST API', desc: 'Integrate transactional & promotional SMS into your web or mobile app using our developer-friendly REST API.', icon: <Activity className="w-8 h-8 text-blue-400" /> },
+                { title: 'Instant Safaricom OTP Delivery', desc: 'Ensure 99.99% deliverability for multi-factor authentication (2FA) and login codes with direct carrier routes.', icon: <CheckCircle className="w-8 h-8 text-emerald-400" /> },
+                { title: 'Two-Way Shortcode Messaging', desc: 'Collect responses, run interactive campaigns, and automate webhook callbacks using premium shortcodes.', icon: <MessageSquare className="w-8 h-8 text-indigo-400" /> },
+                { title: 'SMPP Carrier Gateway', desc: 'Connect direct SMPP binds for high-volume enterprise traffic with dynamic least-cost routing (LCR).', icon: <Cpu className="w-8 h-8 text-purple-400" /> }
               ].map((f, i) => (
-                <div key={i} className="p-8 rounded-2xl bg-slate-900/50 border border-slate-800 backdrop-blur-sm hover:border-slate-700 transition-colors">
+                <div key={i} className="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 backdrop-blur-sm hover:border-indigo-500/40 transition-all hover:-translate-y-1">
                   <div className="mb-4">{f.icon}</div>
-                  <h3 className="text-xl font-bold text-white mb-2">{f.title}</h3>
-                  <p className="text-slate-400 leading-relaxed">{f.desc}</p>
+                  <h3 className="text-lg font-bold text-white mb-2">{f.title}</h3>
+                  <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">{f.desc}</p>
                 </div>
               ))}
+            </div>
+
+            {/* Content Volume Section (SEO Optimization) */}
+            <div className="mt-20 max-w-4xl text-left p-8 rounded-2xl bg-slate-900/40 border border-slate-800/80 mb-20 space-y-4">
+              <h2 className="text-xl font-bold text-white mb-2">Enterprise-Grade Messaging Infrastructure for Kenya &amp; East Africa</h2>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Casamoko offers a robust, scalable communications platform designed for financial institutions, e-commerce stores, healthcare providers, and software developers. With support for customized sender IDs, dynamic contact list segmentation, automated schedule queues, and M-Pesa automated wallet top-ups, Casamoko empowers businesses to maintain seamless customer contact.
+              </p>
+              <div className="flex flex-wrap gap-2 pt-2">
+                {['Safaricom SDP Integration', 'Airtel & Telkom Routes', 'M-Pesa API Topup', 'Sender ID Approval', 'Real-Time DLR Reporting', 'Reseller White-Label'].map((tag, idx) => (
+                  <span key={idx} className="text-[11px] font-semibold bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full">
+                    ✓ {tag}
+                  </span>
+                ))}
+              </div>
             </div>
 
             {/* Public Landing Sticky Footer Section */}
