@@ -33,7 +33,13 @@ import {
   User,
   X,
   Sun,
-  Moon
+  Moon,
+  ChevronDown,
+  ChevronUp,
+  Phone,
+  Mail,
+  MapPin,
+  MessageCircle
 } from 'lucide-react';
 import { Key, Copy, Trash2, Code, Library, Webhook, TerminalSquare, FileCode2, MessageSquareDashed, GitMerge, ArrowRightLeft, Route, Inbox, CheckSquare, Archive, ArrowLeft } from 'lucide-react';
 import apiClient from './services/api';
@@ -122,6 +128,16 @@ export default function App() {
   const toggleTheme = () => {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
   };
+
+  // Public Marketing Landing Page Interactive States
+  const [landingVolume, setLandingVolume] = useState<number>(25000);
+  const [landingApiLang, setLandingApiLang] = useState<'curl' | 'php' | 'python' | 'node' | 'java'>('curl');
+  const [landingActiveFaq, setLandingActiveFaq] = useState<number | null>(null);
+  const [landingContactName, setLandingContactName] = useState('');
+  const [landingContactPhone, setLandingContactPhone] = useState('');
+  const [landingContactEmail, setLandingContactEmail] = useState('');
+  const [landingContactVolume, setLandingContactVolume] = useState('10,000 - 50,000');
+  const [landingContactMsg, setLandingContactMsg] = useState('');
 
   // Navigation State
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
@@ -2381,7 +2397,7 @@ const getChatDateHeader = (timestampStr: string) => {
           <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/10 blur-[120px] mix-blend-screen pointer-events-none"></div>
 
           {/* Header */}
-          <header className="fixed top-0 w-full z-40 border-b border-white/5 bg-slate-950/50 backdrop-blur-md">
+          <header className="fixed top-0 w-full z-40 border-b border-white/5 bg-slate-950/80 backdrop-blur-md">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
@@ -2389,6 +2405,18 @@ const getChatDateHeader = (timestampStr: string) => {
                 </div>
                 <span className="font-extrabold text-lg sm:text-xl tracking-widest uppercase text-white">Casamoko</span>
               </div>
+
+              {/* Desktop Nav Anchors */}
+              <nav className="hidden lg:flex items-center gap-6 text-xs sm:text-sm font-medium text-slate-300">
+                <a href="#pricing-calculator" className="hover:text-indigo-400 transition-colors">Pricing</a>
+                <a href="#api-docs" className="hover:text-indigo-400 transition-colors">API Docs</a>
+                <a href="#features" className="hover:text-indigo-400 transition-colors">Features</a>
+                <a href="#industries" className="hover:text-indigo-400 transition-colors">Industries</a>
+                <a href="#comparison" className="hover:text-indigo-400 transition-colors">Why Casamoko</a>
+                <a href="#faqs" className="hover:text-indigo-400 transition-colors">FAQs</a>
+                <a href="#contact-support" className="hover:text-indigo-400 transition-colors">Contact</a>
+              </nav>
+
               <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                 <button 
                   onClick={toggleTheme}
@@ -2414,87 +2442,663 @@ const getChatDateHeader = (timestampStr: string) => {
           </header>
 
           {/* Hero Section */}
-          <main className="flex-1 flex flex-col items-center justify-center pt-32 pb-20 px-4 sm:px-6 z-10 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs sm:text-sm font-medium mb-6 sm:mb-8 animate-fade-in">
+          <main className="flex-1 flex flex-col items-center justify-center pt-28 pb-20 px-4 sm:px-6 z-10 text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs sm:text-sm font-medium mb-6 sm:mb-8 animate-fade-in mt-6">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
               </span>
-              <span className="truncate">Enterprise Messaging Platform 2.0</span>
+              <span className="truncate">Safaricom Direct SDP Gateway • Kenya 2026</span>
             </div>
             
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight mb-6 sm:mb-8 max-w-5xl leading-[1.1] sm:leading-tight">
-              Enterprise Bulk SMS API & <br className="hidden sm:block" />
+              Enterprise Bulk SMS API &amp; <br className="hidden sm:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-blue-400 to-indigo-300">
                 SMPP Gateway in Kenya.
               </span>
             </h1>
             
-            <p className="text-lg md:text-xl text-slate-400 max-w-3xl mb-12 leading-relaxed">
-              Casamoko provides high-throughput Bulk SMS APIs, instant OTP verification, 2-Way Shortcode messaging, and carrier-grade SMPP gateway routing across Safaricom, Airtel, and Telkom networks in Kenya.
+            <p className="text-lg md:text-xl text-slate-400 max-w-3xl mb-10 leading-relaxed">
+              Deliver instant OTPs, transactional notifications, and two-way shortcode campaigns at Kenya's most competitive rates (from KES 0.35/SMS). Direct Safaricom, Airtel &amp; Telkom interconnects with instant M-Pesa billing.
             </p>
             
-            <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center gap-4 mb-16">
               <button 
                 onClick={() => { setShowAuthModal(true); setIsRegistering(true); }}
-                className="px-8 py-4 text-base font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-600/20 transition-all hover:scale-105 active:scale-95 w-full sm:w-auto"
+                className="px-8 py-4 text-base font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-600/20 transition-all hover:scale-105 active:scale-95 w-full sm:w-auto cursor-pointer"
               >
-                Start Free Trial
+                Start Free Trial (100 Free SMS)
               </button>
-              <button 
-                onClick={() => setShowAuthModal(true)}
+              <a 
+                href="#pricing-calculator"
                 className="px-8 py-4 text-base font-semibold bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white rounded-xl transition-all w-full sm:w-auto"
               >
-                Client Portal Login
-              </button>
+                View Volume Pricing
+              </a>
+              <a 
+                href="https://wa.me/254742765445?text=Hello%20Casamoko%20Team%2C%20I%20would%20like%20to%20get%20started%20with%20Bulk%20SMS"
+                target="_blank"
+                rel="noreferrer"
+                className="px-6 py-4 text-base font-semibold bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 rounded-xl transition-all flex items-center justify-center gap-2 w-full sm:w-auto"
+              >
+                <MessageCircle className="w-5 h-5 text-emerald-400" /> WhatsApp Sales
+              </a>
             </div>
 
-            {/* Section Header H2 */}
-            <div className="mt-28 mb-8 text-center max-w-3xl">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-3">
-                Why Leading Businesses Choose Casamoko for Bulk SMS in Kenya
-              </h2>
-              <p className="text-slate-400 text-sm sm:text-base">
-                Engineered for maximum delivery rates, sub-second latency, and transparent real-time wallet analytics.
-              </p>
-            </div>
-
-            {/* Features Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full max-w-7xl text-left">
-              {[
-                { title: 'High Throughput REST API', desc: 'Integrate transactional & promotional SMS into your web or mobile app using our developer-friendly REST API.', icon: <Activity className="w-8 h-8 text-blue-400" /> },
-                { title: 'Instant Safaricom OTP Delivery', desc: 'Ensure 99.99% deliverability for multi-factor authentication (2FA) and login codes with direct carrier routes.', icon: <CheckCircle className="w-8 h-8 text-emerald-400" /> },
-                { title: 'Two-Way Shortcode Messaging', desc: 'Collect responses, run interactive campaigns, and automate webhook callbacks using premium shortcodes.', icon: <MessageSquare className="w-8 h-8 text-indigo-400" /> },
-                { title: 'SMPP Carrier Gateway', desc: 'Connect direct SMPP binds for high-volume enterprise traffic with dynamic least-cost routing (LCR).', icon: <Cpu className="w-8 h-8 text-purple-400" /> }
-              ].map((f, i) => (
-                <div key={i} className="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 backdrop-blur-sm hover:border-indigo-500/40 transition-all hover:-translate-y-1">
-                  <div className="mb-4">{f.icon}</div>
-                  <h3 className="text-lg font-bold text-white mb-2">{f.title}</h3>
-                  <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">{f.desc}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Content Volume Section (SEO Optimization) */}
-            <div className="mt-20 max-w-4xl text-left p-8 rounded-2xl bg-slate-900/40 border border-slate-800/80 mb-20 space-y-4">
-              <h2 className="text-xl font-bold text-white mb-2">Enterprise-Grade Messaging Infrastructure for Kenya &amp; East Africa</h2>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Casamoko offers a robust, scalable communications platform designed for financial institutions, e-commerce stores, healthcare providers, and software developers. With support for customized sender IDs, dynamic contact list segmentation, automated schedule queues, and M-Pesa automated wallet top-ups, Casamoko empowers businesses to maintain seamless customer contact.
-              </p>
-              <div className="flex flex-wrap gap-2 pt-2">
-                {['Safaricom SDP Integration', 'Airtel & Telkom Routes', 'M-Pesa API Topup', 'Sender ID Approval', 'Real-Time DLR Reporting', 'Reseller White-Label'].map((tag, idx) => (
-                  <span key={idx} className="text-[11px] font-semibold bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full">
-                    ✓ {tag}
-                  </span>
-                ))}
+            {/* Trust Metrics Bar */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-5xl py-6 px-4 rounded-2xl bg-slate-900/40 border border-slate-800/80 mb-20 text-center">
+              <div>
+                <p className="text-2xl sm:text-3xl font-extrabold text-white">99.98%</p>
+                <p className="text-xs text-slate-400 uppercase tracking-wider mt-1">OTP Delivery Rate</p>
+              </div>
+              <div>
+                <p className="text-2xl sm:text-3xl font-extrabold text-indigo-400">&lt; 3.0s</p>
+                <p className="text-xs text-slate-400 uppercase tracking-wider mt-1">Average Latency</p>
+              </div>
+              <div>
+                <p className="text-2xl sm:text-3xl font-extrabold text-cyan-400">KES 0.35</p>
+                <p className="text-xs text-slate-400 uppercase tracking-wider mt-1">Starting Rate</p>
+              </div>
+              <div>
+                <p className="text-2xl sm:text-3xl font-extrabold text-emerald-400">24/7</p>
+                <p className="text-xs text-slate-400 uppercase tracking-wider mt-1">M-Pesa STK Funding</p>
               </div>
             </div>
 
+            {/* SECTION 1: INTERACTIVE PRICING CALCULATOR */}
+            <section id="pricing-calculator" className="w-full max-w-6xl text-left my-16">
+              <div className="text-center max-w-3xl mx-auto mb-10">
+                <span className="text-xs font-bold uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-3.5 py-1.5 rounded-full border border-indigo-500/20">
+                  Transparent Pricing
+                </span>
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-3 mb-3">
+                  Calculate Your Exact SMS Costs in Kenya
+                </h2>
+                <p className="text-slate-400 text-sm sm:text-base">
+                  No hidden fees, no monthly software charges, and your purchased SMS credits never expire.
+                </p>
+              </div>
+
+              {/* Interactive Calculator Slider Card */}
+              <div className="p-8 rounded-3xl glass-panel border border-indigo-500/20 shadow-2xl glow-card mb-12">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+                  <div className="lg:col-span-2 space-y-6">
+                    <div className="flex justify-between items-center">
+                      <label className="text-sm font-bold text-slate-200">Select Monthly SMS Volume:</label>
+                      <span className="text-2xl font-black text-indigo-400 font-mono">
+                        {landingVolume.toLocaleString()} SMS
+                      </span>
+                    </div>
+
+                    <input 
+                      type="range"
+                      min={1000}
+                      max={250000}
+                      step={1000}
+                      value={landingVolume}
+                      onChange={(e) => setLandingVolume(parseInt(e.target.value))}
+                      className="w-full h-3 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                    />
+
+                    <div className="flex justify-between text-xs text-slate-500 font-mono">
+                      <span>1,000 SMS</span>
+                      <span>50,000 SMS</span>
+                      <span>100,000 SMS</span>
+                      <span>250,000+ SMS</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                      {[5000, 25000, 75000, 200000].map((preset) => (
+                        <button
+                          key={preset}
+                          onClick={() => setLandingVolume(preset)}
+                          className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all ${
+                            landingVolume === preset 
+                              ? 'bg-indigo-600 text-white border-indigo-500' 
+                              : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:text-white'
+                          }`}
+                        >
+                          {preset >= 1000 ? `${preset / 1000}k SMS` : preset}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Calculator Summary Box */}
+                  <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-950/60 via-slate-900 to-slate-950 border border-indigo-500/30 text-center space-y-4">
+                    <p className="text-xs text-slate-400 uppercase tracking-widest font-bold">Your Tier Rate</p>
+                    <div className="text-4xl font-extrabold text-white">
+                      KES {landingVolume <= 10000 ? '0.80' : landingVolume <= 50000 ? '0.65' : landingVolume <= 200000 ? '0.50' : '0.35'}
+                      <span className="text-xs text-slate-400 font-normal"> / SMS</span>
+                    </div>
+
+                    <div className="border-t border-slate-800 pt-4 space-y-1">
+                      <p className="text-xs text-slate-400">Total Investment:</p>
+                      <p className="text-2xl font-black text-emerald-400 font-mono">
+                        KES {Math.round(landingVolume * (landingVolume <= 10000 ? 0.80 : landingVolume <= 50000 ? 0.65 : landingVolume <= 200000 ? 0.50 : 0.35)).toLocaleString()}
+                      </p>
+                      <p className="text-[11px] text-indigo-300">
+                        ⚡ You save KES {Math.round((landingVolume * 1.00) - (landingVolume * (landingVolume <= 10000 ? 0.80 : landingVolume <= 50000 ? 0.65 : landingVolume <= 200000 ? 0.50 : 0.35))).toLocaleString()} vs market average
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => { setShowAuthModal(true); setIsRegistering(true); }}
+                      className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all active:scale-95 cursor-pointer"
+                    >
+                      Lock In This Rate Now
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Volume Tiers Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {[
+                  { tier: 'Starter', price: '0.80', range: '1 – 10,000 SMS', perks: ['Safaricom, Airtel & Telkom', 'Free Alphanumeric Sender ID', 'M-Pesa 24/7 Topup', 'Instant DLR Receipts'] },
+                  { tier: 'Growth', price: '0.65', range: '10,001 – 50,000 SMS', perks: ['Everything in Starter', 'Priority OTP Delivery Route', 'REST API & Webhook Access', 'Dedicated Account Manager'] },
+                  { tier: 'Scale', price: '0.50', range: '50,001 – 200,000 SMS', perks: ['Everything in Growth', 'Sub-3s Latency Guarantee', 'Two-Way Shortcode Keywords', '99.98% Network SLA'] },
+                  { tier: 'Enterprise', price: '0.35', range: '200,000+ SMS', perks: ['Direct Carrier SMPP Binds', 'White-Label Reseller Portal', 'Custom Postpaid Contracts', '24/7 DevOps Support'] }
+                ].map((t, idx) => (
+                  <div key={idx} className="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-indigo-500/40 transition-all flex flex-col justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest">{t.tier}</span>
+                      <div className="text-3xl font-black text-white mt-2 mb-1">
+                        KES {t.price} <span className="text-xs text-slate-400 font-normal">/ SMS</span>
+                      </div>
+                      <p className="text-xs text-slate-400 mb-6 font-mono">{t.range}</p>
+                      <ul className="space-y-2 text-xs text-slate-300">
+                        {t.perks.map((p, pIdx) => (
+                          <li key={pIdx} className="flex items-center gap-2">
+                            <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>{p}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <button 
+                      onClick={() => { setShowAuthModal(true); setIsRegistering(true); }}
+                      className="mt-6 w-full py-2.5 bg-slate-800 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold transition-all"
+                    >
+                      Select Plan
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* SECTION 2: DEVELOPER API DOCUMENTATION */}
+            <section id="api-docs" className="w-full max-w-6xl text-left my-16">
+              <div className="text-center max-w-3xl mx-auto mb-10">
+                <span className="text-xs font-bold uppercase tracking-widest text-cyan-400 bg-cyan-500/10 px-3.5 py-1.5 rounded-full border border-cyan-500/20">
+                  Developer First
+                </span>
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-3 mb-3">
+                  Integrate SMS with 5 Lines of Code
+                </h2>
+                <p className="text-slate-400 text-sm sm:text-base">
+                  High-throughput REST API with direct SMPP v3.4 transceiver connectivity for fintechs, banks, and apps.
+                </p>
+              </div>
+
+              <div className="rounded-2xl glass-panel border border-slate-800 overflow-hidden shadow-2xl">
+                {/* Language Switcher Bar */}
+                <div className="flex items-center justify-between px-6 py-4 bg-slate-900/90 border-b border-slate-800">
+                  <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto">
+                    {[
+                      { id: 'curl', label: 'cURL' },
+                      { id: 'php', label: 'PHP' },
+                      { id: 'python', label: 'Python' },
+                      { id: 'node', label: 'Node.js' },
+                      { id: 'java', label: 'Java' }
+                    ].map(lang => (
+                      <button
+                        key={lang.id}
+                        onClick={() => setLandingApiLang(lang.id as any)}
+                        className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                          landingApiLang === lang.id 
+                            ? 'bg-indigo-600 text-white' 
+                            : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                        }`}
+                      >
+                        {lang.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      const codeTexts: Record<string, string> = {
+                        curl: `curl -X POST https://casamoko.co.ke/api/v1/sms/send \\\n  -H "Authorization: Bearer live_csmk_YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"sender_id":"CASAMOKO","msisdn":"254712345678","message":"Your OTP code is 849201"}'`,
+                        php: `<?php\n$curl = curl_init();\ncurl_setopt_array($curl, [\n  CURLOPT_URL => "https://casamoko.co.ke/api/v1/sms/send",\n  CURLOPT_RETURNTRANSFER => true,\n  CURLOPT_CUSTOMREQUEST => "POST",\n  CURLOPT_POSTFIELDS => json_encode(["sender_id" => "CASAMOKO", "msisdn" => "254712345678", "message" => "Your OTP is 849201"]),\n  CURLOPT_HTTPHEADER => ["Authorization: Bearer live_csmk_YOUR_API_KEY", "Content-Type: application/json"]\n]);\n$res = curl_exec($curl);\necho $res;`,
+                        python: `import requests\nres = requests.post("https://casamoko.co.ke/api/v1/sms/send", headers={"Authorization": "Bearer live_csmk_YOUR_API_KEY"}, json={"sender_id": "CASAMOKO", "msisdn": "254712345678", "message": "Your OTP is 849201"})\nprint(res.json())`,
+                        node: `const axios = require('axios');\nconst res = await axios.post('https://casamoko.co.ke/api/v1/sms/send', { sender_id: 'CASAMOKO', msisdn: '254712345678', message: 'Your OTP is 849201' }, { headers: { Authorization: 'Bearer live_csmk_YOUR_API_KEY' } });\nconsole.log(res.data);`,
+                        java: `HttpRequest req = HttpRequest.newBuilder().uri(URI.create("https://casamoko.co.ke/api/v1/sms/send")).header("Authorization", "Bearer live_csmk_YOUR_API_KEY").header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString("{\\"sender_id\\":\\"CASAMOKO\\",\\"msisdn\\":\\"254712345678\\",\\"message\\":\\"Your OTP is 849201\\"}")).build();`
+                      };
+                      navigator.clipboard.writeText(codeTexts[landingApiLang]);
+                      toast.success('Code copied to clipboard!');
+                    }}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 transition-all cursor-pointer"
+                  >
+                    <Copy className="w-3.5 h-3.5 text-indigo-400" /> Copy
+                  </button>
+                </div>
+
+                {/* Code Content */}
+                <div className="p-6 bg-slate-950 font-mono text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed">
+                  {landingApiLang === 'curl' && (
+                    <pre className="text-emerald-300">{`curl -X POST https://casamoko.co.ke/api/v1/sms/send \\
+  -H "Authorization: Bearer live_csmk_YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "sender_id": "CASAMOKO",
+    "msisdn": "254712345678",
+    "message": "Your Casamoko OTP verification code is 849201"
+  }'`}</pre>
+                  )}
+                  {landingApiLang === 'php' && (
+                    <pre className="text-cyan-300">{`<?php
+$curl = curl_init();
+curl_setopt_array($curl, [
+  CURLOPT_URL => "https://casamoko.co.ke/api/v1/sms/send",
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_CUSTOMREQUEST => "POST",
+  CURLOPT_POSTFIELDS => json_encode([
+    "sender_id" => "CASAMOKO",
+    "msisdn" => "254712345678",
+    "message" => "Your Casamoko OTP verification code is 849201"
+  ]),
+  CURLOPT_HTTPHEADER => [
+    "Authorization: Bearer live_csmk_YOUR_API_KEY",
+    "Content-Type: application/json"
+  ]
+]);
+$response = curl_exec($curl);
+curl_close($curl);
+echo $response;`}</pre>
+                  )}
+                  {landingApiLang === 'python' && (
+                    <pre className="text-indigo-300">{`import requests
+
+url = "https://casamoko.co.ke/api/v1/sms/send"
+headers = {
+    "Authorization": "Bearer live_csmk_YOUR_API_KEY",
+    "Content-Type": "application/json"
+}
+payload = {
+    "sender_id": "CASAMOKO",
+    "msisdn": "254712345678",
+    "message": "Your Casamoko OTP verification code is 849201"
+}
+
+response = requests.post(url, json=payload, headers=headers)
+print(response.json())`}</pre>
+                  )}
+                  {landingApiLang === 'node' && (
+                    <pre className="text-amber-300">{`const axios = require('axios');
+
+async function sendSMS() {
+  const response = await axios.post('https://casamoko.co.ke/api/v1/sms/send', {
+    sender_id: 'CASAMOKO',
+    msisdn: '254712345678',
+    message: 'Your Casamoko OTP verification code is 849201'
+  }, {
+    headers: {
+      'Authorization': 'Bearer live_csmk_YOUR_API_KEY',
+      'Content-Type': 'application/json'
+    }
+  });
+  console.log(response.data);
+}
+sendSMS();`}</pre>
+                  )}
+                  {landingApiLang === 'java' && (
+                    <pre className="text-pink-300">{`HttpRequest request = HttpRequest.newBuilder()
+    .uri(URI.create("https://casamoko.co.ke/api/v1/sms/send"))
+    .header("Authorization", "Bearer live_csmk_YOUR_API_KEY")
+    .header("Content-Type", "application/json")
+    .POST(HttpRequest.BodyPublishers.ofString(
+        "{\\"sender_id\\":\\"CASAMOKO\\",\\"msisdn\\":\\"254712345678\\",\\"message\\":\\"Your OTP is 849201\\"}"
+    ))
+    .build();
+
+HttpResponse<String> response = HttpClient.newHttpClient()
+    .send(request, HttpResponse.BodyHandlers.ofString());
+System.out.println(response.body());`}</pre>
+                  )}
+                </div>
+
+                {/* Response Preview */}
+                <div className="p-4 bg-slate-900 border-t border-slate-800 text-xs flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span className="text-slate-300 font-bold">Standard 200 OK Response:</span>
+                    <span className="text-slate-400 font-mono hidden sm:inline">{`{"success": true, "message_id": "csmk_94819", "status": "QUEUED"}`}</span>
+                  </div>
+                  <button 
+                    onClick={() => { setShowAuthModal(true); setIsRegistering(true); }}
+                    className="text-indigo-400 hover:text-white font-bold"
+                  >
+                    Generate Free API Key →
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            {/* SECTION 3: KEY PRODUCT FEATURES */}
+            <section id="features" className="w-full max-w-6xl text-left my-16">
+              <div className="text-center max-w-3xl mx-auto mb-12">
+                <span className="text-xs font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3.5 py-1.5 rounded-full border border-emerald-500/20">
+                  Full Feature Suite
+                </span>
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-3 mb-3">
+                  Built for Enterprise Scale and Developer Freedom
+                </h2>
+                <p className="text-slate-400 text-sm sm:text-base">
+                  Everything you need to launch, scale, and monitor mission-critical SMS campaigns across Kenya.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[
+                  { title: 'Safaricom Direct SDP Binding', desc: 'Direct carrier integration eliminates intermediate aggregators for lightning-fast OTP transmission.', icon: <CheckCircle className="w-6 h-6 text-emerald-400" /> },
+                  { title: 'Two-Way Shortcode (20606)', desc: 'Run live subscriber competitions, customer surveys, and automated keyword reply flows with webhooks.', icon: <MessageSquare className="w-6 h-6 text-indigo-400" /> },
+                  { title: 'M-Pesa STK Automated Topup', desc: 'Top up your SMS wallet balance in real-time via Daraja STK Push 24 hours a day, 7 days a week.', icon: <Wallet className="w-6 h-6 text-cyan-400" /> },
+                  { title: 'Custom Alphanumeric Sender ID', desc: 'Brand your outgoing SMS with your official company name (e.g. CASAMOKO) registered with CAK.', icon: <Sliders className="w-6 h-6 text-pink-400" /> },
+                  { title: 'Dynamic Contact Segmentation', desc: 'Import thousands of contacts from Excel/CSV, clean duplicates, and personalize messages with tags.', icon: <Users className="w-6 h-6 text-purple-400" /> },
+                  { title: 'White-Label Reseller Portal', desc: 'Start your own SMS company with sub-client accounts, custom profit margins, and credit management.', icon: <Building className="w-6 h-6 text-amber-400" /> }
+                ].map((item, i) => (
+                  <div key={i} className="p-6 rounded-2xl bg-slate-900/40 border border-slate-800 hover:border-indigo-500/30 transition-all">
+                    <div className="w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center mb-4">
+                      {item.icon}
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-2">{item.title}</h3>
+                    <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* SECTION 4: INDUSTRY SOLUTIONS */}
+            <section id="industries" className="w-full max-w-6xl text-left my-16">
+              <div className="text-center max-w-3xl mx-auto mb-12">
+                <span className="text-xs font-bold uppercase tracking-widest text-purple-400 bg-purple-500/10 px-3.5 py-1.5 rounded-full border border-purple-500/20">
+                  Targeted Verticals
+                </span>
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-3 mb-3">
+                  Trusted by Key Industries Across Kenya
+                </h2>
+                <p className="text-slate-400 text-sm sm:text-base">
+                  Specialized SMS workflows designed for the highest engagement and compliance.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[
+                  { sector: 'SACCOs & Microfinance', points: ['Loan disbursement alerts', 'Repayment due dates & reminders', 'Monthly dividend announcements', 'Annual General Meeting (AGM) notices'] },
+                  { sector: 'Schools & Higher Institutions', points: ['Term opening & fee balance alerts', 'Student exam performance results', 'Emergency weather/school alerts', 'Parent-Teacher meeting updates'] },
+                  { sector: 'E-Commerce & Logistics', points: ['Order purchase confirmations', 'Dispatch and rider tracking SMS', 'Flash discounts & seasonal promos', 'Abandoned shopping cart recovery'] },
+                  { sector: 'Hospitals & Medical Clinics', points: ['Doctor appointment schedule reminders', 'Laboratory result readiness alerts', 'Prescription medication refill notices', 'Health & wellness outreach'] },
+                  { sector: 'Churches & Non-Profits', points: ['Sunday sermon announcements', 'Prayer meeting schedule reminders', 'Volunteer coordination & mobilization', 'Donation acknowledgments'] },
+                  { sector: 'Political & Public Campaigns', points: ['Voter mobilization communications', 'Town hall & rally invitations', 'Constituency development updates', 'Survey and voter feedback polling'] }
+                ].map((ind, i) => (
+                  <div key={i} className="p-6 rounded-2xl bg-slate-900/30 border border-slate-800">
+                    <h3 className="text-lg font-bold text-white mb-3 text-indigo-300">{ind.sector}</h3>
+                    <ul className="space-y-2 text-xs text-slate-300">
+                      {ind.points.map((pt, pIdx) => (
+                        <li key={pIdx} className="flex items-start gap-2">
+                          <Check className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
+                          <span>{pt}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* SECTION 5: WHY CASAMOKO VS AFRICA'S TALKING */}
+            <section id="comparison" className="w-full max-w-6xl text-left my-16">
+              <div className="text-center max-w-3xl mx-auto mb-12">
+                <span className="text-xs font-bold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3.5 py-1.5 rounded-full border border-amber-500/20">
+                  Market Comparison
+                </span>
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-3 mb-3">
+                  Why Kenyan Businesses Choose Casamoko
+                </h2>
+                <p className="text-slate-400 text-sm sm:text-base">
+                  Compare our infrastructure, pricing structure, and local support directly against legacy SMS providers.
+                </p>
+              </div>
+
+              <div className="overflow-x-auto rounded-2xl border border-slate-800 glass-panel">
+                <table className="w-full text-left text-xs sm:text-sm">
+                  <thead className="bg-slate-900/80 text-slate-300 uppercase font-mono text-[11px] border-b border-slate-800">
+                    <tr>
+                      <th className="py-4 px-6">Feature / Capability</th>
+                      <th className="py-4 px-6 text-indigo-400 font-extrabold">Casamoko</th>
+                      <th className="py-4 px-6 text-slate-400">Africa's Talking</th>
+                      <th className="py-4 px-6 text-slate-400">Traditional Aggregators</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                    <tr>
+                      <td className="py-4 px-6 font-bold text-white">Starting SMS Rate</td>
+                      <td className="py-4 px-6 text-emerald-400 font-bold">KES 0.35 / SMS</td>
+                      <td className="py-4 px-6 text-slate-400">KES 0.80+ / SMS</td>
+                      <td className="py-4 px-6 text-slate-400">KES 1.00+ / SMS</td>
+                    </tr>
+                    <tr>
+                      <td className="py-4 px-6 font-bold text-white">Credit Expiration</td>
+                      <td className="py-4 px-6 text-emerald-400 font-bold">Never Expire (Valid for Life)</td>
+                      <td className="py-4 px-6 text-slate-400">Monthly or annual forfeiture</td>
+                      <td className="py-4 px-6 text-slate-400">Fixed expiration cycle</td>
+                    </tr>
+                    <tr>
+                      <td className="py-4 px-6 font-bold text-white">M-Pesa STK Automated Topup</td>
+                      <td className="py-4 px-6 text-emerald-400 font-bold">Instant 24/7 Daraja STK Push</td>
+                      <td className="py-4 px-6 text-slate-400">Manual payment delays</td>
+                      <td className="py-4 px-6 text-slate-400">Manual bank reconciliations</td>
+                    </tr>
+                    <tr>
+                      <td className="py-4 px-6 font-bold text-white">Carrier Integration</td>
+                      <td className="py-4 px-6 text-emerald-400 font-bold">Direct Safaricom SDP + SMPP</td>
+                      <td className="py-4 px-6 text-slate-400">Multi-hop aggregator</td>
+                      <td className="py-4 px-6 text-slate-400">Single SIM/Modem bridge</td>
+                    </tr>
+                    <tr>
+                      <td className="py-4 px-6 font-bold text-white">Local Nairobi Support</td>
+                      <td className="py-4 px-6 text-emerald-400 font-bold">Direct Phone + WhatsApp</td>
+                      <td className="py-4 px-6 text-slate-400">Ticket queue only</td>
+                      <td className="py-4 px-6 text-slate-400">Email only</td>
+                    </tr>
+                    <tr>
+                      <td className="py-4 px-6 font-bold text-white">Reseller / White-Label Portal</td>
+                      <td className="py-4 px-6 text-emerald-400 font-bold">Built-In with Custom Margins</td>
+                      <td className="py-4 px-6 text-slate-400">Developer build required</td>
+                      <td className="py-4 px-6 text-slate-400">Not supported</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {/* SECTION 6: FAQS ACCORDION */}
+            <section id="faqs" className="w-full max-w-4xl text-left my-16">
+              <div className="text-center max-w-3xl mx-auto mb-10">
+                <span className="text-xs font-bold uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-3.5 py-1.5 rounded-full border border-indigo-500/20">
+                  Got Questions?
+                </span>
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-3 mb-3">
+                  Frequently Asked Questions
+                </h2>
+                <p className="text-slate-400 text-sm">
+                  Clear answers on regulations, pricing, Sender ID approvals, and API integration.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {[
+                  { q: 'How much does Bulk SMS cost in Kenya with Casamoko?', a: 'Our rates start at KES 0.35 per SMS for enterprise volumes, KES 0.50 for scale volumes, KES 0.65 for growth volumes, and KES 0.80 for starter volumes. Credits never expire and there are no monthly setup or maintenance charges.' },
+                  { q: 'What are the legal sending hours for promotional SMS in Kenya?', a: 'Under Communications Authority of Kenya (CAK) regulations, promotional messages can only be dispatched between 7:00 AM and 7:00 PM. Transactional messages like One-Time Passwords (OTPs), bank alerts, and 2FA authentication codes can be sent 24/7 without restriction.' },
+                  { q: 'How long does Safaricom Sender ID registration take?', a: 'Custom alphanumeric Sender ID registration typically takes 2 to 3 business days upon submission of your business registration certificate and CAK authorization letter. Casamoko handles the entire submission and approval process on your behalf.' },
+                  { q: 'How fast is Casamoko OTP message delivery?', a: 'Our direct priority carrier binds to Safaricom, Airtel, and Telkom deliver One-Time Passwords (OTPs) and multi-factor authentication codes in under 3 seconds with real-time delivery receipts (DLR).' },
+                  { q: 'Do my purchased SMS credits expire?', a: 'No! All SMS credits purchased on Casamoko remain valid indefinitely until used. You can top up your balance automatically 24/7 via M-Pesa STK Push.' },
+                  { q: 'Can I white-label Casamoko and resell SMS to my own clients?', a: 'Yes! Casamoko features a built-in Reseller Portal. You can create sub-client accounts, set your own profit margins, allocate credits, and provide your clients with a full dashboard.' }
+                ].map((faq, idx) => (
+                  <div key={idx} className="rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden">
+                    <button
+                      onClick={() => setLandingActiveFaq(landingActiveFaq === idx ? null : idx)}
+                      className="w-full py-4 px-6 flex justify-between items-center text-left text-sm sm:text-base font-bold text-white hover:text-indigo-400 transition-colors"
+                    >
+                      <span>{faq.q}</span>
+                      {landingActiveFaq === idx ? <ChevronUp className="w-5 h-5 text-indigo-400 shrink-0" /> : <ChevronDown className="w-5 h-5 text-slate-500 shrink-0" />}
+                    </button>
+                    {landingActiveFaq === idx && (
+                      <div className="px-6 pb-5 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-slate-800/60 pt-3">
+                        {faq.a}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* SECTION 7: NAIROBI OFFICE, WHATSAPP & CONTACT LEAD FORM */}
+            <section id="contact-support" className="w-full max-w-5xl text-left my-16 p-8 sm:p-12 rounded-3xl glass-panel border border-indigo-500/20 shadow-2xl">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                <div className="space-y-6">
+                  <span className="text-xs font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3.5 py-1.5 rounded-full border border-emerald-500/20">
+                    Direct Contact
+                  </span>
+                  <h2 className="text-3xl font-extrabold text-white leading-tight">
+                    Get in Touch with our Nairobi Team
+                  </h2>
+                  <p className="text-slate-400 text-sm leading-relaxed">
+                    Have questions about shortcode leasing, Sender ID registration, or volume discounts? Our technical and commercial teams are ready to assist.
+                  </p>
+
+                  <div className="space-y-4 pt-2">
+                    <div className="flex items-center gap-3 text-slate-300 text-sm">
+                      <MapPin className="w-5 h-5 text-indigo-400 shrink-0" />
+                      <span>Casamoko Contractors LTD, Nairobi, Kenya</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-slate-300 text-sm">
+                      <Phone className="w-5 h-5 text-indigo-400 shrink-0" />
+                      <a href="tel:+254742765445" className="hover:text-white transition-colors">+254 742 765 445</a>
+                    </div>
+                    <div className="flex items-center gap-3 text-slate-300 text-sm">
+                      <MessageCircle className="w-5 h-5 text-emerald-400 shrink-0" />
+                      <a href="https://wa.me/254742765445" target="_blank" rel="noreferrer" className="text-emerald-400 hover:text-emerald-300 transition-colors">Chat on WhatsApp (+254 742 765 445)</a>
+                    </div>
+                    <div className="flex items-center gap-3 text-slate-300 text-sm">
+                      <Mail className="w-5 h-5 text-indigo-400 shrink-0" />
+                      <a href="mailto:support@casamoko.co.ke" className="hover:text-white transition-colors">support@casamoko.co.ke</a>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Lead Capture Form */}
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!landingContactName || !landingContactPhone) {
+                      toast.error('Please enter your name and phone number');
+                      return;
+                    }
+                    toast.success('Thank you! Our sales team will reach out to you within 30 minutes.');
+                    setLandingContactName('');
+                    setLandingContactPhone('');
+                    setLandingContactEmail('');
+                    setLandingContactMsg('');
+                  }}
+                  className="space-y-4 bg-slate-900/60 p-6 rounded-2xl border border-slate-800"
+                >
+                  <h3 className="text-base font-bold text-white">Request a Custom Rate Quote</h3>
+                  
+                  <div>
+                    <label className="text-xs text-slate-400 block mb-1">Your Full Name *</label>
+                    <input 
+                      type="text" 
+                      required 
+                      value={landingContactName}
+                      onChange={(e) => setLandingContactName(e.target.value)}
+                      placeholder="e.g. Willy Mutunga" 
+                      className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500" 
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-slate-400 block mb-1">Phone / WhatsApp *</label>
+                      <input 
+                        type="text" 
+                        required 
+                        value={landingContactPhone}
+                        onChange={(e) => setLandingContactPhone(e.target.value)}
+                        placeholder="2547XXXXXXXX" 
+                        className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500" 
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-slate-400 block mb-1">Work Email</label>
+                      <input 
+                        type="email" 
+                        value={landingContactEmail}
+                        onChange={(e) => setLandingContactEmail(e.target.value)}
+                        placeholder="willy@company.co.ke" 
+                        className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500" 
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-slate-400 block mb-1">Estimated Monthly SMS Volume</label>
+                    <select
+                      value={landingContactVolume}
+                      onChange={(e) => setLandingContactVolume(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="1,000 - 10,000">1,000 – 10,000 SMS</option>
+                      <option value="10,000 - 50,000">10,000 – 50,000 SMS</option>
+                      <option value="50,000 - 200,000">50,000 – 200,000 SMS</option>
+                      <option value="200,000+ Enterprise">200,000+ Enterprise Volume</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-slate-400 block mb-1">How can we help you?</label>
+                    <textarea 
+                      rows={2} 
+                      value={landingContactMsg}
+                      onChange={(e) => setLandingContactMsg(e.target.value)}
+                      placeholder="Tell us about your project or Sender ID requirements..." 
+                      className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500" 
+                    />
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all active:scale-95 cursor-pointer"
+                  >
+                    Submit Inquiry (Instant Response)
+                  </button>
+                </form>
+              </div>
+            </section>
+
             {/* Public Landing Sticky Footer Section */}
-            <footer className="sticky bottom-0 left-0 right-0 w-full border-t border-slate-800/80 bg-slate-955/95 backdrop-blur-md py-3.5 px-6 text-center text-xs text-gray-400 flex flex-col sm:flex-row items-center justify-between gap-2 z-40 shrink-0 shadow-2xl mt-auto">
-              <p className="font-medium text-gray-300">
-                © {new Date().getFullYear()} <span className="text-white font-bold">Casamoko Contractors LTD</span>. All rights reserved.
-              </p>
+            <footer className="w-full border-t border-slate-800/80 bg-slate-955/95 py-6 px-6 text-center text-xs text-gray-400 flex flex-col sm:flex-row items-center justify-between gap-4 z-40 shrink-0 shadow-2xl mt-12 max-w-7xl">
+              <div className="text-left">
+                <p className="font-bold text-white">Casamoko Contractors LTD</p>
+                <p className="text-[11px] text-gray-400">CAK Licensed Bulk SMS &amp; Telecommunications Services • Nairobi, Kenya</p>
+              </div>
+              <div className="flex items-center gap-4 text-xs text-gray-300">
+                <a href="#pricing-calculator" className="hover:text-white">Pricing</a>
+                <a href="#api-docs" className="hover:text-white">API Docs</a>
+                <a href="#faqs" className="hover:text-white">FAQs</a>
+                <a href="tel:+254742765445" className="hover:text-white">+254 742 765 445</a>
+              </div>
               <p className="text-xs text-gray-400">
                 Developed by <span className="text-indigo-400 font-semibold">Willy Mutunga</span>
               </p>

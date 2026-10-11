@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#060913"/>
+      <stop offset="50%" stop-color="#0c1222"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="50%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="50%" stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#f472b6"/>
+    </linearGradient>
+    <filter id="blurFilter">
+      <feGaussianBlur stdDeviation="80"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Glowing background orbs -->
+  <circle cx="150" cy="120" r="240" fill="#4f46e5" opacity="0.18" filter="url(#blurFilter)"/>
+  <circle cx="1050" cy="500" r="260" fill="#06b6d4" opacity="0.15" filter="url(#blurFilter)"/>
+
+  <!-- Logo Mark -->
+  <g transform="translate(100, 90)">
+    <rect width="72" height="72" rx="20" fill="url(#accent)"/>
+    <path d="M 22,22 C 22,17 26,13 31,13 L 51,13 C 56,13 60,17 60,22 L 60,42 C 60,47 56,51 51,51 L 40,51 L 28,61 L 30,51 L 22,51 Z" fill="#ffffff" opacity="0.95"/>
+    <path d="M 43,21 L 31,37 L 39,37 L 37,48 L 49,33 L 41,33 Z" fill="#4f46e5"/>
+    <text x="96" y="50" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="36" fill="#ffffff" letter-spacing="4">CASAMOKO</text>
+    <rect x="360" y="24" width="130" height="32" rx="16" fill="rgba(99, 102, 241, 0.2)" stroke="rgba(99, 102, 241, 0.5)"/>
+    <text x="375" y="45" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="14" fill="#818cf8">KENYA GATEWAY</text>
+  </g>
+
+  <!-- Hero Headline -->
+  <g transform="translate(100, 240)">
+    <text x="0" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="52" fill="#ffffff">
+      Enterprise Bulk SMS API &amp;
+    </text>
+    <text x="0" y="65" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="52" fill="url(#glow)">
+      SMPP Carrier Gateway Kenya
+    </text>
+  </g>
+
+  <!-- Subtitle -->
+  <text x="100" y="380" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="400" font-size="22" fill="#94a3b8">
+    Deliver Instant OTPs, 2-Way Shortcode Campaigns &amp; High-Throughput Transactional Alerts.
+  </text>
+  <text x="100" y="415" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="400" font-size="22" fill="#94a3b8">
+    Direct Safaricom, Airtel &amp; Telkom Interconnects • Starting at KES 0.35 / SMS.
+  </text>
+
+  <!-- Feature Pills -->
+  <g transform="translate(100, 480)">
+    <!-- Pill 1 -->
+    <rect x="0" y="0" width="220" height="48" rx="12" fill="rgba(30, 41, 59, 0.8)" stroke="rgba(99, 102, 241, 0.3)"/>
+    <text x="20" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="16" fill="#38bdf8">⚡ Safaricom Direct OTP</text>
+
+    <!-- Pill 2 -->
+    <rect x="240" y="0" width="230" height="48" rx="12" fill="rgba(30, 41, 59, 0.8)" stroke="rgba(99, 102, 241, 0.3)"/>
+    <text x="260" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="16" fill="#4ade80">📱 Two-Way Shortcodes</text>
+
+    <!-- Pill 3 -->
+    <rect x="490" y="0" width="220" height="48" rx="12" fill="rgba(30, 41, 59, 0.8)" stroke="rgba(99, 102, 241, 0.3)"/>
+    <text x="510" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="16" fill="#f472b6">💳 M-Pesa STK Topup</text>
+
+    <!-- Pill 4 -->
+    <rect x="730" y="0" width="240" height="48" rx="12" fill="rgba(30, 41, 59, 0.8)" stroke="rgba(99, 102, 241, 0.3)"/>
+    <text x="750" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="16" fill="#fbbf24">🏢 White-Label Reseller</text>
+  </g>
+
+  <!-- Footer Info -->
+  <text x="100" y="585" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="16" fill="#64748b">
+    https://casamoko.co.ke • Nairobi, Kenya • +254 742 765 445 • support@casamoko.co.ke
+  </text>
+</svg>
